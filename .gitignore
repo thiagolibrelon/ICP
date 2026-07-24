@@ -1,11 +1,14 @@
-AR.csv
-BANCO DE DADOS.csv
-CONTRATOS ABERTO CLIENTE.csv
-COTACAO e CONVERSAO.csv
-HISTORICO DE LEADS.csv
-HISTORICO DE RESERVA.csv
-NPS.csv
-PROMPT.DOCX
-RESERVA - COTAÇÃO - CONVERSAO.csv
-VOLUME.csv
-readme.md
+/AR.csv
+/BANCO DE DADOS.csv
+/CONTRATOS ABERTO CLIENTE.csv
+/COTACAO e CONVERSAO.csv
+/HISTORICO DE LEADS.csv
+/HISTORICO DE RESERVA.csv
+/NPS.csv
+/PROMPT.DOCX
+/RESERVA - COTAÇÃO - CONVERSAO.csv
+/VOLUME.csv
+/readme.md
+
+# Intermediários binários do pipeline (cache pandas, não portável/legível) — nunca versionar
+processado/*.pkl

@@ -1,0 +1,13 @@
+﻿CLUSTER;N_CLIENTES;objetivo;abordagem;oferta;canal;cadencia;kpi;impacto;esforco;prioridade
+Campeões;1642;Reter e expandir;Consultiva 1:1;Cross-sell, AM, grupo econômico;Executivo dedicado;Semanal/quinzenal;Receita/volume retido + expansão;Alto;Alto;1
+Alto potencial subpenetrado;2191;Expandir consumo;Consultiva/Inside;Aumento de frequência, novos produtos;Executivo/Inside Sales;Quinzenal;Crescimento de volume;Alto;Médio;2
+Recorrentes;18689;Manter frequência, migrar AD→AM;Cadência híbrida;Upgrade de modalidade;Inside Sales;Mensal;Frequência mantida/aumentada;Alto (55,8% do volume);Médio;3
+Novos com potencial;340;Consolidar relacionamento;Onboarding ativo;Segunda compra guiada;Inside Sales;Semanal nos primeiros 90 dias;Taxa de segunda compra;Médio;Médio;4
+Em risco;997;Reter antes da inatividade;Contato de investigação;Resolver causa raiz (NPS/queda de volume);Executivo/Inside (retenção);Imediata;Taxa de recuperação;Médio-Alto;Médio;2
+Potencial de aluguel mensal;34;Migrar AD para AM;Oferta direcionada;Simulação de economia AM;Inside Sales;Pontual;Taxa de migração AD→AM;Médio;Baixo;5
+Potencial de cross-sell;478;Expandir para outros CNPJs do grupo;Apresentação de portfólio;Contrato unificado de grupo;Executivo dedicado;Pontual;Nº de CNPJs ativados no grupo;Médio;Médio;5
+Inativos recentes;532;Reativar rápido;Automação + humano em resposta;Oferta de retorno;CRM automatizado;Imediata;Taxa de reativação;Médio;Baixo;4
+Inativos intermediários;7856;Reativar;Automação;Oferta de retorno;CRM automatizado;Mensal;Taxa de reativação;Médio (6,3% do volume);Baixo;6
+Inativos antigos;20247;Nutrição de baixo custo;Automação passiva;Conteúdo/gatilho de reengajamento;CRM automatizado;Trimestral;Taxa de resposta;Baixo por cliente, alto em volume de clientes (23,6% da base);Baixo;7
+Baixo potencial atual;5542;Manter sem custo comercial;Automação;Nenhuma ativa;CRM automatizado;Trimestral;Custo de servir mínimo;Baixo;Baixo;8
+Dados insuficientes;27387;Enriquecer cadastro;Pesquisa/validação cadastral;N/A;Nenhum (pré-comercial);N/A;% de enriquecimento cadastral;Habilita ação futura;Baixo;9
