@@ -1,0 +1,566 @@
+<title>ICP & Scoring de Clientes — Briefing</title>
+<style>
+  :root {
+    --asphalt: #1b1b1d;
+    --paper: #eeede7;
+    --paper-raised: #f8f7f2;
+    --ink: #24231f;
+    --ink-soft: #58554c;
+    --line: #d8d5c9;
+    --amber: #c98a2e;
+    --amber-ink: #7a4f13;
+    --teal: #2f6560;
+    --teal-soft: #e2ebe9;
+    --good: #4d7856;
+    --good-soft: #e4ecdf;
+    --risk: #a84a41;
+    --risk-soft: #f3e2df;
+    --mono-bg: #232220;
+    --mono-ink: #e8e5da;
+    --mono-dim: #948f80;
+    --shadow: 0 1px 2px rgba(27,27,29,0.06), 0 8px 24px -12px rgba(27,27,29,0.18);
+  }
+
+  :root[data-theme="dark"] {
+    --asphalt: #eeede7;
+    --paper: #171614;
+    --paper-raised: #201f1c;
+    --ink: #eae7dd;
+    --ink-soft: #a8a396;
+    --line: #38362f;
+    --amber: #e0a54a;
+    --amber-ink: #f2c988;
+    --teal: #5fa89f;
+    --teal-soft: #1c2b29;
+    --good: #7fae8b;
+    --good-soft: #1e2a20;
+    --risk: #d1837a;
+    --risk-soft: #2c1e1c;
+    --mono-bg: #0f0e0d;
+    --mono-ink: #e8e5da;
+    --mono-dim: #726d60;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -12px rgba(0,0,0,0.5);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --asphalt: #eeede7;
+      --paper: #171614;
+      --paper-raised: #201f1c;
+      --ink: #eae7dd;
+      --ink-soft: #a8a396;
+      --line: #38362f;
+      --amber: #e0a54a;
+      --amber-ink: #f2c988;
+      --teal: #5fa89f;
+      --teal-soft: #1c2b29;
+      --good: #7fae8b;
+      --good-soft: #1e2a20;
+      --risk: #d1837a;
+      --risk-soft: #2c1e1c;
+      --mono-bg: #0f0e0d;
+      --mono-ink: #e8e5da;
+      --mono-dim: #726d60;
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -12px rgba(0,0,0,0.5);
+    }
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: -apple-system, "Segoe UI", "Helvetica Neue", Roboto, Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .display {
+    font-family: "Iowan Old Style", "Sitka Text", Georgia, "Times New Roman", serif;
+  }
+
+  .mono, code, pre {
+    font-family: ui-monospace, "SF Mono", "Cascadia Code", "Consolas", "Menlo", monospace;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .wrap {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 0 24px 96px;
+  }
+
+  /* ---------- Header ---------- */
+  header.masthead {
+    padding: 64px 0 40px;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 40px;
+  }
+  .eyebrow {
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--teal);
+    margin: 0 0 14px;
+  }
+  h1.title {
+    font-size: clamp(2rem, 4.4vw, 2.9rem);
+    line-height: 1.08;
+    margin: 0 0 14px;
+    text-wrap: balance;
+    font-weight: 500;
+  }
+  .lede {
+    font-size: 1.1rem;
+    color: var(--ink-soft);
+    max-width: 58ch;
+    margin: 0 0 20px;
+    text-wrap: pretty;
+  }
+  .meta-line {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    font-size: 13px;
+    color: var(--ink-soft);
+  }
+  .meta-line .dot { color: var(--line); }
+
+  /* ---------- Stat cards ---------- */
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 56px;
+  }
+  .stat {
+    background: var(--paper-raised);
+    padding: 20px 18px;
+  }
+  .stat-value {
+    font-family: "Iowan Old Style", "Sitka Text", Georgia, serif;
+    font-variant-numeric: tabular-nums;
+    font-size: 1.65rem;
+    color: var(--amber-ink);
+    margin: 0 0 4px;
+    line-height: 1;
+  }
+  .stat-label {
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    line-height: 1.35;
+  }
+
+  /* ---------- Sections ---------- */
+  section { margin-bottom: 56px; }
+  h2.section-title {
+    font-family: "Iowan Old Style", "Sitka Text", Georgia, serif;
+    font-size: 1.5rem;
+    font-weight: 500;
+    margin: 0 0 6px;
+  }
+  .section-sub {
+    color: var(--ink-soft);
+    font-size: 0.96rem;
+    margin: 0 0 24px;
+    max-width: 62ch;
+  }
+
+  p { margin: 0 0 16px; }
+
+  /* ---------- File tree ---------- */
+  .tree-scroll { overflow-x: auto; border-radius: 10px; box-shadow: var(--shadow); }
+  .tree {
+    background: var(--mono-bg);
+    color: var(--mono-ink);
+    padding: 24px 26px;
+    font-size: 13px;
+    line-height: 1.75;
+    white-space: pre;
+    min-width: 560px;
+  }
+  .tree .dim { color: var(--mono-dim); }
+  .tree .flag { color: var(--amber); font-weight: 600; }
+  .tree .note { color: var(--mono-dim); font-style: italic; }
+
+  /* ---------- Numbered steps ---------- */
+  .steps { display: flex; flex-direction: column; gap: 0; border-top: 1px solid var(--line); }
+  .step {
+    display: grid;
+    grid-template-columns: 44px 1fr;
+    gap: 18px;
+    padding: 20px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .step-num {
+    font-family: "Iowan Old Style", "Sitka Text", Georgia, serif;
+    font-size: 1.3rem;
+    color: var(--amber-ink);
+    line-height: 1;
+    padding-top: 2px;
+  }
+  .step-body h3 {
+    margin: 0 0 4px;
+    font-size: 1rem;
+    font-weight: 600;
+  }
+  .step-body p { margin: 0; color: var(--ink-soft); font-size: 0.94rem; }
+  .step-file {
+    display: inline-block;
+    margin-top: 8px;
+    font-size: 12.5px;
+    padding: 3px 8px;
+    border-radius: 5px;
+    background: var(--teal-soft);
+    color: var(--teal);
+  }
+
+  /* ---------- Decision cards ---------- */
+  .decision-list { display: flex; flex-direction: column; gap: 14px; }
+  .decision {
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 18px 20px;
+  }
+  .decision-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+  }
+  .decision-head h3 { margin: 0; font-size: 1.02rem; font-weight: 600; }
+  .decision p { margin: 0; color: var(--ink-soft); font-size: 0.94rem; }
+
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11.5px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    padding: 4px 10px;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+  .pill-amber { background: rgba(201,138,46,0.15); color: var(--amber-ink); }
+  .pill-good { background: var(--good-soft); color: var(--good); }
+  .pill-risk { background: var(--risk-soft); color: var(--risk); }
+  .pill-teal { background: var(--teal-soft); color: var(--teal); }
+
+  /* ---------- ICP status table ---------- */
+  .icp-scroll { overflow-x: auto; }
+  table.icp-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 620px;
+    font-size: 0.92rem;
+  }
+  .icp-table th {
+    text-align: left;
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--ink-soft);
+    padding: 0 10px 10px;
+    border-bottom: 1px solid var(--line);
+    font-weight: 600;
+  }
+  .icp-table td {
+    padding: 12px 10px;
+    border-bottom: 1px solid var(--line);
+    vertical-align: top;
+  }
+  .icp-table td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .icp-name { font-weight: 600; }
+  .icp-desc { color: var(--ink-soft); font-size: 0.88rem; }
+
+  /* ---------- Tier bar ---------- */
+  .tier-bar {
+    display: flex;
+    height: 34px;
+    border-radius: 7px;
+    overflow: hidden;
+    margin-bottom: 14px;
+    box-shadow: var(--shadow);
+  }
+  .tier-seg { display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: #fff; }
+  .tier-legend { display: flex; flex-wrap: wrap; gap: 16px; font-size: 12.5px; color: var(--ink-soft); }
+  .tier-legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .swatch { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+
+  /* ---------- Divider ---------- */
+  .lane-divider {
+    height: 0;
+    border-top: 2px dashed var(--amber);
+    opacity: 0.4;
+    margin: 56px 0;
+  }
+
+  footer {
+    border-top: 1px solid var(--line);
+    padding-top: 20px;
+    color: var(--ink-soft);
+    font-size: 12.5px;
+  }
+  footer code { background: var(--teal-soft); color: var(--teal); padding: 1px 6px; border-radius: 4px; }
+
+  a { color: var(--teal); }
+  a:focus-visible, button:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+
+  @media (max-width: 620px) {
+    .stat-grid { grid-template-columns: repeat(2, 1fr); }
+    header.masthead { padding-top: 40px; }
+  }
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <p class="eyebrow">Briefing de projeto · Localiza B2B</p>
+    <h1 class="title display">ICP &amp; Scoring de Clientes</h1>
+    <p class="lede">Guia de leitura da pasta do projeto e das decisões que dependem de você — pensado pra quem não acompanhou o trabalho sendo feito, sem precisar abrir nenhum CSV.</p>
+    <div class="meta-line">
+      <span>85.941 clientes classificados</span>
+      <span class="dot">·</span>
+      <span>Atualizado em 24 de julho de 2026</span>
+      <span class="dot">·</span>
+      <span>Repositório <code class="mono">thiagolibrelon/ICP</code></span>
+    </div>
+  </header>
+
+  <div class="stat-grid">
+    <div class="stat">
+      <p class="stat-value mono">85.941</p>
+      <p class="stat-label">clientes na base classificada</p>
+    </div>
+    <div class="stat">
+      <p class="stat-value mono">1.699</p>
+      <p class="stat-label">clientes em Tier A — atendimento consultivo (2,0% da base)</p>
+    </div>
+    <div class="stat">
+      <p class="stat-value mono">79,4%</p>
+      <p class="stat-label">do volume vem de só 23,7% dos clientes</p>
+    </div>
+    <div class="stat">
+      <p class="stat-value mono">2 de 5</p>
+      <p class="stat-label">perfis de cliente (ICPs) validados com confiança alta</p>
+    </div>
+  </div>
+
+  <section>
+    <h2 class="section-title display">O que é isso</h2>
+    <p>Analisamos toda a base de clientes da Localiza — reservas, contratos, volume de locação, pesquisas de NPS — pra responder três perguntas: <strong>quem são os clientes que mais valem a pena hoje</strong>, <strong>quem tem potencial que ainda não foi aproveitado</strong>, e <strong>como o time comercial deveria priorizar o dia a dia</strong>.</p>
+    <p>O resultado não é um relatório único — é uma pasta com vários arquivos, uns pra leitura e decisão, outros com o dado de cada um dos 85.941 clientes. Este briefing mostra onde olhar, em que ordem, e o que precisa da sua aprovação.</p>
+  </section>
+
+  <section>
+    <h2 class="section-title display">Estrutura da pasta</h2>
+    <p class="section-sub">Nem tudo aqui é pra você abrir — boa parte é planilha de trabalho intermediária. O que importa pra decisão está marcado com ★.</p>
+    <div class="tree-scroll">
+<pre class="tree mono"><span class="dim">ICP/</span>
+├── saidas/ <span class="flag">★ COMECE AQUI</span>
+│   ├── plano_de_acao.md            <span class="dim">12 recomendações + matriz de prioridade</span>
+│   ├── tabela1_resumo_icps.csv     <span class="dim">os perfis de cliente, em números</span>
+│   ├── tabela3_acoes_por_segmento.csv <span class="dim">ação sugerida por grupo</span>
+│   └── tabela4_top_oportunidades.csv  <span class="dim">clientes específicos, por nome</span>
+├── icp_segmentacao/ <span class="flag">★</span>
+│   ├── icps_definidos.md           <span class="dim">5 perfis testados, o que sobreviveu</span>
+│   └── clusters_definidos.md       <span class="dim">14 grupos comerciais, com critério</span>
+├── scores/ <span class="flag">★</span>
+│   └── metodologia_scores.md       <span class="dim">como a nota de cada cliente foi calculada</span>
+├── auditoria/ <span class="flag">★</span>
+│   └── auditoria_dados.md          <span class="dim">o que confiar nos dados, o que não</span>
+├── master_classificada/
+│   └── MASTER_CLASSIFICADA.csv     <span class="dim">a base inteira — 1 linha por cliente</span>
+├── powerbi/
+│   └── modelo_dados.md             <span class="dim">roteiro pra montar o painel visual</span>
+├── personas/                        <span class="note">quem no "time" cuida de cada etapa</span>
+├── planejamento/                    <span class="note">como o trabalho foi dividido em fases</span>
+└── processado/                      <span class="note">etapas intermediárias — pode ignorar</span></pre>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="section-title display">Como ler, em ordem</h2>
+    <p class="section-sub">Essa ordem importa: cada arquivo responde a pergunta que o anterior deixou em aberto.</p>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num display">1</div>
+        <div class="step-body">
+          <h3>O que fazer primeiro</h3>
+          <p>As 12 recomendações comerciais e a matriz de prioridade (impacto × esforço) — a parte mais direta ao ponto de todo o projeto.</p>
+          <span class="step-file mono">saidas/plano_de_acao.md</span>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num display">2</div>
+        <div class="step-body">
+          <h3>Quantos clientes, em cada perfil</h3>
+          <p>Tamanho de cada perfil de cliente (ICP) e quanto cada um representa do volume total — a visão de "onde está o dinheiro".</p>
+          <span class="step-file mono">saidas/tabela1_resumo_icps.csv</span>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num display">3</div>
+        <div class="step-body">
+          <h3>Por que os clientes foram agrupados assim</h3>
+          <p>Os 14 grupos comerciais e o critério objetivo de entrada em cada um — não é opinião, é regra aplicada sobre o dado real.</p>
+          <span class="step-file mono">icp_segmentacao/clusters_definidos.md</span>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num display">4</div>
+        <div class="step-body">
+          <h3>O que não confiar 100%</h3>
+          <p>Dois avisos importantes sobre a qualidade dos dados antes de basear qualquer decisão neles — ver seção de decisões abaixo.</p>
+          <span class="step-file mono">auditoria/auditoria_dados.md</span>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num display">5</div>
+        <div class="step-body">
+          <h3>Procurar um cliente específico</h3>
+          <p>Base completa pra abrir no Excel ou Power BI, ou a lista já filtrada de "top oportunidades" por nome de cliente.</p>
+          <span class="step-file mono">master_classificada/MASTER_CLASSIFICADA.csv</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="lane-divider"></div>
+
+  <section>
+    <h2 class="section-title display">O que precisa da sua decisão</h2>
+    <p class="section-sub">Seis pontos onde o modelo tomou um caminho específico — vale sua leitura antes de virar operação.</p>
+    <div class="decision-list">
+
+      <div class="decision">
+        <div class="decision-head">
+          <h3>Método usado pra medir potencial do cliente</h3>
+          <span class="pill pill-amber">Aprovação de método</span>
+        </div>
+        <p>Usamos <strong>limite de crédito</strong> no lugar de faturamento pra estimar potencial — faturamento só existe pra 28,6% da base, limite de crédito existe pra 81,2%. Se existir uma fonte de faturamento mais completa, o modelo muda.</p>
+      </div>
+
+      <div class="decision">
+        <div class="decision-head">
+          <h3>Redistribuição de carteira comercial</h3>
+          <span class="pill pill-amber">Decisão de estrutura</span>
+        </div>
+        <p>O modelo indica algo em torno de <strong>15 executivos dedicados</strong> pros 1.699 clientes Tier A e <strong>~70 posições de Inside Sales</strong> pros 31.691 de Tier B. Vale confrontar com o time comercial que existe hoje.</p>
+      </div>
+
+      <div class="decision">
+        <div class="decision-head">
+          <h3>27.387 clientes sem nenhum dado de comportamento</h3>
+          <span class="pill pill-risk">Precisa direção</span>
+        </div>
+        <p>Quase 1 em cada 3 clientes nunca teve reserva, contrato ou visita registrada. Vale investir em enriquecer esse cadastro, ou deixar de lado por ora e focar nos outros 68%?</p>
+      </div>
+
+      <div class="decision">
+        <div class="decision-head">
+          <h3>Não existe dado de desconto na base</h3>
+          <span class="pill pill-risk">Gap de dado</span>
+        </div>
+        <p>Não há nenhum campo de tarifa aplicada ou desconto — por isso não conseguimos identificar clientes sensíveis a preço. Vale pedir esse dado pra próxima atualização da base?</p>
+      </div>
+
+      <div class="decision">
+        <div class="decision-head">
+          <h3>Histórico de reservas veio cortado</h3>
+          <span class="pill pill-teal">Já contornado</span>
+        </div>
+        <p>O arquivo de histórico de reservas trouxe só 5 meses de 2025 (exportação truncada). Usamos uma fonte alternativa mais completa no lugar — mas vale confirmar se dá pra reexportar sem esse limite na próxima vez.</p>
+      </div>
+
+      <div class="decision">
+        <div class="decision-head">
+          <h3>Hoje, atualizar isso exige refazer manualmente</h3>
+          <span class="pill pill-teal">Investimento futuro</span>
+        </div>
+        <p>O processamento que gerou esses arquivos não ficou salvo como script reaproveitável. Se este projeto virar rotina (trimestral, por exemplo), vale investir em automatizar essa parte.</p>
+      </div>
+
+    </div>
+  </section>
+
+  <div class="lane-divider"></div>
+
+  <section>
+    <h2 class="section-title display">Os 5 perfis de cliente testados</h2>
+    <p class="section-sub">Nem toda hipótese sobreviveu ao teste contra o dado real — e isso é informação tão útil quanto a que validou.</p>
+    <div class="icp-scroll">
+      <table class="icp-table">
+        <thead>
+          <tr><th>Perfil</th><th>Situação</th><th>Clientes</th><th>Do volume</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="icp-name">Operação móvel recorrente</span><br><span class="icp-desc">Equipes de campo, manutenção, energia, telecom</span></td>
+            <td><span class="pill pill-good">Validado</span></td>
+            <td class="num mono">18.051 <span style="color:var(--ink-soft)">(21,0%)</span></td>
+            <td class="num mono">26,75%</td>
+          </tr>
+          <tr>
+            <td><span class="icp-name">Mobilidade comercial e executiva</span><br><span class="icp-desc">Consultorias, financeiras, equipes executivas</span></td>
+            <td><span class="pill pill-good">Validado</span></td>
+            <td class="num mono">11.325 <span style="color:var(--ink-soft)">(13,2%)</span></td>
+            <td class="num mono">14,81%</td>
+          </tr>
+          <tr>
+            <td><span class="icp-name">Frota própria substituível</span><br><span class="icp-desc">Uso contínuo, longa duração — nicho pequeno</span></td>
+            <td><span class="pill pill-teal">Nicho de alto valor</span></td>
+            <td class="num mono">1.037 <span style="color:var(--ink-soft)">(1,2%)</span></td>
+            <td class="num mono">volume médio 9× a média</td>
+          </tr>
+          <tr>
+            <td><span class="icp-name">Multiproduto / grupo econômico</span><br><span class="icp-desc">Grupo com mais de um CNPJ na base</span></td>
+            <td><span class="pill pill-amber">Parcial</span></td>
+            <td class="num mono">4.672 <span style="color:var(--ink-soft)">(5,4%)</span></td>
+            <td class="num mono">6,31%</td>
+          </tr>
+          <tr>
+            <td><span class="icp-name">Demanda sazonal / por projeto</span><br><span class="icp-desc">Compras concentradas em períodos</span></td>
+            <td><span class="pill pill-risk">Rejeitado</span></td>
+            <td class="num mono">~25 <span style="color:var(--ink-soft)">(0,03%)</span></td>
+            <td class="num mono">sem padrão real</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="section-title display">Como a base se divide por prioridade (Tier)</h2>
+    <p class="section-sub">Tier A recebe atendimento consultivo; Tier C fica em automação; "Revisão" é quem falta dado pra sequer classificar.</p>
+    <div class="tier-bar">
+      <div class="tier-seg" style="width:2.0%; background:var(--amber);" title="Tier A — 2,0%"></div>
+      <div class="tier-seg" style="width:36.9%; background:var(--teal);" title="Tier B — 36,9%">36,9%</div>
+      <div class="tier-seg" style="width:29.3%; background:#8a8677;" title="Tier C — 29,3%">29,3%</div>
+      <div class="tier-seg" style="width:31.9%; background:var(--risk);" title="Revisão — 31,9%">31,9%</div>
+    </div>
+    <div class="tier-legend">
+      <span><i class="swatch" style="background:var(--amber)"></i>Tier A — 1.699 (2,0%) — consultivo</span>
+      <span><i class="swatch" style="background:var(--teal)"></i>Tier B — 31.691 (36,9%) — inside sales</span>
+      <span><i class="swatch" style="background:#8a8677"></i>Tier C — 25.164 (29,3%) — automação</span>
+      <span><i class="swatch" style="background:var(--risk)"></i>Revisão — 27.387 (31,9%) — falta dado</span>
+    </div>
+  </section>
+
+  <footer>
+    Gerado a partir do repositório <code>thiagolibrelon/ICP</code>, commit <code>e80bb2e</code>. Metodologia completa em <code>scores/metodologia_scores.md</code> e <code>auditoria/auditoria_dados.md</code>. Time responsável descrito em <code>personas/README.md</code>.
+  </footer>
+
+</div>
