@@ -1,6 +1,7 @@
 """Cliente do LLM (endpoint compatível com chat/completions). A chave fica só no backend."""
 import os
 import time
+import uuid
 from pathlib import Path
 
 import httpx
@@ -49,7 +50,8 @@ def headers() -> dict:
     """Cabeçalho da chave configurável: LLM_AUTH_HEADER (padrão Authorization) + LLM_AUTH_PREFIX (padrão 'Bearer ')."""
     nome = os.getenv("LLM_AUTH_HEADER", "Authorization")
     prefixo = os.getenv("LLM_AUTH_PREFIX", "Bearer " if nome.lower() == "authorization" else "")
-    return {nome: f"{prefixo}{os.environ['LLM_API_KEY']}", "Content-Type": "application/json"}
+    return {nome: f"{prefixo}{os.environ['LLM_API_KEY']}", "Content-Type": "application/json",
+            "X-Correlation-ID": str(uuid.uuid4())}
 
 
 def payload(messages: list[dict], max_tokens: int) -> dict:
@@ -66,7 +68,7 @@ def _verify():
     return v if v else True
 
 
-def chat(messages: list[dict], max_tokens: int = 800, retries: int = 2) -> dict:
+def chat(messages: list[dict], max_tokens: int = 1500, retries: int = 2) -> dict:
     """Retorna {"texto", "tokens_entrada", "tokens_saida"} ou levanta LLMUnavailable."""
     if mode() == "mock" or (mode() == "auto" and not configured()):
         raise LLMUnavailable("LLM desabilitado ou não configurado")
@@ -74,9 +76,22 @@ def chat(messages: list[dict], max_tokens: int = 800, retries: int = 2) -> dict:
         raise LLMUnavailable("LLM_API_KEY/LLM_BASE_URL ausentes")
     timeout = float(os.getenv("LLM_TIMEOUT_SECONDS", "60"))
     last = ""
-    for attempt in range(retries + 1):
+    body = payload(messages, max_tokens)
+    fallback_effort = ["low", None]  # igual ao script do time: se o modelo recusar o valor, tenta "low" e depois sem o parâmetro
+    tentativas = 0
+    while tentativas <= retries:
         try:
-            r = httpx.post(endpoint(), json=payload(messages, max_tokens), headers=headers(), timeout=timeout, verify=_verify())
+            r = httpx.post(endpoint(), json=body, headers=headers(), timeout=timeout, verify=_verify())
+        except Exception as e:  # noqa: BLE001 - qualquer falha de rede vira contingência
+            last = f"{type(e).__name__}: {e}"
+        else:
+            if r.status_code == 400 and "reasoning_effort" in body and "reasoning" in r.text.lower() and fallback_effort:
+                nxt = fallback_effort.pop(0)
+                if nxt:
+                    body["reasoning_effort"] = nxt
+                else:
+                    body.pop("reasoning_effort")
+                continue  # não conta como tentativa
             if r.status_code >= 400:
                 last = f"HTTP {r.status_code}: {r.text[:300]}"
                 if r.status_code in (400, 401, 403, 404):  # erro de configuração: não adianta repetir
@@ -85,12 +100,10 @@ def chat(messages: list[dict], max_tokens: int = 800, retries: int = 2) -> dict:
                 data = r.json()
                 usage = data.get("usage", {})
                 texto = (data["choices"][0]["message"].get("content") or "").strip()
-                if not texto:
-                    last = "Resposta vazia do modelo (limite de tokens consumido pelo raciocínio?)"
-                else:
+                if texto:
                     return {"texto": texto, "tokens_entrada": usage.get("prompt_tokens", 0),
                             "tokens_saida": usage.get("completion_tokens", 0)}
-        except Exception as e:  # noqa: BLE001 - qualquer falha vira contingência
-            last = f"{type(e).__name__}: {e}"
-        time.sleep(0.5 * (attempt + 1))
+                last = "Resposta vazia do modelo (limite de tokens consumido pelo raciocínio?)"
+        tentativas += 1
+        time.sleep(0.5 * tentativas)
     raise LLMUnavailable(redact(f"Falha ao chamar o LLM: {last}"))

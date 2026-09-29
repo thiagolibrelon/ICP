@@ -91,3 +91,44 @@ def test_config_do_llm(monkeypatch):
     monkeypatch.setenv("LLM_REASONING_EFFORT", "minimal")
     assert llm_client.payload([], 100)["reasoning_effort"] == "minimal"
     assert llm_client.redact("x segredo y") == "x *** y"
+
+
+class _Resp:
+    def __init__(self, status, body):
+        self.status_code, self._body = status, body
+        self.text = body if isinstance(body, str) else ""
+
+    def json(self):
+        return self._body
+
+
+def test_gateway_recusa_reasoning_e_cai_para_low_e_sem(monkeypatch):
+    monkeypatch.setenv("LLM_MODE", "llm")
+    monkeypatch.setenv("LLM_API_KEY", "segredo")
+    monkeypatch.setenv("LLM_BASE_URL", "https://gw/v2/chat/completions")
+    monkeypatch.setenv("LLM_AUTH_HEADER", "api_key")
+    monkeypatch.setattr(llm_client.time, "sleep", lambda s: None)
+    chamadas = []
+
+    def post(url, json, headers, **kw):
+        chamadas.append((json.get("reasoning_effort"), headers))
+        if "reasoning_effort" in json:
+            return _Resp(400, "Unsupported value for reasoning_effort")
+        return _Resp(200, {"choices": [{"message": {"content": "oi"}}], "usage": {"prompt_tokens": 3, "completion_tokens": 1}})
+    monkeypatch.setattr(llm_client.httpx, "post", post)
+    r = llm_client.chat([{"role": "user", "content": "x"}])
+    assert r["texto"] == "oi"
+    assert [c[0] for c in chamadas] == ["minimal", "low", None]
+    assert chamadas[0][1]["api_key"] == "segredo" and "X-Correlation-ID" in chamadas[0][1]
+
+
+def test_gateway_401_nao_repete_e_nao_vaza_chave(monkeypatch):
+    monkeypatch.setenv("LLM_MODE", "llm")
+    monkeypatch.setenv("LLM_API_KEY", "segredo")
+    monkeypatch.setenv("LLM_BASE_URL", "https://gw/v2")
+    monkeypatch.setattr(llm_client.time, "sleep", lambda s: None)
+    n = []
+    monkeypatch.setattr(llm_client.httpx, "post", lambda *a, **k: n.append(1) or _Resp(401, "invalid key segredo"))
+    with pytest.raises(llm_client.LLMUnavailable) as e:
+        llm_client.chat([])
+    assert len(n) == 1 and "HTTP 401" in str(e.value) and "segredo" not in str(e.value)
