@@ -111,7 +111,8 @@ def responder(acao: str, fatos: dict, historico: list[dict], texto_cliente: str)
         if llm_client.mode() == "llm":
             return {"texto": CONTINGENCIA, "fonte": "contingencia", "violacoes_brutas": [], "erro": str(e),
                     "tokens_entrada": 0, "tokens_saida": 0}
-        return {"texto": base, "fonte": "template", "violacoes_brutas": [], "tokens_entrada": 0, "tokens_saida": 0}
+        return {"texto": base, "fonte": "template", "violacoes_brutas": [], "erro": str(e) if llm_client.configured() else None,
+                "tokens_entrada": 0, "tokens_saida": 0}
     viol = validator.validar(r["texto"], fatos)
     if viol:
         return {"texto": base, "fonte": "template_reescrito", "violacoes_brutas": viol,

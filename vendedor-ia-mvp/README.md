@@ -9,8 +9,8 @@ vendedor virtual. **Python calcula e valida; o LLM explica e conduz.** Nenhum da
 cd vendedor-ia-mvp
 pip install -r requirements.txt
 python -m database.seed          # gera data/*.csv e database/mvp.db (opcional: o app cria no 1º start)
-uvicorn app:app --reload         # abre http://localhost:8000
-pytest                           # 56 testes
+python -m uvicorn app:app --reload   # abre http://localhost:8000 (use python -m no Windows sem admin)
+python -m pytest
 ```
 
 ### LLM (opcional)

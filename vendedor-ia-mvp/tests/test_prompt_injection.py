@@ -77,3 +77,17 @@ def test_chave_nao_esta_no_frontend_nem_no_git():
         txt = f.read_text(encoding="utf-8")
         assert "LLM_API_KEY" not in txt and "Bearer" not in txt
     assert ".env" in (base / ".gitignore").read_text().splitlines()
+
+
+def test_config_do_llm(monkeypatch):
+    monkeypatch.setenv("LLM_API_KEY", "segredo")
+    for url in ("https://gw/v2", "https://gw/v2/", "https://gw/v2/chat/completions"):
+        monkeypatch.setenv("LLM_BASE_URL", url)
+        assert llm_client.endpoint() == "https://gw/v2/chat/completions"
+    monkeypatch.delenv("LLM_AUTH_HEADER", raising=False)
+    assert llm_client.headers()["Authorization"] == "Bearer segredo"
+    monkeypatch.setenv("LLM_AUTH_HEADER", "api-key")
+    assert llm_client.headers()["api-key"] == "segredo"
+    monkeypatch.setenv("LLM_REASONING_EFFORT", "minimal")
+    assert llm_client.payload([], 100)["reasoning_effort"] == "minimal"
+    assert llm_client.redact("x segredo y") == "x *** y"

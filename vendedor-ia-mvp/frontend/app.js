@@ -50,7 +50,7 @@ function showAudit(id) {
     <dt>Intenção</dt><dd>${esc(a.intencao)}</dd><dt>Confiança</dt><dd>${esc(a.confianca)}</dd>
     <dt>Ação</dt><dd>${esc(a.acao)}</dd><dt>Regra</dt><dd>${esc(a.regra || '—')}</dd>
     <dt>Alçada</dt><dd>${a.alcada == null ? '—' : 'Até ' + pct(a.alcada)}</dd><dt>Preço retornado</dt><dd>${brl(a.preco_retornado)}</dd>
-    <dt>Handoff</dt><dd>${a.handoff ? 'Sim' : 'Não'}</dd><dt>Fonte</dt><dd>${esc(a.fonte)}</dd>
+    <dt>Handoff</dt><dd>${a.handoff ? 'Sim' : 'Não'}</dd><dt>Fonte</dt><dd>${esc(a.fonte)}</dd>${a.erro_llm ? `<dt>Erro LLM</dt><dd class="bad">${esc(a.erro_llm)}</dd>` : ''}
     <dt>Validação</dt><dd class="${a.validacao === 'OK' ? 'ok' : 'bad'}">${esc(a.validacao)}</dd></dl>
     <h2 style="margin-top:10px">Ferramentas</h2><pre>${ferr || 'nenhuma'}</pre>`;
   $('audit').style.display = auditOn ? '' : 'none';

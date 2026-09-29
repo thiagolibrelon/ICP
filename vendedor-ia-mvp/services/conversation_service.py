@@ -210,7 +210,7 @@ def _abrir(conv_id: str, cliente: dict, state: dict, comercial: bool) -> None:
     audit = {"intencao": "INICIO", "confianca": "ALTA", "acao": acao,
              "ferramentas": [{"nome": "consultar_perfil", "entrada": {"cliente_id": cliente["cliente_id"]}, "saida": "ok"},
                              {"nome": "consultar_oportunidades", "entrada": {"cliente_id": cliente["cliente_id"]}, "saida": ops[:1]}],
-             "regra": None, "validacao": _rotulo(r), "fonte": r["fonte"], "fatos": fatos, "handoff": False}
+             "regra": None, "validacao": _rotulo(r), "fonte": r["fonte"], "erro_llm": r.get("erro"), "fatos": fatos, "handoff": False}
     _log_msg(conv_id, "vendedor", r["texto"], audit, (r["tokens_entrada"], r["tokens_saida"]))
     _salvar_estado(conv_id, state)
 
@@ -460,7 +460,7 @@ def processar_mensagem(conv_id: str, texto: str) -> dict:
     if r["fonte"] == "contingencia":
         state["desfecho"] = state["desfecho"] if state["desfecho"] != "EM_ANDAMENTO" else "EM_ANDAMENTO"
     audit = {"intencao": intent, "confianca": conf, "acao": acao, "ferramentas": ferramentas,
-             "regra": regra.get("regra_id"), "alcada": regra.get("desconto_maximo"), "fonte": r["fonte"],
+             "regra": regra.get("regra_id"), "alcada": regra.get("desconto_maximo"), "fonte": r["fonte"], "erro_llm": r.get("erro"),
              "validacao": _rotulo(r), "violacoes_brutas": r["violacoes_brutas"], "fatos": fatos,
              "preco_retornado": (fatos.get("desconto") or fatos.get("cotacao") or {}).get("preco_unitario"),
              "handoff": bool(state.get("handoff")), "slots": slots}
