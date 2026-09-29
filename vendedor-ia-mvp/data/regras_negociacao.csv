@@ -1,0 +1,11 @@
+regra_id,segmento,produto,quantidade_minima,quantidade_maxima,prazo_minimo,prazo_maximo,desconto_maximo,exige_handoff,mensagem_recomendada,vigencia_inicio,vigencia_fim,max_cotacoes,permite_credito,versao
+REG_CON_001,CONSTRUCAO,MENSAL,1,8,3,24,0.03,1,Vincule o desconto ao volume de 5 veículos e ao prazo; acima de 3% só com aprovação humana.,2025-01-01,2026-12-31,1,1,v1
+REG_SER_002,SERVICOS,MENSAL,1,6,6,24,0.0,0,Sem desconto; reforce previsibilidade de custo e ausência de imobilização de caixa.,2025-01-01,2026-12-31,1,1,v1
+REG_ALI_003,ALIMENTOS,MENSAL,1,8,6,24,0.02,1,Retenção: até 2% autorizado; acima disso handoff para o time comercial.,2025-01-01,2026-12-31,1,1,v1
+REG_SEG_004,SEGURANCA,MENSAL,1,10,12,36,0.0,0,Renovação sem desconto. Apenas explicar as regras contratuais em vigor; não citar valores de multa.,2025-01-01,2026-12-31,1,1,v1
+REG_TEC_005,TECNOLOGIA,PILOTO_MENSAL,1,2,3,3,0.0,0,"Oferta piloto: 1 a 2 veículos por 3 meses, sem desconto.",2025-01-01,2026-12-31,1,1,v1
+REG_LOG_006,LOGISTICA,UTILITARIO_MENSAL,1,4,3,12,0.0,0,Nunca prometer veículo; disponibilidade só é confirmada por consulta oficial (fora do MVP).,2025-01-01,2026-12-31,1,1,v1
+REG_SAU_007,SAUDE,MENSAL,1,4,3,12,0.02,1,"Ouvir a experiência anterior; se houver reclamação, transferir para atendimento humano.",2025-01-01,2026-12-31,1,1,v1
+REG_EVE_008,EVENTOS,DIARIA,1,6,1,15,0.0,0,Não há simulação de crédito no MVP; encaminhar para análise do time financeiro.,2025-01-01,2026-12-31,1,0,v1
+REG_ENG_009,ENGENHARIA,MENSAL,1,8,6,24,0.01,1,Permitir até duas cotações por praça diferente; desconto até 1%.,2025-01-01,2026-12-31,2,1,v1
+REG_COM_010,COMERCIO,MENSAL,1,6,6,24,0.01,1,Até 1% de desconto; qualquer pedido acima segue para atendimento humano.,2025-01-01,2026-12-31,1,1,v1

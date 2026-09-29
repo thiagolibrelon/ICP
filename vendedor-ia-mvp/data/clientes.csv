@@ -1,0 +1,11 @@
+cliente_id,codigo_cliente,cnpj_ficticio,razao_social,segmento,cidade,estado,setor,frota_propria,volume_medio_ad,volume_medio_am,receita_12m,rpd_medio,status_relacionamento,perfil_preco,propensao_compra,risco_churn
+C001,CLI-1001,00.000.001/0001-11,Alpha Obras,CONSTRUCAO,Curitiba,PR,Construção civil,1,2.0,3.0,249810.0,139.71,ATIVO,SENSIVEL,ALTA,MEDIO
+C002,CLI-1002,00.000.002/0001-12,Beta Serviços,SERVICOS,São Paulo,SP,Serviços gerais,0,4.0,0.0,298275.0,205.0,ATIVO,NEUTRO,MEDIA,BAIXO
+C003,CLI-1003,00.000.003/0001-13,Gama Alimentos,ALIMENTOS,Campinas,SP,Alimentos e bebidas,0,0.7,3.6,169050.0,108.16,EM_QUEDA,MUITO_SENSIVEL,MEDIA,ALTO
+C004,CLI-1004,00.000.004/0001-14,Delta Segurança,SEGURANCA,Belo Horizonte,MG,Segurança privada,0,0.0,5.9,200784.0,94.0,ATIVO,NEUTRO,MEDIA,BAIXO
+C005,CLI-1005,00.000.005/0001-15,Épsilon Tech,TECNOLOGIA,Florianópolis,SC,Tecnologia,0,0.0,0.0,0.0,0.0,LEAD,NEUTRO,MEDIA,N/A
+C006,CLI-1006,00.000.006/0001-16,Zeta Logística,LOGISTICA,Curitiba,PR,Logística,1,1.0,8.5,374385.0,108.99,ATIVO,NEUTRO,ALTA,BAIXO
+C007,CLI-1007,00.000.007/0001-17,Eta Saúde,SAUDE,Rio de Janeiro,RJ,Saúde,0,0.0,0.5,15345.0,93.0,INATIVO,NEUTRO,BAIXA,ALTO
+C008,CLI-1008,00.000.008/0001-18,Teta Eventos,EVENTOS,São Paulo,SP,Eventos,0,0.0,0.0,0.0,0.0,LEAD,SENSIVEL,MEDIA,N/A
+C009,CLI-1009,00.000.009/0001-19,Iota Engenharia,ENGENHARIA,Curitiba,PR,Engenharia,1,1.1,6.7,306444.0,108.32,ATIVO,SENSIVEL,ALTA,MEDIO
+C010,CLI-1010,00.000.010/0001-20,Kappa Comércio,COMERCIO,Porto Alegre,RS,Varejo,0,1.8,2.7,218172.0,135.93,ATIVO,MUITO_SENSIVEL,MEDIA,ALTO

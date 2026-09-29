@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vendedor IA — Simulador</title>
+<link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+<header>
+  <h1>Vendedor IA <small>ambiente simulado · dados fictícios</small></h1>
+  <div class="controls">
+    <select id="cenario"></select>
+    <input id="ident" placeholder="ou CNPJ/código fictício">
+    <button id="btn-novo">Novo cenário</button>
+    <button id="btn-obj">Forçar objeção</button>
+    <button id="btn-reset">Reiniciar conversa</button>
+    <button id="btn-dados">Mostrar dados</button>
+    <button id="btn-audit">Ocultar auditoria</button>
+    <button id="btn-aval">Gerar avaliação</button>
+    <button id="btn-json">Exportar JSON</button>
+    <button id="btn-txt">Exportar transcrição</button>
+    <span id="llm" class="badge"></span>
+  </div>
+</header>
+<main>
+  <aside id="col-cliente"><h2>Contexto do cliente</h2><div id="cliente">Selecione um cenário.</div><div id="dados" hidden></div></aside>
+  <section id="col-chat">
+    <div id="chat"></div>
+    <form id="form"><input id="msg" autocomplete="off" placeholder="Você é o cliente. Escreva sua mensagem..." disabled><button disabled>Enviar</button></form>
+  </section>
+  <aside id="col-audit"><h2>Auditoria</h2><div id="audit">Clique em uma resposta do vendedor.</div><h2>Avaliação</h2><div id="aval">—</div></aside>
+</main>
+<script src="/static/app.js"></script>
+</body>
+</html>

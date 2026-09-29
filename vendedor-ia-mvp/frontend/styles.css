@@ -1,0 +1,22 @@
+:root{--bg:#f5f6f8;--card:#fff;--fg:#1c2330;--muted:#667085;--line:#e3e6ec;--brand:#1f6feb;--ok:#127a3d;--bad:#b42318}
+@media (prefers-color-scheme:dark){:root{--bg:#12151b;--card:#1b2029;--fg:#e8ebf0;--muted:#98a2b3;--line:#2a3140;--brand:#5b9bff;--ok:#4cc38a;--bad:#ff7b72}}
+*{box-sizing:border-box}body{margin:0;font:14px/1.45 system-ui,sans-serif;background:var(--bg);color:var(--fg)}
+header{padding:10px 16px;background:var(--card);border-bottom:1px solid var(--line)}
+h1{margin:0 0 8px;font-size:18px}h1 small{color:var(--muted);font-weight:400;font-size:12px}
+h2{font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin:0 0 8px}
+.controls{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+button,select,input{font:inherit;padding:6px 10px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--fg)}
+button{cursor:pointer}button:hover:not(:disabled){border-color:var(--brand)}button:disabled{opacity:.5;cursor:default}
+main{display:grid;grid-template-columns:260px 1fr 320px;gap:12px;padding:12px 16px;height:calc(100vh - 100px)}
+aside,section{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:12px;overflow:auto}
+#col-chat{display:flex;flex-direction:column;padding:0}
+#chat{flex:1;overflow:auto;padding:12px;display:flex;flex-direction:column;gap:8px}
+.m{max-width:80%;padding:8px 12px;border-radius:10px}
+.m.vendedor{background:var(--bg);border:1px solid var(--line);align-self:flex-start;cursor:pointer}
+.m.cliente{background:var(--brand);color:#fff;align-self:flex-end}
+.m.sel{outline:2px solid var(--brand)}.who{font-size:11px;opacity:.7;margin-bottom:2px}
+#form{display:flex;gap:6px;padding:10px;border-top:1px solid var(--line)}#msg{flex:1}
+dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:2px 8px}dt{color:var(--muted)}dd{margin:0;word-break:break-word}
+.badge{font-size:12px;color:var(--muted)}.ok{color:var(--ok)}.bad{color:var(--bad)}
+pre{white-space:pre-wrap;font-size:11px;background:var(--bg);padding:6px;border-radius:6px;overflow:auto;max-height:200px}
+@media(max-width:900px){main{grid-template-columns:1fr;height:auto}}

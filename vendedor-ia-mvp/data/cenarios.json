@@ -1,0 +1,128 @@
+[
+  {
+    "cenario_id": "C001_EXPANSAO",
+    "cliente_id": "C001",
+    "titulo": "Alpha Obras: expansão de 3 para 5 carros",
+    "descricao": "Cliente ativo; objeção de preço; desconto até 3%.",
+    "abertura_comercial": 1,
+    "objecao_texto": "Achei o preço alto, preciso de um desconto de 5%.",
+    "desfechos_esperados": [
+      "PROPOSTA_SIMULADA",
+      "HANDOFF"
+    ]
+  },
+  {
+    "cenario_id": "C002_MIGRACAO",
+    "cliente_id": "C002",
+    "titulo": "Beta Serviços: migrar diária para mensal",
+    "descricao": "Cliente ativo; receio de compromisso de prazo; sem desconto.",
+    "abertura_comercial": 1,
+    "objecao_texto": "Não quero me comprometer com prazo longo.",
+    "desfechos_esperados": [
+      "PROPOSTA_SIMULADA"
+    ]
+  },
+  {
+    "cenario_id": "C003_RETENCAO",
+    "cliente_id": "C003",
+    "titulo": "Gama Alimentos: retenção",
+    "descricao": "Cliente em queda; concorrente mais barato; handoff acima de 2%.",
+    "abertura_comercial": 1,
+    "objecao_texto": "O concorrente está mais barato, preciso de 5% de desconto.",
+    "desfechos_esperados": [
+      "HANDOFF",
+      "PROPOSTA_SIMULADA"
+    ]
+  },
+  {
+    "cenario_id": "C004_RENOVACAO",
+    "cliente_id": "C004",
+    "titulo": "Delta Segurança: renovação",
+    "descricao": "Cliente ativo; dúvida sobre multa contratual; apenas explicar regras.",
+    "abertura_comercial": 1,
+    "objecao_texto": "E se eu quiser cancelar antes, tem multa?",
+    "desfechos_esperados": [
+      "PROPOSTA_SIMULADA",
+      "ENCERRADO_COM_PROXIMO_PASSO"
+    ]
+  },
+  {
+    "cenario_id": "C005_PILOTO",
+    "cliente_id": "C005",
+    "titulo": "Épsilon Tech: primeira locação mensal",
+    "descricao": "Novo lead; incerteza de demanda; oferta piloto simulada.",
+    "abertura_comercial": 1,
+    "objecao_texto": "Não sei se vou ter demanda suficiente.",
+    "desfechos_esperados": [
+      "PROPOSTA_SIMULADA"
+    ]
+  },
+  {
+    "cenario_id": "C006_CROSSSELL",
+    "cliente_id": "C006",
+    "titulo": "Zeta Logística: utilitário",
+    "descricao": "Cliente ativo; pergunta sobre disponibilidade; não prometer veículo.",
+    "abertura_comercial": 1,
+    "objecao_texto": "Vocês garantem que tem utilitário disponível?",
+    "desfechos_esperados": [
+      "PROPOSTA_SIMULADA"
+    ]
+  },
+  {
+    "cenario_id": "C007_REATIVACAO",
+    "cliente_id": "C007",
+    "titulo": "Eta Saúde: reativação",
+    "descricao": "Cliente inativo; experiência ruim; handoff se houver reclamação.",
+    "abertura_comercial": 1,
+    "objecao_texto": "Tive uma experiência péssima da última vez, fiz uma reclamação e ninguém resolveu.",
+    "desfechos_esperados": [
+      "HANDOFF"
+    ]
+  },
+  {
+    "cenario_id": "C008_SAZONAL",
+    "cliente_id": "C008",
+    "titulo": "Teta Eventos: diária sazonal",
+    "descricao": "Novo lead com urgência; sem crédito simulado.",
+    "abertura_comercial": 1,
+    "objecao_texto": "Preciso disso urgente, dá para fechar com crédito aprovado hoje?",
+    "desfechos_esperados": [
+      "PROPOSTA_SIMULADA",
+      "HANDOFF"
+    ]
+  },
+  {
+    "cenario_id": "C009_REGIONAL",
+    "cliente_id": "C009",
+    "titulo": "Iota Engenharia: expansão regional",
+    "descricao": "Cliente ativo; preço por praça; permitir duas cotações.",
+    "abertura_comercial": 1,
+    "objecao_texto": "O preço em cada cidade é diferente, quero comparar.",
+    "desfechos_esperados": [
+      "PROPOSTA_SIMULADA"
+    ]
+  },
+  {
+    "cenario_id": "C010_CHURN",
+    "cliente_id": "C010",
+    "titulo": "Kappa Comércio: renovação com risco de churn",
+    "descricao": "Cliente ativo; concorrência; até 1%, depois humano.",
+    "abertura_comercial": 1,
+    "objecao_texto": "Recebi uma proposta melhor de outra locadora, quero 3% de desconto.",
+    "desfechos_esperados": [
+      "HANDOFF",
+      "PROPOSTA_SIMULADA"
+    ]
+  },
+  {
+    "cenario_id": "S011_SUPORTE",
+    "cliente_id": "C001",
+    "titulo": "Alpha Obras: suporte (senha)",
+    "descricao": "Evento de suporte puro, sem intenção comercial.",
+    "abertura_comercial": 0,
+    "objecao_texto": "Não consigo acessar o portal, esqueci minha senha.",
+    "desfechos_esperados": [
+      "ENCAMINHADO_SUPORTE"
+    ]
+  }
+]
