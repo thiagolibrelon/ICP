@@ -115,7 +115,7 @@ def test_gateway_recusa_reasoning_e_cai_para_low_e_sem(monkeypatch):
         if "reasoning_effort" in json:
             return _Resp(400, "Unsupported value for reasoning_effort")
         return _Resp(200, {"choices": [{"message": {"content": "oi"}}], "usage": {"prompt_tokens": 3, "completion_tokens": 1}})
-    monkeypatch.setattr(llm_client.httpx, "post", post)
+    monkeypatch.setattr(llm_client.requests, "post", post)
     r = llm_client.chat([{"role": "user", "content": "x"}])
     assert r["texto"] == "oi"
     assert [c[0] for c in chamadas] == ["minimal", "low", None]
@@ -128,7 +128,7 @@ def test_gateway_401_nao_repete_e_nao_vaza_chave(monkeypatch):
     monkeypatch.setenv("LLM_BASE_URL", "https://gw/v2")
     monkeypatch.setattr(llm_client.time, "sleep", lambda s: None)
     n = []
-    monkeypatch.setattr(llm_client.httpx, "post", lambda *a, **k: n.append(1) or _Resp(401, "invalid key segredo"))
+    monkeypatch.setattr(llm_client.requests, "post", lambda *a, **k: n.append(1) or _Resp(401, "invalid key segredo"))
     with pytest.raises(llm_client.LLMUnavailable) as e:
         llm_client.chat([])
     assert len(n) == 1 and "HTTP 401" in str(e.value) and "segredo" not in str(e.value)

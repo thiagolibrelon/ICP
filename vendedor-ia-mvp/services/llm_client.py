@@ -4,7 +4,7 @@ import time
 import uuid
 from pathlib import Path
 
-import httpx
+import requests
 
 
 class LLMUnavailable(Exception):
@@ -81,7 +81,8 @@ def chat(messages: list[dict], max_tokens: int = 1500, retries: int = 2) -> dict
     tentativas = 0
     while tentativas <= retries:
         try:
-            r = httpx.post(endpoint(), json=body, headers=headers(), timeout=timeout, verify=_verify())
+            # requests (e não httpx) porque no Windows ele usa o proxy configurado no sistema, como o script do time
+            r = requests.post(endpoint(), json=body, headers=headers(), timeout=timeout, verify=_verify())
         except Exception as e:  # noqa: BLE001 - qualquer falha de rede vira contingência
             last = f"{type(e).__name__}: {e}"
         else:
