@@ -41,6 +41,12 @@ Mesmos clientes e roteiros nos dois modos; o botão **Comparativo A × B** mostr
   (grupo com 2 CNPJs). Cada um tem um roteiro; há 5 roteiros genéricos (suporte, multa, reclamação, humano, arrancar margem)
   e a opção **Conversa livre** (sem roteiro, para quem quiser "brincar").
 
+## Pacote gerente/diretor
+
+Adicionais no mensal (proteção, telemetria, km extra), roteamento por tier (Tier A → executivo dedicado; a IA não cota),
+qualificação do decisor, handoff com briefing montado pelo sistema, **Painel do gerente** (concessões e fila de handoffs)
+e **áudio** (🎤 → transcrição pelo llm-gate em `/audio/transcriptions`; `LLM_STT_MODEL`, `LLM_STT_URL`).
+
 ## Chave do llm-gate
 
 Mesmo padrão do `classificar_ligacoes_diario.py`: variável `API_KEY` ou janela; a chave fica só na memória do processo.

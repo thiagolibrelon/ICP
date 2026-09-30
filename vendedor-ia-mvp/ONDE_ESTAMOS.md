@@ -81,7 +81,24 @@ As comparações dizem a verdade quando **não** compensa (ex.: diária é melho
 - **Tiques de robô** são medidos (não bloqueiam): entram na avaliação e no comparativo A × B.
 - Próximo nível de naturalidade: exemplos reais anonimizados dos melhores vendedores (camada 2 da seção 5).
 
-### 3.5 Governança e medição
+### 3.5 Pacote gerente/diretor (visão de operação)
+
+- **Adicionais no mensal** (preço fixo, sem desconto): Proteção total (R$ 189), Telemetria (R$ 59) e pacote de +1.000 km
+  (R$ 180) — franquia de 2.000 km/mês por veículo. A Fernanda oferece quando conecta com a dor (km acima da franquia,
+  multa no condutor errado, obra/campo).
+- **Roteamento por tier**: Tier A (Kappa Logística e Grupo Mu) é do executivo dedicado — a IA acolhe e transfere; as
+  ferramentas bloqueiam cotação e proposta para Tier A.
+- **Qualificação**: a Fernanda registra quem decide, quem mais participa e quando a decisão sai (medido: qualificou
+  antes da proposta?).
+- **Handoff com briefing**: o humano recebe resumo, necessidade, objeção, próximo passo sugerido, qualificação, última
+  condição avaliada, propostas e últimas mensagens — montado pelo sistema, não pela memória do GPT.
+- **Painel do gerente**: concessões (desconto, quem aprovou, contrapartida, margem cedida/mês, receita e adicionais)
+  e fila de handoffs com o briefing.
+- **Áudio**: botão 🎤 grava como cliente de WhatsApp; o áudio é transcrito pelo llm-gate (`/audio/transcriptions`) e
+  segue o mesmo fluxo, marcado como [ÁUDIO TRANSCRITO] (a Fernanda confirma números/cidade se algo parecer estranho).
+  O diagnóstico (`python -m services.llm_client`) informa se o gate tem transcrição; se não tiver, o botão desativa.
+
+### 3.6 Governança e medição
 
 - **Validador**: todo R$ e % dito ao cliente precisa ter vindo de uma ferramenta; detecta margem revelada, proposta/
   protocolo afirmados sem registro e vazamento de instruções.
@@ -90,9 +107,9 @@ As comparações dizem a verdade quando **não** compensa (ex.: diária é melho
 - **Exportar p/ classificador**: gera o CSV no formato de entrada do `classificar_ligacoes_diario.py` → o vendedor IA é
   medido com a **mesma régua C12** das ligações reais.
 - **Chave**: variável `API_KEY` ou janela; fica só na memória (nunca em HTML, log ou arquivo versionado).
-- **Testes automáticos**: 40 (preço, alçada, gerente, estoque, comparações, agente A/B, validador, API, cliente do LLM).
+- **Testes automáticos**: 54 (preço, alçada, gerente, estoque, comparações, agente A/B, validador, API, cliente do LLM).
 
-### 3.6 Como rodar
+### 3.7 Como rodar
 
 ```bash
 cd vendedor-ia-mvp
@@ -138,6 +155,12 @@ python -m pytest                 # testes
 Ciclo de melhoria: **rodar os roteiros → medir → mudar uma coisa → rodar os mesmos roteiros → manter se melhorou.**
 
 ### Evoluções do simulador (a decidir)
+
+- **Modo copiloto** (sugestão do diretor): a Fernanda escreve, o vendedor humano revisa/edita e envia — risco baixo,
+  valor imediato e cada edição vira dado de treino ("sugestão da IA × o que o bom vendedor mandou").
+- **Follow-up de propostas** (D+1, D+3, "vence amanhã"), **assumir conversa** e **revisão amostral** semanal.
+- **Linha de base humana e metas comerciais** (conversão, ticket, desconto médio, tempo de resposta) — pré-requisito
+  do Gate 1.
 
 - **Cliente simulado pelo GPT**, seguindo os roteiros, para rodar dezenas de conversas em lote (hoje é manual).
 - **Linha de base humana**: metas do vendedor IA definidas a partir dos números C12 das ligações reais

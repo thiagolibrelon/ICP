@@ -144,6 +144,50 @@ def chat(messages: list[dict], max_tokens: int = 1500, retries: int = 2, json_mo
     return {"texto": texto, **{k: r[k] for k in ("tokens_entrada", "tokens_saida", "tokens_cache", "custo_gate")}}
 
 
+def endpoint_transcricao() -> str:
+    """LLM_STT_URL ou a mesma base do chat trocando /chat/completions por /audio/transcriptions."""
+    if os.getenv("LLM_STT_URL"):
+        return os.environ["LLM_STT_URL"]
+    return endpoint()[: -len("/chat/completions")] + "/audio/transcriptions"
+
+
+class TranscricaoIndisponivel(LLMUnavailable):
+    pass
+
+
+def transcrever(audio: bytes, nome_arquivo: str = "audio.webm", mime: str = "audio/webm") -> dict:
+    """Fala -> texto pelo gate (formato OpenAI /audio/transcriptions). {"texto", "modelo", "custo_gate"}."""
+    if mode() == "mock" or not configured():
+        raise TranscricaoIndisponivel("GPT não configurado (modo offline)")
+    modelo = os.getenv("LLM_STT_MODEL", "gpt-4o-mini-transcribe")
+    h = {k: v for k, v in headers().items() if k.lower() != "content-type"}  # requests monta o multipart
+    try:
+        r = requests.post(endpoint_transcricao(), headers=h, files={"file": (nome_arquivo, audio, mime)},
+                          data={"model": modelo, "language": "pt"}, timeout=float(os.getenv("LLM_TIMEOUT_SECONDS", "60")),
+                          verify=_verify())
+    except Exception as e:  # noqa: BLE001
+        raise TranscricaoIndisponivel(redact(f"Falha de conexão na transcrição: {type(e).__name__}: {e}"))
+    if r.status_code in (404, 405):
+        raise TranscricaoIndisponivel(f"O gate não tem transcrição neste endereço (HTTP {r.status_code}). Veja LLM_STT_URL.")
+    if r.status_code >= 400:
+        raise TranscricaoIndisponivel(redact(f"HTTP {r.status_code}: {r.text[:200]}"))
+    data = r.json()
+    return {"texto": (data.get("text") or "").strip(), "modelo": modelo,
+            "custo_gate": ((data.get("cost") or {}).get("token") or {}).get("total")}
+
+
+def _wav_silencio(segundos: float = 1.0) -> bytes:
+    import io
+    import wave
+    buf = io.BytesIO()
+    with wave.open(buf, "wb") as w:
+        w.setnchannels(1)
+        w.setsampwidth(2)
+        w.setframerate(16000)
+        w.writeframes(b"\x00\x00" * int(16000 * segundos))
+    return buf.getvalue()
+
+
 def diagnosticar() -> int:
     """python -m services.llm_client  →  checa chave, DNS, proxy e faz 1 chamada mínima (não mostra a chave)."""
     import socket
@@ -172,6 +216,11 @@ def diagnosticar() -> int:
         return 1
     print(f"Chamada ........ OK em {time.time() - t0:.1f}s | resposta: {r['texto'][:40]!r} | tokens {r['tokens_entrada']}+{r['tokens_saida']}"
           f" | custo gate: {r['custo_gate']}")
+    try:
+        transcrever(_wav_silencio(), "teste.wav", "audio/wav")
+        print(f"Áudio .......... OK: o gate transcreve ({endpoint_transcricao()})")
+    except TranscricaoIndisponivel as e:
+        print(f"Áudio .......... indisponível: {e}  (o botão de áudio ficará desativado)")
     return 0
 
 

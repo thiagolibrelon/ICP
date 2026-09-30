@@ -31,6 +31,12 @@ class NovaConversa(BaseModel):
     roteiro_id: str | None = None
 
 
+class Audio(BaseModel):
+    audio_base64: str = Field(min_length=10, max_length=15_000_000)
+    mime: str = "audio/webm"
+    duracao_s: float | None = None
+
+
 class Mensagem(BaseModel):
     conteudo: str = Field(min_length=1, max_length=2000)
 
@@ -88,6 +94,29 @@ def obter(cid: str):
 @app.post("/api/conversations/{cid}/messages")
 def mensagem(cid: str, body: Mensagem):
     return _tratar(conv.processar, cid, body.conteudo)
+
+
+@app.post("/api/conversations/{cid}/audio")
+def audio(cid: str, body: Audio):
+    import base64
+    try:
+        dados = base64.b64decode(body.audio_base64.split(",")[-1])
+    except ValueError:
+        raise HTTPException(400, "Áudio inválido")
+    try:
+        return _tratar(conv.processar_audio, cid, dados, body.mime, body.duracao_s)
+    except llm_client.TranscricaoIndisponivel as e:
+        raise HTTPException(503, f"Transcrição indisponível: {e}")
+
+
+@app.get("/api/gerente/concessoes")
+def concessoes():
+    return evaluation.painel_concessoes()
+
+
+@app.get("/api/gerente/handoffs")
+def handoffs():
+    return conv.fila_handoffs()
 
 
 @app.post("/api/conversations/{cid}/reset")

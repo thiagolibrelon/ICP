@@ -24,6 +24,7 @@
   <div class="controls">
     <button id="btn-aval">Avaliar conversa</button>
     <button id="btn-comp">Comparativo A × B</button>
+    <button id="btn-gerente" class="primary">Painel do gerente</button>
     <button id="btn-json">Exportar JSON</button>
     <button id="btn-txt">Exportar transcrição</button>
     <button id="btn-cls" title="Todas as conversas no formato de entrada do classificar_ligacoes_diario.py">Exportar p/ classificador</button>
@@ -39,13 +40,16 @@
   </aside>
   <section id="col-chat">
     <div id="chat"><div class="nota">Escolha um cliente e clique em <b>Nova conversa</b>. O atendimento é receptivo: quem começa é você, no papel do cliente.</div></div>
-    <form id="form"><input id="msg" autocomplete="off" placeholder="Escreva como o cliente..." disabled><button disabled>Enviar</button></form>
+    <form id="form"><button type="button" id="btn-mic" title="Gravar áudio como o cliente (clique para começar e para enviar)" disabled>🎤</button><input id="msg" autocomplete="off" placeholder="Escreva como o cliente..." disabled><button id="btn-enviar" disabled>Enviar</button></form>
   </section>
   <aside id="col-audit">
     <div id="audit-box"><h2>Auditoria</h2><div id="audit">Clique numa resposta do vendedor.</div></div>
     <h2>Avaliação</h2><div id="aval">—</div>
   </aside>
 </main>
+<div id="modal" hidden><div class="modal-box"><div class="modal-top"><h2>Painel do gerente</h2><button id="btn-fechar-modal">Fechar</button></div>
+  <div class="tabs"><button data-tab="concessoes" class="tab ativo">Concessões</button><button data-tab="handoffs" class="tab">Fila de handoffs</button></div>
+  <div id="modal-conteudo"></div></div></div>
 <script src="/static/app.js"></script>
 </body>
 </html>

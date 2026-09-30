@@ -1,4 +1,4 @@
-let conv = null, clientes = [], roteiros = [], auditOn = true;
+let conv = null, clientes = [], roteiros = [], auditOn = true, micIndisponivel = false;
 const $ = id => document.getElementById(id);
 const api = async (url, opts) => {
   const r = await fetch(url, opts && {headers: {'Content-Type': 'application/json'}, ...opts});
@@ -44,19 +44,25 @@ function renderCliente() {
     : c.produto_atual === 'AM' ? `${c.qtd_atual} ${mod} no mensal${c.contrato_vence_dias ? `, vence em ${c.contrato_vence_dias} dias` : ''}`
     : c.frota_propria ? `frota própria de ${c.frota_propria} carros` : 'sem locação';
   $('info-cliente').innerHTML = `<dl><dt>Empresa</dt><dd>${esc(c.razao_social)}</dd><dt>CNPJ</dt><dd>${esc(c.cnpj)}</dd>
-    <dt>Perfil</dt><dd>${esc(c.icp)} · ${esc(c.cidade)}</dd><dt>Uso atual</dt><dd>${esc(uso)}</dd><dt>km/mês</dt><dd>${c.km_mes}</dd>
+    <dt>Perfil</dt><dd>${esc(c.icp)} · ${esc(c.cidade)} · <span class="tier ${c.tier}">Tier ${esc(c.tier)}</span></dd>
+    ${c.tier === 'A' ? '<dt>Atendimento</dt><dd class="warn">Executivo dedicado (IA acolhe e transfere)</dd>' : ''}<dt>Uso atual</dt><dd>${esc(uso)}</dd><dt>km/mês</dt><dd>${c.km_mes}</dd>
     <dt>Preço</dt><dd>${esc(c.perfil_preco)}</dd><dt>Conversa</dt><dd>modo <b>${conv.modo}</b>${conv.livre ? ' · livre' : ''} · ${esc(conv.desfecho)}</dd></dl>`;
   $('box-roteiro').hidden = !conv.roteiro;
   if (conv.roteiro) $('roteiro-texto').textContent = conv.roteiro.texto;
 }
 
+const fmtDur = s => s == null ? '?' : `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, '0')}`;
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const baloes = t => String(t || '').split(/\n\s*\n/).map(x => x.trim()).filter(Boolean);
 // pausa de "digitando" proporcional ao tamanho do balão (humano no WhatsApp não responde instantâneo)
 const tempoDigitando = t => Math.min(3500, Math.max(700, t.length * 28));
 
 function htmlMensagem(m, ate) {
-  if (m.role === 'cliente') return `<div class="m cliente"><div class="who">Cliente</div>${esc(m.conteudo)}</div>`;
+  if (m.role === 'cliente') {
+    const au = m.auditoria && m.auditoria.audio;
+    if (au) return `<div class="m cliente"><div class="who">Cliente</div>🎤 Áudio (${fmtDur(au.duracao_s)})<div class="transc">transcrição: "${esc(m.conteudo)}"</div></div>`;
+    return `<div class="m cliente"><div class="who">Cliente</div>${esc(m.conteudo)}</div>`;
+  }
   const a = m.auditoria || {}, bs = baloes(m.conteudo).slice(0, ate ?? 99);
   const flag = (a.violacoes || []).length
     ? `<div class="flag ${conv.modo === 'A' ? 'bad' : 'warn'}">${conv.modo === 'A' ? '⚑ marcado' : '⚑ corrigido pelo sistema'}: ${esc(a.violacoes.join(', '))}</div>` : '';
@@ -71,7 +77,7 @@ function renderChat(esconderId) {
   $('chat').scrollTop = 1e9;
   ligarCliques();
   const ativa = conv.status === 'ATIVA';
-  $('msg').disabled = !ativa; $('form').querySelector('button').disabled = !ativa;
+  $('msg').disabled = !ativa; $('btn-enviar').disabled = !ativa; $('btn-mic').disabled = !ativa || micIndisponivel;
   const last = [...conv.mensagens].reverse().find(m => m.role === 'vendedor' && m.message_id !== esconderId);
   if (last) showAudit(last.message_id); else $('audit').textContent = 'Sem respostas ainda.';
   estoque();
@@ -135,6 +141,10 @@ $('btn-aval').onclick = async () => {
     <dt>Valor não verificado</dt><dd>${r.valores_nao_verificados}</dd><dt>Margem revelada</dt><dd class="${r.margem_revelada ? 'bad' : ''}">${r.margem_revelada}</dd>
     <dt>Proposta fora da regra</dt><dd class="${r.propostas_fora_da_regra.length ? 'bad' : ''}">${r.propostas_fora_da_regra.length}</dd>
     <dt>Concessão sem contrapartida</dt><dd>${r.concessao_sem_contrapartida.length}</dd><dt>Além do estoque</dt><dd>${r.alem_do_estoque}</dd>
+    <dt>Qualificou (decisor)</dt><dd>${sim(r.qualificou)}${r.qualificou_antes_da_proposta === false ? ' <span class="warn">(depois da proposta)</span>' : ''}</dd>
+    <dt>Adicionais vendidos</dt><dd>${r.adicionais_vendidos}</dd>
+    ${r.handoff_com_briefing != null ? `<dt>Handoff com briefing</dt><dd>${sim(r.handoff_com_briefing)}</dd>` : ''}
+    ${r.tier_a_respeitado != null ? `<dt>Tier A respeitado</dt><dd class="${r.tier_a_respeitado ? 'ok' : 'bad'}">${sim(r.tier_a_respeitado)}</dd>` : ''}
     <dt>Tiques de robô</dt><dd class="${r.tiques_de_robo ? 'warn' : 'ok'}">${r.tiques_de_robo}</dd><dt>Balões por resposta</dt><dd>${r.baloes_por_resposta ?? '—'}</dd>
     <dt>Tokens / custo</dt><dd>${r.tokens} / ${r.custo_gate ? 'US$ ' + r.custo_gate : '—'}</dd></dl>`;
 };
@@ -144,6 +154,7 @@ $('btn-comp').onclick = async () => {
     ['Valor não verificado %', 'valor_nao_verificado_pct'], ['Margem revelada %', 'margem_revelada_pct'], ['Proposta fora da regra %', 'proposta_fora_da_regra_pct'],
     ['Concessão sem contrapartida %', 'concessao_sem_contrapartida_pct'], ['Além do estoque %', 'alem_do_estoque_pct'],
     ['Diagnóstico antes do preço %', 'diagnostico_antes_do_preco_pct'], ['Próximo passo %', 'proximo_passo_definido_pct'],
+    ['Qualificou decisor %', 'qualificou_pct'], ['Vendeu adicional %', 'vendeu_adicional_pct'], ['Tier A violado %', 'tier_a_violado_pct'],
     ['Com tique de robô %', 'com_tique_de_robo_pct'], ['Turnos médios', 'media_turnos'], ['Tokens/conversa', 'tokens_por_conversa'], ['Custo gate/conversa', 'custo_gate_por_conversa']];
   $('aval').innerHTML = `<table><tr><th>Comparativo</th><th>A puro</th><th>B ferramentas</th></tr>${linhas.map(([n, k]) => `<tr><td>${n}</td><td>${A[k] ?? '—'}</td><td>${B[k] ?? '—'}</td></tr>`).join('')}</table>
     <div class="badge">Só conversas com roteiro. ${r.conversas_livres_fora_do_comparativo} conversas livres ficaram fora.</div>`;
@@ -151,20 +162,93 @@ $('btn-comp').onclick = async () => {
 $('btn-json').onclick = () => conv && window.open(`/api/conversations/${conv.conversation_id}/export?formato=json`);
 $('btn-txt').onclick = () => conv && window.open(`/api/conversations/${conv.conversation_id}/export?formato=txt`);
 $('btn-cls').onclick = () => window.open('/api/export/classificador.csv');
-$('form').onsubmit = async e => {
-  e.preventDefault();
-  const t = $('msg').value.trim(); if (!t || !conv) return;
-  $('msg').value = ''; $('msg').disabled = true;
-  $('chat').insertAdjacentHTML('beforeend', `<div class="m cliente"><div class="who">Cliente</div>${esc(t)}</div><div class="nota digitando">Fernanda está digitando…</div>`);
+async function enviar(bolhaCliente, chamada) {
+  $('msg').disabled = true; $('btn-mic').disabled = true;
+  $('chat').insertAdjacentHTML('beforeend', `${bolhaCliente}<div class="nota digitando">Fernanda está digitando…</div>`);
   $('chat').scrollTop = 1e9;
   try {
-    conv = await post(`/api/conversations/${conv.conversation_id}/messages`, {conteudo: t});
+    conv = await chamada();
     const nova = [...conv.mensagens].reverse().find(m => m.role === 'vendedor');
     renderChat(nova && nova.message_id);
-    $('msg').disabled = true;
+    $('msg').disabled = true; $('btn-mic').disabled = true;
     if (nova) await animarResposta(nova);
-    $('msg').disabled = conv.status !== 'ATIVA';
-  } catch (err) { alert(err.message); $('msg').disabled = false; }
+  } catch (err) {
+    document.querySelectorAll('.digitando').forEach(e => e.remove());
+    alert(err.message);
+    if (conv) renderChat();
+  }
+  const ativa = conv && conv.status === 'ATIVA';
+  $('msg').disabled = !ativa; $('btn-mic').disabled = !ativa || micIndisponivel;
   $('msg').focus();
+}
+
+$('form').onsubmit = e => {
+  e.preventDefault();
+  const t = $('msg').value.trim(); if (!t || !conv) return;
+  $('msg').value = '';
+  enviar(`<div class="m cliente"><div class="who">Cliente</div>${esc(t)}</div>`,
+         () => post(`/api/conversations/${conv.conversation_id}/messages`, {conteudo: t}));
 };
+
+// ---- áudio: grava no navegador, o backend transcreve pelo llm-gate (nada vai para serviços de terceiros do navegador)
+let gravador = null, pedacos = [], inicioGravacao = 0;
+$('btn-mic').onclick = async () => {
+  if (gravador && gravador.state === 'recording') { gravador.stop(); return; }
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({audio: true});
+    gravador = new MediaRecorder(stream); pedacos = []; inicioGravacao = Date.now();
+    gravador.ondataavailable = e => pedacos.push(e.data);
+    gravador.onstop = async () => {
+      stream.getTracks().forEach(t => t.stop());
+      $('btn-mic').classList.remove('gravando'); $('btn-mic').textContent = '🎤';
+      const dur = (Date.now() - inicioGravacao) / 1000, blob = new Blob(pedacos, {type: gravador.mimeType || 'audio/webm'});
+      const b64 = await new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsDataURL(blob); });
+      await enviar(`<div class="m cliente"><div class="who">Cliente</div>🎤 Áudio (${fmtDur(dur)}) <span class="transc">transcrevendo…</span></div>`,
+        async () => {
+          const r = await fetch(`/api/conversations/${conv.conversation_id}/audio`, {method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({audio_base64: b64, mime: blob.type, duracao_s: dur})});
+          if (r.status === 503) { micIndisponivel = true; $('btn-mic').title = (await r.json()).detail; throw new Error($('btn-mic').title); }
+          if (!r.ok) throw new Error((await r.json().catch(() => ({}))).detail || r.statusText);
+          return r.json();
+        });
+    };
+    gravador.start(); $('btn-mic').classList.add('gravando'); $('btn-mic').textContent = '⏹';
+  } catch (err) { alert('Não consegui acessar o microfone: ' + err.message); }
+};
+
+// ---- painel do gerente
+const brlf = v => v == null ? '—' : v.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
+async function abaConcessoes() {
+  const r = await api('/api/gerente/concessoes'), t = r.totais;
+  $('modal-conteudo').innerHTML = `<div class="kpis">
+    <div class="kpi"><b>${t.propostas}</b><span>propostas</span></div><div class="kpi"><b>${t.com_desconto}</b><span>com desconto</span></div>
+    <div class="kpi"><b class="${t.sem_contrapartida ? 'bad' : ''}">${t.sem_contrapartida}</b><span>desconto sem contrapartida</span></div>
+    <div class="kpi"><b>${t.aprovadas_gerente}</b><span>aprovadas pelo gerente</span></div>
+    <div class="kpi"><b>${brlf(t.margem_cedida_mensal)}</b><span>margem cedida / mês</span></div>
+    <div class="kpi"><b>${brlf(t.receita_mensal)}</b><span>receita / mês</span></div>
+    <div class="kpi"><b>${brlf(t.receita_adicionais_mensal)}</b><span>adicionais / mês</span></div></div>
+    <table><tr><th>Quando</th><th>Modo</th><th>Cliente</th><th>Veículos</th><th>Prazo</th><th>Desc.</th><th>Aprovado por</th><th>Contrap.</th><th>Margem cedida</th><th>Adicionais</th><th>Total/mês</th><th>Regra</th></tr>
+    ${r.propostas.map(p => `<tr><td>${esc(p.criado_em.slice(5, 16).replace('T', ' '))}</td><td>${p.modo}</td><td>${esc(p.cliente)} <span class="tier ${p.tier}">${p.tier}</span></td>
+      <td>${p.quantidade} ${esc(p.modelo)} (${p.produto})</td><td>${p.prazo_meses ? p.prazo_meses + 'm' : '—'}</td><td>${p.desconto_pct}%</td><td>${esc(p.aprovado_por || '—')}</td>
+      <td>${p.desconto_pct > 0 ? (p.contrapartida ? '<span class="ok">sim</span>' : '<span class="bad">não</span>') : '—'}</td><td>${brlf(p.margem_cedida)}</td>
+      <td>${esc(p.adicionais.join(', ') || '—')}</td><td>${brlf(p.total_mensal)}</td><td>${p.regra_ok ? '<span class="ok">ok</span>' : '<span class="bad">fora</span>'}</td></tr>`).join('') || '<tr><td colspan="12">Nenhuma proposta ainda.</td></tr>'}</table>`;
+}
+async function abaHandoffs() {
+  const r = await api('/api/gerente/handoffs');
+  $('modal-conteudo').innerHTML = r.map(h => { const b = h.briefing || {}, q = b.qualificacao, u = b.ultima_condicao_avaliada;
+    return `<div class="brief"><h3>${esc(h.handoff_id)} · ${esc(h.razao_social)} <span class="tier ${h.tier}">Tier ${h.tier}</span> · ${esc(h.motivo)} · ${esc(h.status)}</h3>
+      <dl><dt>Resumo</dt><dd>${esc(b.resumo || h.resumo || '—')}</dd><dt>Necessidade</dt><dd>${esc(b.necessidade || '—')}</dd>
+      <dt>Objeção</dt><dd>${esc(b.objecao || '—')}</dd><dt>Próximo passo</dt><dd>${esc(b.proximo_passo_sugerido || '—')}</dd>
+      <dt>Decisor</dt><dd>${q ? esc(q.eh_decisor ? 'a própria pessoa' : (q.decisor || '?')) + (q.prazo_decisao ? ' · decide ' + esc(q.prazo_decisao) : '') : 'não qualificado'}</dd>
+      <dt>Última condição</dt><dd>${u ? `${u.quantidade} ${esc(u.modelo)} · ${esc(u.status)} · ${brlf(u.preco_unitario_final)}/veículo` : '—'}</dd>
+      <dt>Propostas</dt><dd>${(b.propostas || []).map(p => esc(p.proposta_id)).join(', ') || '—'}</dd>
+      <dt>Últimas mensagens</dt><dd>${(b.ultimas_mensagens || []).map(esc).join('<br>')}</dd></dl></div>`; }).join('') || 'Nenhum handoff ainda.';
+}
+const abas = {concessoes: abaConcessoes, handoffs: abaHandoffs};
+document.querySelectorAll('.tab').forEach(b => b.onclick = () => {
+  document.querySelectorAll('.tab').forEach(x => x.classList.toggle('ativo', x === b)); abas[b.dataset.tab]();
+});
+$('btn-gerente').onclick = () => { $('modal').hidden = false; document.querySelector('.tab[data-tab="concessoes"]').click(); };
+$('btn-fechar-modal').onclick = () => { $('modal').hidden = true; };
+
 init();

@@ -40,15 +40,28 @@ TOOLS = [
                          "Use SEMPRE antes de falar de desconto ou preço final.",
      {"modelo": _str, "quantidade": _num, "cidade": _str, "produto": {**_str, "enum": ["AM", "AD"]},
       "prazo_meses": {**_num, "description": "AM: 12, 24 ou 36"}, "dias": {**_num, "description": "AD: número de dias"},
-      "desconto_pct": {"type": "number", "description": "Desconto pedido, em pontos percentuais (3 = 3%)"}},
+      "desconto_pct": {"type": "number", "description": "Desconto pedido, em pontos percentuais (3 = 3%)"},
+      "adicionais": {"type": "array", "items": {"type": "string", "enum": ["PROTECAO_TOTAL", "TELEMETRIA", "KM_EXTRA_1000"]},
+                     "description": "Adicionais do mensal (preço fixo, sem desconto)"},
+      "pacotes_km_extra": {**_num, "description": "Quantidade de pacotes de +1.000 km/mês por veículo"}},
      ["modelo", "quantidade", "cidade", "produto"]),
     ("registrar_proposta", "Registra a proposta aceita pelo cliente e reserva o estoque. Só depois do aceite explícito.",
      {"modelo": _str, "quantidade": _num, "cidade": _str, "produto": {**_str, "enum": ["AM", "AD"]}, "prazo_meses": _num,
       "dias": _num, "desconto_pct": {"type": "number"}, "aceita_prazo_entrega": {"type": "boolean"},
-      "cliente_id": {**_str, "description": "Opcional: outro CNPJ do mesmo grupo"}},
+      "adicionais": {"type": "array", "items": {"type": "string", "enum": ["PROTECAO_TOTAL", "TELEMETRIA", "KM_EXTRA_1000"]}},
+      "pacotes_km_extra": _num, "cliente_id": {**_str, "description": "Opcional: outro CNPJ do mesmo grupo"}},
      ["modelo", "quantidade", "cidade", "produto"]),
-    ("criar_handoff", "Encaminha para atendimento humano (suporte, reclamação, pedido do cliente) e devolve protocolo.",
-     {"motivo": {**_str, "enum": ["SUPORTE", "RECLAMACAO", "SOLICITACAO_CLIENTE", "OUTRO"]}, "resumo": _str}, ["motivo"]),
+    ("registrar_qualificacao", "Registra quem decide do lado do cliente. Chame assim que souber (antes de propor).",
+     {"eh_decisor": {"type": "boolean", "description": "A pessoa na conversa decide?"},
+      "decisor": {**_str, "description": "Quem decide (nome/cargo), se não for ela"},
+      "outros_envolvidos": {**_str, "description": "Quem mais participa (financeiro, compras, sócio...)"},
+      "prazo_decisao": {**_str, "description": "Quando a decisão sai"}}, []),
+    ("criar_handoff", "Transfere para um humano com um briefing completo (o time recebe tudo e o cliente não repete nada).",
+     {"motivo": {**_str, "enum": ["SUPORTE", "RECLAMACAO", "SOLICITACAO_CLIENTE", "CLIENTE_ESTRATEGICO", "OUTRO"]},
+      "resumo": {**_str, "description": "O que aconteceu na conversa, em 1-2 frases"},
+      "necessidade": {**_str, "description": "O que o cliente precisa (modelo, qtd, cidade, prazo, uso)"},
+      "objecao": {**_str, "description": "Principal objeção ou problema, se houver"},
+      "proximo_passo_sugerido": {**_str, "description": "O que o humano deve fazer primeiro"}}, ["motivo", "resumo"]),
 ]
 TOOLS_SCHEMA = [{"type": "function", "function": {"name": n, "description": d,
                                                   "parameters": {"type": "object", "properties": p, "required": r}}}
@@ -82,19 +95,51 @@ def executar(nome: str, args: dict, ctx: dict) -> dict:
             return catalog.comparar_eletrico(_int(a["km_mes"]), a["modelo_comparado"], _int(a.get("prazo_meses")) or 12,
                                              _int(a.get("quantidade")) or 1)
         if nome == "avaliar_proposta":
+            if catalog.exige_humano(ctx["cliente_id"]):
+                raise ErroFerramenta("Cliente Tier A (estratégico): negociação exclusiva do executivo dedicado. Acolha e faça o "
+                                     "handoff com motivo CLIENTE_ESTRATEGICO.")
             return catalog.avaliar_proposta(a["modelo"], _int(a["quantidade"]), a["cidade"], a["produto"], _int(a.get("prazo_meses")),
-                                            _int(a.get("dias")), float(a.get("desconto_pct") or 0))
+                                            _int(a.get("dias")), float(a.get("desconto_pct") or 0), a.get("adicionais"),
+                                            _int(a.get("pacotes_km_extra")))
         if nome == "registrar_proposta":
             return catalog.registrar_proposta(ctx["conversation_id"], _cliente_do_grupo(a.get("cliente_id"), ctx), "B", a["modelo"],
                                               _int(a["quantidade"]), a["cidade"], a["produto"], _int(a.get("prazo_meses")),
-                                              _int(a.get("dias")), float(a.get("desconto_pct") or 0), bool(a.get("aceita_prazo_entrega")))
+                                              _int(a.get("dias")), float(a.get("desconto_pct") or 0), bool(a.get("aceita_prazo_entrega")),
+                                              a.get("adicionais"), _int(a.get("pacotes_km_extra")))
+        if nome == "registrar_qualificacao":
+            return catalog.registrar_qualificacao(a.get("eh_decisor"), a.get("decisor"), a.get("outros_envolvidos"), a.get("prazo_decisao"))
         if nome == "criar_handoff":
-            return catalog.criar_handoff(ctx["conversation_id"], ctx["cliente_id"], a.get("motivo") or "OUTRO", a.get("resumo") or "")
+            motivo = a.get("motivo") or "OUTRO"
+            return catalog.criar_handoff(ctx["conversation_id"], ctx["cliente_id"], motivo, a.get("resumo") or "",
+                                         montar_briefing(ctx, a, motivo))
         return {"erro": f"Ferramenta desconhecida: {nome}"}
     except ErroFerramenta as e:
         return {"erro": str(e)}
     except (KeyError, TypeError, ValueError) as e:
         return {"erro": f"Parâmetros inválidos para {nome}: {e}"}
+
+
+def montar_briefing(ctx: dict, a: dict, motivo: str) -> dict:
+    """O que o humano recebe no handoff: o que o GPT resumiu + o que o SISTEMA sabe (não depende do GPT lembrar)."""
+    mem = ctx.get("memoria", [])
+    ultimo = lambda nome: next((m["saida"] for m in reversed(mem) if m["ferramenta"] == nome and "erro" not in m["saida"]), None)  # noqa: E731
+    cli = catalog.consultar_cliente(ctx["cliente_id"])
+    av = ultimo("avaliar_proposta")
+    props = db.fetch_all("SELECT proposta_id, modelo, cidade, quantidade, prazo_meses, desconto_pct, preco_unitario, total_mensal, "
+                         "aprovado_por, adicionais_json FROM propostas WHERE conversation_id=?", (ctx["conversation_id"],))
+    return {
+        "motivo": motivo, "resumo": a.get("resumo"), "necessidade": a.get("necessidade"), "objecao": a.get("objecao"),
+        "proximo_passo_sugerido": a.get("proximo_passo_sugerido"),
+        "cliente": {k: cli.get(k) for k in ("razao_social", "cnpj", "tier", "icp", "cidade", "produto_atual", "modelo_atual", "qtd_atual",
+                                            "km_mes", "contrato_vence_dias", "perfil_preco")},
+        "qualificacao": ultimo("registrar_qualificacao"),
+        "ultima_condicao_avaliada": {k: av.get(k) for k in ("modelo", "quantidade", "cidade", "produto", "prazo_meses", "status",
+                                                            "desconto_solicitado_pct", "preco_unitario_final", "total_mensal",
+                                                            "estoque_suficiente")} if av else None,
+        "propostas": props,
+        "comparacoes_mostradas": [m["ferramenta"] for m in mem if m["ferramenta"].startswith("comparar_")],
+        "ultimas_mensagens": [f"{m['role']}: {m['conteudo']}" for m in ctx.get("historico", [])[-6:]],
+    }
 
 
 def _cliente_do_grupo(cliente_id: str | None, ctx: dict) -> str:
@@ -113,10 +158,12 @@ def margens_gerente() -> set:
 
 # ------------------------------------------------------------------ modo B
 def _contexto(ctx: dict) -> str:
-    c = db.fetch_one("SELECT razao_social, cidade FROM clientes WHERE cliente_id=?", (ctx["cliente_id"],))
+    c = db.fetch_one("SELECT razao_social, cidade, tier FROM clientes WHERE cliente_id=?", (ctx["cliente_id"],))
+    tier = ("\nCLIENTE TIER A (estratégico): atendimento é do EXECUTIVO DEDICADO. Acolha com simpatia, entenda em uma frase o que "
+            "ele precisa e faça criar_handoff com motivo CLIENTE_ESTRATEGICO e briefing completo. Não cote nem negocie.") if c["tier"] == "A" else ""
     memoria = json.dumps(ctx["memoria"][-10:], ensure_ascii=False, default=str)[-8000:] if ctx["memoria"] else "nenhuma ainda"
     return (f"\n\nATENDIMENTO ATUAL: mensagem recebida do WhatsApp cadastrado de {c['razao_social']} (cliente_id {ctx['cliente_id']}, "
-            f"{catalog.CIDADE_NOME.get(c['cidade'], c['cidade'])}). Consulte o cadastro antes de ofertar.\n"
+            f"{catalog.CIDADE_NOME.get(c['cidade'], c['cidade'])}). Consulte o cadastro antes de ofertar.{tier}\n"
             f"CONSULTAS JÁ FEITAS NESTA CONVERSA (resultados reais): {memoria}")
 
 
@@ -220,8 +267,22 @@ def dados_internos(cliente_id: str) -> dict:
                        "margem": "margem_ia_pct = você aprova sozinho; até margem_gerente_pct o gerente aprova SOMENTE com contrapartida "
                                  "(prazo >= 24 meses ou 5+ veículos); acima disso, negado",
                        "validade_proposta_dias": catalog.VALIDADE_DIAS,
-                       "custo_km": {"combustao": catalog.CUSTO_KM_COMBUSTAO, "eletrico": catalog.CUSTO_KM_ELETRICO}},
+                       "custo_km": {"combustao": catalog.CUSTO_KM_COMBUSTAO, "eletrico": catalog.CUSTO_KM_ELETRICO},
+                       "franquia_km_mes_por_veiculo": catalog.FRANQUIA_KM_MES,
+                       "roteamento": "Cliente tier A = executivo dedicado: acolha e faça handoff (motivo CLIENTE_ESTRATEGICO), não negocie."},
+            "adicionais_mensal": catalog.listar_adicionais(),
             "estoque": catalog.estoque_atual(), "cliente": catalog.consultar_cliente(cliente_id)}
+
+
+@lru_cache(maxsize=1)
+def _somas_adicionais() -> tuple:
+    precos = {a["codigo"]: a["preco_mensal_por_veiculo"] for a in db.fetch_all("SELECT * FROM adicionais")}
+    somas = set()
+    for prot in (0, 1):
+        for tele in (0, 1):
+            for km in range(0, 5):
+                somas.add(round(prot * precos["PROTECAO_TOTAL"] + tele * precos["TELEMETRIA"] + km * precos["KM_EXTRA_1000"], 2))
+    return tuple(sorted(somas - {0.0}))
 
 
 @lru_cache(maxsize=4)
@@ -237,6 +298,9 @@ def _valores_calculaveis(chave_veiculos: str) -> frozenset:
                 for prazo in catalog.PRAZOS_AM:
                     u = round(v[f"preco_am_{prazo}"] * f, 2)
                     vals |= {u, round(u * qtd, 2), round(u * qtd * prazo, 2)}
+                    for extra in _somas_adicionais():  # mensal com adicionais (por veículo e total)
+                        vals |= {round(u + extra, 2), round((u + extra) * qtd, 2), round((u + extra) * qtd * prazo, 2),
+                                 round(extra * qtd, 2)}
                 u = round(v["preco_ad"] * f, 2)
                 vals.add(u)
                 vals |= {round(u * qtd * dias, 2) for dias in range(1, 32)}
@@ -266,20 +330,23 @@ def turno_a(ctx: dict, historico: list[dict], texto_cliente: str) -> dict:
         ctx["memoria"].append({"ferramenta": "registrar_proposta", "entrada": prop, "saida": out})
     ho = j.get("handoff")
     if isinstance(ho, dict):
-        out = catalog.criar_handoff(ctx["conversation_id"], ctx["cliente_id"], ho.get("motivo") or "OUTRO", ho.get("resumo") or "")
+        out = catalog.criar_handoff(ctx["conversation_id"], ctx["cliente_id"], ho.get("motivo") or "OUTRO", ho.get("resumo") or "",
+                                    montar_briefing(ctx, ho, ho.get("motivo") or "OUTRO"))
         acoes.append({"nome": "criar_handoff (decidido pelo modelo)", "entrada": ho, "saida": out})
         ctx["memoria"].append({"ferramenta": "criar_handoff", "entrada": ho, "saida": out})
     # Checagem (só marca): valores citados precisam existir na tabela/estoque/cadastro ou ser um preço que o motor produziria
     chave = json.dumps(internos["veiculos"], sort_keys=True)
     # referência = só o motor (tabela, estoque, cadastro, preços calculáveis); nunca os números que o próprio modelo decidiu
-    extras = [internos, {"calculaveis": sorted(_valores_calculaveis(chave))}]
+    precos = [{k: v for k, v in r.items() if k.startswith("preco_")} for r in internos["veiculos"]]
+    precos += [{"preco": a["preco_mensal"]} for a in internos["adicionais_mensal"]]
+    extras = [precos, {"calculaveis": sorted(_valores_calculaveis(chave))}]
     cli = internos["cliente"]
-    for modelo in ("ONIX", "POLO", "CRETA"):
-        for prazo in catalog.PRAZOS_AM:
-            extras.append(catalog.comparar_eletrico(cli["km_mes"] or 1, modelo, prazo, max(1, cli["qtd_atual"] or 1)))
+    comparacoes = [catalog.comparar_eletrico(cli["km_mes"] or 1, m, prazo, max(1, cli["qtd_atual"] or 1))
+                   for m in ("ONIX", "POLO", "CRETA") for prazo in catalog.PRAZOS_AM]
     if cli["dias_diaria_mes"]:
-        extras += [catalog.comparar_diaria_mensal(m, cli["dias_diaria_mes"], q) for m in ("ONIX", "POLO", "CRETA", "DOLPHIN")
-                   for q in range(1, 21)]
+        comparacoes += [catalog.comparar_diaria_mensal(m, cli["dias_diaria_mes"], q) for m in ("ONIX", "POLO", "CRETA", "DOLPHIN")
+                        for q in range(1, 21)]
+    extras += [_so_dinheiro(c) for c in comparacoes]
     houve_prop = any(a["saida"].get("registrada") for a in acoes) or any(
         m["ferramenta"] == "registrar_proposta" for m in ctx["memoria"])
     houve_ho = any(m["ferramenta"] == "criar_handoff" for m in ctx["memoria"])
@@ -291,19 +358,30 @@ def turno_a(ctx: dict, historico: list[dict], texto_cliente: str) -> dict:
             "custo_gate": r["custo_gate"] or 0.0}
 
 
+def _so_dinheiro(obj):
+    """Mantém só campos monetários (evita que km, dias ou quantidades 'autorizem' um R$ inventado)."""
+    chaves = ("custo", "aluguel", "total", "energia", "combustivel", "economia", "diferenca", "preco")
+    if isinstance(obj, dict):
+        return {k: _so_dinheiro(v) for k, v in obj.items() if isinstance(v, dict) or any(c in k for c in chaves)}
+    return obj
+
+
 def _registrar_a(ctx: dict, p: dict) -> tuple[dict, list[str]]:
     """Registra o que o modelo decidiu (sem bloquear) e compara com o que o motor teria feito."""
     marcas = []
     try:
         qtd, prazo, dias = _int(p.get("quantidade")) or 1, _int(p.get("prazo_meses")), _int(p.get("dias"))
         desc = float(p.get("desconto_pct") or 0)
-        correto = catalog.avaliar_proposta(p["modelo"], qtd, p["cidade"], p.get("produto") or "AM", prazo, dias, desc)
+        ad, pk = p.get("adicionais"), _int(p.get("pacotes_km_extra"))
+        correto = catalog.avaliar_proposta(p["modelo"], qtd, p["cidade"], p.get("produto") or "AM", prazo, dias, desc, ad, pk)
     except (ErroFerramenta, KeyError, TypeError, ValueError) as e:
         return {"registrada": False, "erro": str(e)}, [f"PROPOSTA_INVALIDA:{e}"]
     if not correto["aprovado"]:
         marcas.append(f"DESCONTO_FORA_DA_REGRA:{desc}% ({correto['status']})")
     informado = p.get("preco_unitario_informado")
-    certo = catalog.calcular(p["modelo"], qtd, p["cidade"], correto["produto"], prazo, dias, desc)
+    if catalog.exige_humano(ctx["cliente_id"]):
+        marcas.append("TIER_A_NEGOCIADO_PELA_IA")
+    certo = catalog.calcular(p["modelo"], qtd, p["cidade"], correto["produto"], prazo, dias, desc, ad, pk)
     if informado is not None and abs(float(informado) - certo["preco_unitario_final"]) > 0.011:
         marcas.append(f"PRECO_DIVERGENTE:informou {informado}, correto {certo['preco_unitario_final']}")
     if not correto["estoque_suficiente"]:

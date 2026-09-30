@@ -16,6 +16,7 @@ CIDADES = {"sao paulo": "SAO PAULO", "sp": "SAO PAULO", "curitiba": "CURITIBA", 
 CIDADE_NOME = {"SAO PAULO": "São Paulo", "CURITIBA": "Curitiba", "BELO HORIZONTE": "Belo Horizonte"}
 PRAZOS_AM = (12, 24, 36)
 VALIDADE_DIAS = 5
+FRANQUIA_KM_MES = 2000  # km/mês por veículo incluídos no mensal
 # Parâmetros fictícios de energia/combustível (R$ por km) para a comparação do elétrico
 CUSTO_KM_COMBUSTAO = 0.56
 CUSTO_KM_ELETRICO = 0.13
@@ -82,6 +83,10 @@ def consultar_cliente(cliente_id: str) -> dict:
     out = {k: c[k] for k in ("cliente_id", "razao_social", "cnpj", "icp", "grupo", "perfil_preco", "km_mes", "produto_atual",
                              "modelo_atual", "qtd_atual", "dias_diaria_mes", "contrato_vence_dias", "frota_propria", "situacao")}
     out["cidade"] = CIDADE_NOME.get(c["cidade"], c["cidade"])
+    out["tier"] = c["tier"]
+    out["atendimento"] = "EXECUTIVO_DEDICADO" if c["tier"] == "A" else "VENDA_INTERNA"
+    if c["km_mes"] and c["km_mes"] > FRANQUIA_KM_MES:
+        out["km_acima_da_franquia_por_veiculo"] = c["km_mes"] - FRANQUIA_KM_MES
     if c["grupo"]:
         out["outros_cnpjs_do_grupo"] = [
             {"cliente_id": r["cliente_id"], "razao_social": r["razao_social"], "cidade": CIDADE_NOME.get(r["cidade"], r["cidade"]),
@@ -111,10 +116,40 @@ def consultar_catalogo(cidade_nome: str | None = None, modelo: str | None = None
             e = _estoque(v["modelo"], cid)
             item.update(estoque_disponivel=e["unidades"], prazo_entrega_se_faltar_dias=e["prazo_entrega_dias"])
         itens.append(item)
-    return {"cidade": CIDADE_NOME.get(cid) if cid else None, "veiculos": itens,
+    return {"cidade": CIDADE_NOME.get(cid) if cid else None, "veiculos": itens, "adicionais_mensal": listar_adicionais(),
             "regras_publicas": {"prazos_mensal_meses": list(PRAZOS_AM),
+                                "franquia_km_mes_por_veiculo": FRANQUIA_KM_MES,
                                 "desconto_volume": "5 a 9 veículos: 2% de tabela; 10 ou mais: 4% (automático)",
                                 "validade_proposta_dias": VALIDADE_DIAS}}
+
+
+def listar_adicionais() -> list[dict]:
+    return [{"codigo": a["codigo"], "nome": a["nome"], "preco_mensal": a["preco_mensal_por_veiculo"], "unidade": a["unidade"],
+             "quando_oferecer": a["quando_oferecer"]} for a in db.fetch_all("SELECT * FROM adicionais ORDER BY codigo")]
+
+
+def _adicionais(produto: str, codigos: list | None, pacotes_km: int | None, quantidade: int) -> dict:
+    codigos = [str(c).upper().strip() for c in (codigos or []) if str(c).strip()]
+    if pacotes_km and "KM_EXTRA_1000" not in codigos:
+        codigos.append("KM_EXTRA_1000")
+    if not codigos:
+        return {"itens": [], "por_veiculo": 0.0, "total_mensal": 0.0}
+    if produto != "AM":
+        raise ErroFerramenta("Adicionais só existem no mensal (AM).")
+    tabela = {a["codigo"]: a for a in db.fetch_all("SELECT * FROM adicionais")}
+    itens, por_veiculo = [], 0.0
+    for cod in dict.fromkeys(codigos):
+        if cod not in tabela:
+            raise ErroFerramenta(f"Adicional '{cod}' não existe. Disponíveis: {', '.join(tabela)}.")
+        n = max(1, int(pacotes_km or 1)) if cod == "KM_EXTRA_1000" else 1
+        valor = round(tabela[cod]["preco_mensal_por_veiculo"] * n, 2)
+        itens.append({"codigo": cod, "nome": tabela[cod]["nome"], "quantidade_por_veiculo": n, "mensal_por_veiculo": valor})
+        por_veiculo += valor
+    return {"itens": itens, "por_veiculo": round(por_veiculo, 2), "total_mensal": round(por_veiculo * quantidade, 2)}
+
+
+def pacotes_km_necessarios(km_mes: int | None) -> int:
+    return max(0, math.ceil(((km_mes or 0) - FRANQUIA_KM_MES) / 1000))
 
 
 # ---------------------------------------------------------------- comparações (Challenger com dado)
@@ -156,7 +191,8 @@ def comparar_eletrico(km_mes: int, modelo_comparado: str, prazo_meses: int = 12,
 
 # ---------------------------------------------------------------- negociação
 def calcular(modelo: str, quantidade: int, cidade_nome: str, produto: str, prazo_meses: int | None = None,
-             dias: int | None = None, desconto_pct: float = 0.0) -> dict:
+             dias: int | None = None, desconto_pct: float = 0.0, adicionais: list | None = None,
+             pacotes_km_extra: int | None = None) -> dict:
     """Preço correto para uma combinação (sem decidir alçada). Usado por avaliar/registrar e pela checagem do modo A."""
     v, cid, prod = veiculo(modelo), cidade(cidade_nome), _produto(produto)
     quantidade = int(quantidade)
@@ -171,15 +207,23 @@ def calcular(modelo: str, quantidade: int, cidade_nome: str, produto: str, prazo
            "preco_tabela_unitario": tabela, "desconto_volume_pct": vol, "desconto_pct": float(desconto_pct),
            "preco_unitario_final": unit}
     if prod == "AM":
-        out.update(prazo_meses=prazo_meses, total_mensal=round(unit * quantidade, 2),
-                   total_contrato=round(unit * quantidade * prazo_meses, 2))
+        ad = _adicionais(prod, adicionais, pacotes_km_extra, quantidade)
+        veic = round(unit * quantidade, 2)
+        out.update(prazo_meses=prazo_meses, total_mensal_veiculos=veic)
+        if ad["itens"]:
+            out.update(adicionais=ad["itens"], adicionais_mensal_por_veiculo=ad["por_veiculo"], adicionais_total_mensal=ad["total_mensal"])
+        out.update(total_mensal=round(veic + ad["total_mensal"], 2),
+                   total_contrato=round((veic + ad["total_mensal"]) * prazo_meses, 2))
+    elif adicionais or pacotes_km_extra:
+        _adicionais(prod, adicionais, pacotes_km_extra, quantidade)  # levanta o erro explicativo
     else:
         out.update(dias=int(dias), total=round(unit * quantidade * int(dias), 2))
     return out
 
 
 def avaliar_proposta(modelo: str, quantidade: int, cidade_nome: str, produto: str, prazo_meses: int | None = None,
-                     dias: int | None = None, desconto_pct: float = 0.0) -> dict:
+                     dias: int | None = None, desconto_pct: float = 0.0, adicionais: list | None = None,
+                     pacotes_km_extra: int | None = None) -> dict:
     v = veiculo(modelo)
     prod = _produto(produto)
     desconto_pct = max(0.0, float(desconto_pct or 0))
@@ -194,7 +238,8 @@ def avaliar_proposta(modelo: str, quantidade: int, cidade_nome: str, produto: st
     else:
         status, aprovado_por = "ACIMA_DO_LIMITE", None
     aprovado = status.startswith("APROVADO")
-    base = calcular(modelo, quantidade, cidade_nome, prod, prazo_meses, dias, desconto_pct if aprovado else 0.0)
+    base = calcular(modelo, quantidade, cidade_nome, prod, prazo_meses, dias, desconto_pct if aprovado else 0.0, adicionais,
+                    pacotes_km_extra)
     e = _estoque(v["modelo"], cidade(cidade_nome))
     out = {"status": status, "aprovado": aprovado, "aprovado_por": aprovado_por, "desconto_solicitado_pct": desconto_pct,
            "tem_contrapartida": contrapartida, **base,
@@ -205,17 +250,24 @@ def avaliar_proposta(modelo: str, quantidade: int, cidade_nome: str, produto: st
         # Contraproposta: o maior desconto aprovável NESTAS condições (não revela o teto com contrapartida se não houver)
         contra = ger if contrapartida else ia
         out["contraproposta_desconto_pct"] = contra
-        out["contraproposta"] = calcular(modelo, quantidade, cidade_nome, prod, prazo_meses, dias, contra)
+        out["contraproposta"] = calcular(modelo, quantidade, cidade_nome, prod, prazo_meses, dias, contra, adicionais, pacotes_km_extra)
         out["orientacao"] = ("Gerente negou: sem contrapartida. Com prazo de 24 meses ou mais, ou 5 veículos ou mais, o gerente pode avaliar."
                              if status == "NEGADO_GERENTE" else "Pedido acima do que pode ser aprovado nestas condições.")
     return out
 
 
+def exige_humano(cliente_id: str) -> bool:
+    c = db.fetch_one("SELECT tier FROM clientes WHERE cliente_id=?", (cliente_id,))
+    return bool(c and c["tier"] == "A")
+
+
 def registrar_proposta(conversation_id: str, cliente_id: str, modo: str, modelo: str, quantidade: int, cidade_nome: str,
                        produto: str, prazo_meses: int | None = None, dias: int | None = None, desconto_pct: float = 0.0,
-                       aceita_prazo_entrega: bool = False) -> dict:
+                       aceita_prazo_entrega: bool = False, adicionais: list | None = None, pacotes_km_extra: int | None = None) -> dict:
     """Modo B: só registra o que avaliar_proposta aprova. Reserva o estoque (compartilhado entre conversas)."""
-    av = avaliar_proposta(modelo, quantidade, cidade_nome, produto, prazo_meses, dias, desconto_pct)
+    if exige_humano(cliente_id):
+        raise ErroFerramenta("Cliente Tier A (estratégico): proposta é exclusiva do executivo dedicado. Faça o handoff.")
+    av = avaliar_proposta(modelo, quantidade, cidade_nome, produto, prazo_meses, dias, desconto_pct, adicionais, pacotes_km_extra)
     if not av["aprovado"]:
         raise ErroFerramenta(f"Proposta não aprovada ({av['status']}). Use avaliar_proposta e ofereça a contraproposta.")
     if not av["estoque_suficiente"] and not aceita_prazo_entrega:
@@ -232,21 +284,36 @@ def _gravar(conversation_id: str, cliente_id: str, modo: str, calc: dict, checag
     reserva = min(qtd, e["unidades"]) if reservar is None else reservar
     db.execute("UPDATE estoque SET unidades = unidades - ? WHERE modelo=? AND cidade=?", (reserva, modelo, cid))
     pid = "PROP-" + uuid.uuid4().hex[:8].upper()
-    db.execute("INSERT INTO propostas VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+    db.execute("INSERT INTO propostas VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                (pid, conversation_id, cliente_id, modo, modelo, cid, calc["produto"], qtd, calc.get("prazo_meses"), calc.get("dias"),
                 calc["desconto_pct"], calc["preco_unitario_final"], calc.get("total_mensal"), calc.get("total"), calc.get("aprovado_por"),
-                reserva, int(reserva < qtd), json.dumps(checagem, ensure_ascii=False), _now()))
+                reserva, int(reserva < qtd), json.dumps(checagem, ensure_ascii=False), _now(),
+                json.dumps(calc.get("adicionais") or [], ensure_ascii=False), calc.get("adicionais_total_mensal") or 0.0))
     return {"proposta_id": pid, "registrada": True, "simulada": True, "unidades_reservadas": reserva,
             "entrega_futura_unidades": qtd - reserva, "prazo_entrega_dias": e["prazo_entrega_dias"] if reserva < qtd else 0,
             "validade_dias": VALIDADE_DIAS, **{k: calc[k] for k in ("modelo", "cidade", "produto", "quantidade", "desconto_pct",
                                                                     "preco_unitario_final") if k in calc},
-            **{k: calc[k] for k in ("prazo_meses", "total_mensal", "total_contrato", "dias", "total") if k in calc}}
+            **{k: calc[k] for k in ("prazo_meses", "total_mensal_veiculos", "adicionais", "adicionais_total_mensal", "total_mensal",
+                                    "total_contrato", "dias", "total") if k in calc}}
 
 
-def criar_handoff(conversation_id: str, cliente_id: str, motivo: str, resumo: str = "") -> dict:
+PRAZO_RETORNO = {"CLIENTE_ESTRATEGICO": "hoje, em até 2 horas úteis"}
+
+
+def criar_handoff(conversation_id: str, cliente_id: str, motivo: str, resumo: str = "", briefing: dict | None = None) -> dict:
     hid = "HO-" + uuid.uuid4().hex[:8].upper()
-    db.execute("INSERT INTO handoffs VALUES (?,?,?,?,?,?)", (hid, conversation_id, cliente_id, motivo, resumo, _now()))
-    return {"protocolo": hid, "motivo": motivo, "prazo_retorno": "1 dia útil", "simulado": True}
+    db.execute("INSERT INTO handoffs (handoff_id, conversation_id, cliente_id, motivo, resumo, criado_em, briefing_json, status) "
+               "VALUES (?,?,?,?,?,?,?,'ABERTO')",
+               (hid, conversation_id, cliente_id, motivo, resumo, _now(), json.dumps(briefing or {}, ensure_ascii=False, default=str)))
+    return {"protocolo": hid, "motivo": motivo, "prazo_retorno": PRAZO_RETORNO.get(motivo, "1 dia útil"), "simulado": True,
+            "briefing_enviado_ao_time": bool(briefing)}
+
+
+def registrar_qualificacao(eh_decisor: bool | None = None, decisor: str | None = None, outros_envolvidos: str | None = None,
+                           prazo_decisao: str | None = None) -> dict:
+    campos = {"eh_decisor": eh_decisor, "decisor": decisor, "outros_envolvidos": outros_envolvidos, "prazo_decisao": prazo_decisao}
+    faltando = [k for k, v in campos.items() if v in (None, "")]
+    return {"qualificacao_registrada": True, **campos, "faltando": faltando}
 
 
 # ---------------------------------------------------------------- estoque compartilhado

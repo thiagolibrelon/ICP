@@ -52,10 +52,55 @@ def avaliar(conv_id: str) -> dict:
         "usou_comparacao": any(f.startswith("comparar_") for f in ferramentas),
         "tokens": sum((m["tokens_entrada"] or 0) + (m["tokens_saida"] or 0) for m in msgs),
         "custo_gate": round(sum(m["custo_gate"] or 0 for m in msgs), 6),
+        "qualificou": any(ch["nome"].startswith("registrar_qualificacao") for a in auds for ch in (a.get("chamadas") or [])),
+        "qualificou_antes_da_proposta": _qualificou_antes(auds) if props else None,
+        "adicionais_vendidos": sum(len(json.loads(p["adicionais_json"] or "[]")) for p in props),
+        "handoff_com_briefing": all(json.loads(h["briefing_json"] or "{}").get("resumo") for h in hos) if hos else None,
+        "tier_a_respeitado": (not props) if catalog.exige_humano(c["cliente_id"]) else None,
         "tiques_de_robo": sum(len(a.get("tiques") or []) for a in auds),
         "baloes_por_resposta": round(sum(m["conteudo"].count("\n\n") + 1 for m in vend) / len(vend), 1) if vend else None,
         "violacoes": viol,
     }
+
+
+def painel_concessoes() -> dict:
+    """Visão do gerente: o que foi concedido, por quem, com que contrapartida e quanto de margem saiu (por mês)."""
+    props = db.fetch_all("SELECT p.*, c.razao_social, c.tier FROM propostas p JOIN clientes c USING (cliente_id) ORDER BY p.criado_em DESC")
+    linhas, tot = [], {"propostas": 0, "com_desconto": 0, "sem_contrapartida": 0, "aprovadas_gerente": 0, "margem_cedida_mensal": 0.0,
+                       "receita_mensal": 0.0, "receita_adicionais_mensal": 0.0}
+    for p in props:
+        if p["produto"] == "AM":
+            cheio = catalog.calcular(p["modelo"], p["quantidade"], p["cidade"], "AM", p["prazo_meses"])["preco_unitario_final"]
+            cedida = round((cheio - p["preco_unitario"]) * p["quantidade"], 2)
+        else:
+            cheio = catalog.calcular(p["modelo"], p["quantidade"], p["cidade"], "AD", dias=p["dias"])["preco_unitario_final"]
+            cedida = round((cheio - p["preco_unitario"]) * p["quantidade"] * (p["dias"] or 1), 2)
+        contrap = catalog.tem_contrapartida(p["produto"], p["quantidade"], p["prazo_meses"])
+        linhas.append({"proposta_id": p["proposta_id"], "criado_em": p["criado_em"], "modo": p["modo"], "cliente": p["razao_social"],
+                       "tier": p["tier"], "modelo": p["modelo"].title(), "quantidade": p["quantidade"], "produto": p["produto"],
+                       "prazo_meses": p["prazo_meses"], "desconto_pct": p["desconto_pct"], "aprovado_por": p["aprovado_por"],
+                       "contrapartida": contrap, "margem_cedida": cedida, "total_mensal": p["total_mensal"] or p["total"],
+                       "adicionais": [a["codigo"] for a in json.loads(p["adicionais_json"] or "[]")],
+                       "receita_adicionais_mensal": p["total_adicionais_mensal"] or 0.0,
+                       "regra_ok": json.loads(p["checagem_json"] or "{}").get("valida", True)})
+        tot["propostas"] += 1
+        tot["com_desconto"] += (p["desconto_pct"] or 0) > 0
+        tot["sem_contrapartida"] += (p["desconto_pct"] or 0) > 0 and not contrap
+        tot["aprovadas_gerente"] += p["aprovado_por"] == "gerente_simulado"
+        tot["margem_cedida_mensal"] = round(tot["margem_cedida_mensal"] + cedida, 2)
+        tot["receita_mensal"] = round(tot["receita_mensal"] + (p["total_mensal"] or p["total"] or 0), 2)
+        tot["receita_adicionais_mensal"] = round(tot["receita_adicionais_mensal"] + (p["total_adicionais_mensal"] or 0), 2)
+    return {"totais": tot, "propostas": linhas}
+
+
+def _qualificou_antes(auds: list) -> bool:
+    for a in auds:
+        for ch in a.get("chamadas") or []:
+            if ch["nome"].startswith("registrar_qualificacao"):
+                return True
+            if ch["nome"].startswith("registrar_proposta"):
+                return False
+    return False
 
 
 def comparativo() -> dict:
@@ -86,6 +131,9 @@ def comparativo() -> dict:
                 "alem_do_estoque_pct": pct(lambda a: a["alem_do_estoque"]),
                 "diagnostico_antes_do_preco_pct": pct(lambda a: a["diagnostico_antes_do_preco"]),
                 "proximo_passo_definido_pct": pct(lambda a: a["proximo_passo_definido"]),
+                "qualificou_pct": pct(lambda a: a["qualificou"]),
+                "vendeu_adicional_pct": pct(lambda a: a["adicionais_vendidos"]),
+                "tier_a_violado_pct": pct(lambda a: a["tier_a_respeitado"] is False),
                 "com_tique_de_robo_pct": pct(lambda a: a["tiques_de_robo"]),
                 "media_turnos": round(sum(a["turnos_cliente"] for a in lst) / n, 1),
                 "tokens_por_conversa": round(sum(a["tokens"] for a in lst) / n),

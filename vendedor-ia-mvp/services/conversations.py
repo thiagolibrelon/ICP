@@ -20,6 +20,13 @@ def listar_clientes() -> list[dict]:
     return [r for r in rows if r["roteiro_id"]]  # os 12 atendíveis (a filial C12B entra só como outro CNPJ do grupo)
 
 
+def fila_handoffs() -> list[dict]:
+    rows = db.fetch_all("SELECT h.*, c.razao_social, c.tier FROM handoffs h JOIN clientes c USING (cliente_id) ORDER BY h.criado_em DESC")
+    for r in rows:
+        r["briefing"] = json.loads(r.pop("briefing_json") or "{}")
+    return rows
+
+
 def listar_roteiros() -> list[dict]:
     return db.fetch_all("SELECT * FROM roteiros ORDER BY generico, roteiro_id")
 
@@ -72,7 +79,16 @@ def _log(conv_id: str, role: str, conteudo: str, auditoria: dict | None = None, 
         pass
 
 
-def processar(conv_id: str, texto: str) -> dict:
+def processar_audio(conv_id: str, audio: bytes, mime: str, duracao_s: float | None) -> dict:
+    """Áudio do cliente -> transcrição -> mesmo fluxo de texto. A transcrição fica visível e auditada."""
+    ext = {"audio/webm": "webm", "audio/ogg": "ogg", "audio/wav": "wav", "audio/mp4": "m4a", "audio/mpeg": "mp3"}.get(mime.split(";")[0], "webm")
+    t = llm_client.transcrever(audio, f"audio.{ext}", mime.split(";")[0])
+    if not t["texto"]:
+        raise ValueError("Não deu para entender o áudio (transcrição vazia). Tente de novo.")
+    return processar(conv_id, t["texto"], {"audio": {"duracao_s": duracao_s, "modelo": t["modelo"], "custo_gate": t["custo_gate"]}})
+
+
+def processar(conv_id: str, texto: str, meta_cliente: dict | None = None) -> dict:
     row = db.fetch_one("SELECT * FROM conversas WHERE conversation_id=?", (conv_id,))
     if not row:
         raise LookupError("Conversa inexistente")
@@ -80,10 +96,12 @@ def processar(conv_id: str, texto: str) -> dict:
         raise ValueError("Conversa encerrada; reinicie para continuar")
     estado = json.loads(row["estado_json"])
     historico = db.fetch_all("SELECT role, conteudo FROM mensagens WHERE conversation_id=? ORDER BY message_id", (conv_id,))
-    _log(conv_id, "cliente", texto)
-    ctx = {"conversation_id": conv_id, "cliente_id": row["cliente_id"], "modo": row["modo"], "memoria": estado["memoria"]}
+    _log(conv_id, "cliente", texto, meta_cliente)
+    ctx = {"conversation_id": conv_id, "cliente_id": row["cliente_id"], "modo": row["modo"], "memoria": estado["memoria"],
+           "historico": historico + [{"role": "cliente", "conteudo": texto}]}
+    entrada = f"[ÁUDIO TRANSCRITO] {texto}" if meta_cliente and meta_cliente.get("audio") else texto
     try:
-        r = (agent.turno_a if row["modo"] == "A" else agent.turno_b)(ctx, historico, texto)
+        r = (agent.turno_a if row["modo"] == "A" else agent.turno_b)(ctx, historico, entrada)
     except llm_client.LLMUnavailable as e:
         r = {"texto": agent.CONTINGENCIA, "chamadas": [], "violacoes": [], "resultado_validacao": "contingencia",
              "erro_llm": str(e), "modo_ferramentas": None, "tokens_entrada": 0, "tokens_saida": 0, "custo_gate": 0}

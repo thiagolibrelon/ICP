@@ -4,11 +4,14 @@ PRAGMA foreign_keys = ON;
 CREATE TABLE IF NOT EXISTS clientes (
   cliente_id TEXT PRIMARY KEY, codigo TEXT UNIQUE, cnpj TEXT UNIQUE, razao_social TEXT, icp TEXT, cidade TEXT,
   grupo TEXT, perfil_preco TEXT, km_mes INTEGER, produto_atual TEXT, modelo_atual TEXT, qtd_atual INTEGER,
-  dias_diaria_mes INTEGER, contrato_vence_dias INTEGER, frota_propria INTEGER, situacao TEXT, roteiro TEXT
+  dias_diaria_mes INTEGER, contrato_vence_dias INTEGER, frota_propria INTEGER, situacao TEXT, roteiro TEXT, tier TEXT
 );
 CREATE TABLE IF NOT EXISTS veiculos (
   modelo TEXT PRIMARY KEY, categoria TEXT, eletrico INTEGER, preco_ad REAL, preco_am_12 REAL, preco_am_24 REAL,
   preco_am_36 REAL, margem_ia_pct REAL, margem_gerente_pct REAL
+);
+CREATE TABLE IF NOT EXISTS adicionais (
+  codigo TEXT PRIMARY KEY, nome TEXT, preco_mensal_por_veiculo REAL, unidade TEXT, quando_oferecer TEXT
 );
 CREATE TABLE IF NOT EXISTS estoque (
   modelo TEXT REFERENCES veiculos(modelo), cidade TEXT, unidades_iniciais INTEGER, unidades INTEGER,
@@ -30,9 +33,10 @@ CREATE TABLE IF NOT EXISTS propostas (
   proposta_id TEXT PRIMARY KEY, conversation_id TEXT, cliente_id TEXT, modo TEXT, modelo TEXT, cidade TEXT,
   produto TEXT, quantidade INTEGER, prazo_meses INTEGER, dias INTEGER, desconto_pct REAL, preco_unitario REAL,
   total_mensal REAL, total REAL, aprovado_por TEXT, unidades_reservadas INTEGER, entrega_futura INTEGER,
-  checagem_json TEXT, criado_em TEXT
+  checagem_json TEXT, criado_em TEXT, adicionais_json TEXT, total_adicionais_mensal REAL
 );
 CREATE TABLE IF NOT EXISTS handoffs (
-  handoff_id TEXT PRIMARY KEY, conversation_id TEXT, cliente_id TEXT, motivo TEXT, resumo TEXT, criado_em TEXT
+  handoff_id TEXT PRIMARY KEY, conversation_id TEXT, cliente_id TEXT, motivo TEXT, resumo TEXT, criado_em TEXT,
+  briefing_json TEXT, status TEXT DEFAULT 'ABERTO'
 );
 CREATE TABLE IF NOT EXISTS meta (chave TEXT PRIMARY KEY, valor TEXT);
