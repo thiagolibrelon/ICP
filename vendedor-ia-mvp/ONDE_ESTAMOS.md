@@ -70,7 +70,18 @@ em 17 dias/mês) · `comparar_eletrico` (Dolphin compensa a partir de ~930 km/m�
 
 As comparações dizem a verdade quando **não** compensa (ex.: diária é melhor para quem usa 6 dias/mês).
 
-### 3.4 Governança e medição
+### 3.4 Naturalidade: a vendedora "Fernanda"
+
+- Persona **Fernanda**, da venda interna; **nunca diz que é humana** (se perguntarem, é a assistente virtual do time).
+- Guia de estilo WhatsApp no prompt: mensagens curtas, 1 a 3 balões, uma pergunta por vez, acompanha o tom do cliente,
+  usa o cadastro com naturalidade, sem listas/markdown e sem fórmulas de robô ("Entendo sua preocupação", "Fico à
+  disposição"...).
+- Na tela, cada balão aparece em sequência com "Fernanda está digitando…" e pausa proporcional ao tamanho.
+- Mensagem segura e de contingência reescritas com tom humano.
+- **Tiques de robô** são medidos (não bloqueiam): entram na avaliação e no comparativo A × B.
+- Próximo nível de naturalidade: exemplos reais anonimizados dos melhores vendedores (camada 2 da seção 5).
+
+### 3.5 Governança e medição
 
 - **Validador**: todo R$ e % dito ao cliente precisa ter vindo de uma ferramenta; detecta margem revelada, proposta/
   protocolo afirmados sem registro e vazamento de instruções.
@@ -79,9 +90,9 @@ As comparações dizem a verdade quando **não** compensa (ex.: diária é melho
 - **Exportar p/ classificador**: gera o CSV no formato de entrada do `classificar_ligacoes_diario.py` → o vendedor IA é
   medido com a **mesma régua C12** das ligações reais.
 - **Chave**: variável `API_KEY` ou janela; fica só na memória (nunca em HTML, log ou arquivo versionado).
-- **Testes automáticos**: 36 (preço, alçada, gerente, estoque, comparações, agente A/B, validador, API, cliente do LLM).
+- **Testes automáticos**: 40 (preço, alçada, gerente, estoque, comparações, agente A/B, validador, API, cliente do LLM).
 
-### 3.5 Como rodar
+### 3.6 Como rodar
 
 ```bash
 cd vendedor-ia-mvp

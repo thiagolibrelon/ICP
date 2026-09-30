@@ -19,9 +19,10 @@ BASE = (PROMPTS / "vendedor_base.md").read_text(encoding="utf-8")
 REGRAS_B = (PROMPTS / "vendedor_b.md").read_text(encoding="utf-8")
 REGRAS_A = (PROMPTS / "vendedor_a.md").read_text(encoding="utf-8")
 MAX_PASSOS = 8
-CONTINGENCIA = "Estou com uma instabilidade para consultar o sistema agora. Registrei sua mensagem e te retorno em até 1 dia útil."
-MENSAGEM_SEGURA = ("Quero te passar isso certinho, então vou confirmar as condições no sistema antes de falar em valores. "
-                   "Pode me confirmar modelo, quantidade, cidade e por quanto tempo?")
+CONTINGENCIA = ("Opa, meu sistema deu uma travada aqui e não tô conseguindo consultar agora 😕\n\n"
+                "Já anotei sua mensagem e te retorno ainda hoje ou, no máximo, em 1 dia útil, tá?")
+MENSAGEM_SEGURA = ("Deixa eu confirmar isso certinho no sistema antes de te passar valor, pra não te falar nada errado.\n\n"
+                   "Me confirma só qual modelo, quantos carros e por quanto tempo?")
 
 _num = {"type": "integer"}
 _str = {"type": "string"}
@@ -185,12 +186,22 @@ def turno_b(ctx: dict, historico: list[dict], texto_cliente: str) -> dict:
             violacoes_brutas += viol
             texto, final = MENSAGEM_SEGURA, "mensagem_segura"
         else:
-            texto, final = conteudo, ("corrigida" if corrigiu else "ok")
+            texto, final = formatar_baloes(conteudo), ("corrigida" if corrigiu else "ok")
         break
     else:
         texto, final = MENSAGEM_SEGURA, "limite_de_passos"
     return {"texto": texto, "chamadas": chamadas, "violacoes": violacoes_brutas, "resultado_validacao": final,
-            "modo_ferramentas": _modo_ferramentas["atual"], **uso}
+            "modo_ferramentas": _modo_ferramentas["atual"], "tiques": validator.tiques_de_robo(texto), **uso}
+
+
+def formatar_baloes(texto: str, maximo: int = 3) -> str:
+    """Estilo WhatsApp: sem markdown, 1 a 3 balões separados por linha em branco."""
+    t = texto.replace("**", "").replace("__", "")
+    t = "\n".join(ln[2:] if ln.startswith(("- ", "• ", "* ")) else ln for ln in t.splitlines())
+    baloes = [b.strip() for b in t.split("\n\n") if b.strip()]
+    if len(baloes) > maximo:
+        baloes = baloes[: maximo - 1] + [" ".join(baloes[maximo - 1:])]
+    return "\n\n".join(baloes)
 
 
 def _validar(texto: str, ctx: dict) -> list[str]:
@@ -245,7 +256,7 @@ def turno_a(ctx: dict, historico: list[dict], texto_cliente: str) -> dict:
         j = json.loads(conteudo)
     except json.JSONDecodeError:
         j = {"resposta": conteudo}
-    texto = str(j.get("resposta") or "").strip()
+    texto = formatar_baloes(str(j.get("resposta") or "").strip())
     acoes, marcas = [], []
     prop = j.get("registrar_proposta")
     if isinstance(prop, dict):
@@ -276,7 +287,7 @@ def turno_a(ctx: dict, historico: list[dict], texto_cliente: str) -> dict:
     marcas += [v for v in validator.validar(texto, extras, houve_prop, houve_ho, margens_gerente(), set())
                if not v.startswith("PERCENTUAL_NAO_VERIFICADO")]
     return {"texto": texto or conteudo, "chamadas": acoes, "violacoes": marcas, "resultado_validacao": "marcado" if marcas else "ok",
-            "modo_ferramentas": "sem_ferramentas", "tokens_entrada": r["tokens_entrada"] or 0, "tokens_saida": r["tokens_saida"] or 0,
+            "modo_ferramentas": "sem_ferramentas", "tiques": validator.tiques_de_robo(texto or conteudo), "tokens_entrada": r["tokens_entrada"] or 0, "tokens_saida": r["tokens_saida"] or 0,
             "custo_gate": r["custo_gate"] or 0.0}
 
 

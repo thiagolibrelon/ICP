@@ -148,3 +148,27 @@ def test_conversa_livre_nao_tem_roteiro():
 def test_modo_invalido(modo):
     with pytest.raises(ValueError):
         cs.iniciar("C01", modo)
+
+
+# ------------------------------------------------------------------ naturalidade (Fernanda)
+def test_formata_em_baloes_sem_markdown():
+    t = agent.formatar_baloes("Oi! **Tudo bem?**\n\n- Onix sai por R$ 2.690,00\n\nMais um\n\nE outro")
+    assert "**" not in t and "- Onix" not in t and t.count("\n\n") == 2   # no máximo 3 balões
+
+
+def test_tiques_de_robo_sao_medidos_sem_bloquear(gpt):
+    gpt("Entendo sua preocupação! Fico à disposição. Quantos carros? Qual cidade?")
+    m = ultima(cs.processar(nova(), "Oi"))
+    assert m["auditoria"]["resultado_validacao"] == "ok"
+    assert {"entendo sua preocupacao", "fico a disposicao", "mais_de_uma_pergunta"} <= set(m["auditoria"]["tiques"])
+    assert evaluation.avaliar(m["conversation_id"])["tiques_de_robo"] == 3
+
+
+def test_mensagens_de_sistema_passam_no_validador():
+    from services import validator
+    for t in (agent.MENSAGEM_SEGURA, agent.CONTINGENCIA):
+        assert validator.validar(t, [], False, False, {6.0}, set()) == [] and validator.tiques_de_robo(t) == []
+
+
+def test_prompt_tem_persona_e_transparencia():
+    assert "FERNANDA" in agent.BASE and "Nunca diga que é humana" in agent.BASE

@@ -50,23 +50,51 @@ function renderCliente() {
   if (conv.roteiro) $('roteiro-texto').textContent = conv.roteiro.texto;
 }
 
-function renderChat() {
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const baloes = t => String(t || '').split(/\n\s*\n/).map(x => x.trim()).filter(Boolean);
+// pausa de "digitando" proporcional ao tamanho do balão (humano no WhatsApp não responde instantâneo)
+const tempoDigitando = t => Math.min(3500, Math.max(700, t.length * 28));
+
+function htmlMensagem(m, ate) {
+  if (m.role === 'cliente') return `<div class="m cliente"><div class="who">Cliente</div>${esc(m.conteudo)}</div>`;
+  const a = m.auditoria || {}, bs = baloes(m.conteudo).slice(0, ate ?? 99);
+  const flag = (a.violacoes || []).length
+    ? `<div class="flag ${conv.modo === 'A' ? 'bad' : 'warn'}">${conv.modo === 'A' ? '⚑ marcado' : '⚑ corrigido pelo sistema'}: ${esc(a.violacoes.join(', '))}</div>` : '';
+  return bs.map((b, i) => `<div class="m vendedor" data-id="${m.message_id}">${i === 0 ? '<div class="who">Fernanda · Vendedor IA</div>' : ''}${esc(b)}${i === bs.length - 1 ? flag : ''}</div>`).join('');
+}
+
+function renderChat(esconderId) {
   renderCliente();
   const vazia = !conv.mensagens.length;
   $('chat').innerHTML = (vazia ? `<div class="nota">Atendimento receptivo: mande a primeira mensagem como <b>${esc(conv.cliente.razao_social)}</b>.</div>` : '') +
-    conv.mensagens.map(m => {
-      const a = m.auditoria || {};
-      const flag = m.role === 'vendedor' && (a.violacoes || []).length
-        ? `<div class="flag ${conv.modo === 'A' ? 'bad' : 'warn'}">${conv.modo === 'A' ? '⚑ marcado' : '⚑ corrigido pelo sistema'}: ${esc(a.violacoes.join(', '))}</div>` : '';
-      return `<div class="m ${m.role}" data-id="${m.message_id}"><div class="who">${m.role === 'vendedor' ? 'Vendedor IA' : 'Cliente'}</div>${esc(m.conteudo)}${flag}</div>`;
-    }).join('');
+    conv.mensagens.filter(m => m.message_id !== esconderId).map(m => htmlMensagem(m)).join('');
   $('chat').scrollTop = 1e9;
-  document.querySelectorAll('.m.vendedor').forEach(el => el.onclick = () => showAudit(+el.dataset.id));
+  ligarCliques();
   const ativa = conv.status === 'ATIVA';
   $('msg').disabled = !ativa; $('form').querySelector('button').disabled = !ativa;
-  const last = [...conv.mensagens].reverse().find(m => m.role === 'vendedor');
+  const last = [...conv.mensagens].reverse().find(m => m.role === 'vendedor' && m.message_id !== esconderId);
   if (last) showAudit(last.message_id); else $('audit').textContent = 'Sem respostas ainda.';
   estoque();
+}
+
+function ligarCliques() {
+  document.querySelectorAll('.m.vendedor').forEach(el => el.onclick = () => showAudit(+el.dataset.id));
+}
+
+async function animarResposta(m) {
+  const bs = baloes(m.conteudo);
+  for (let i = 0; i < bs.length; i++) {
+    $('chat').insertAdjacentHTML('beforeend', '<div class="nota digitando">Fernanda está digitando…</div>');
+    $('chat').scrollTop = 1e9;
+    await sleep(tempoDigitando(bs[i]));
+    document.querySelectorAll('.digitando').forEach(e => e.remove());
+    document.querySelectorAll(`.m.vendedor[data-id="${m.message_id}"]`).forEach(e => e.remove());
+    $('chat').insertAdjacentHTML('beforeend', htmlMensagem(m, i + 1));
+    $('chat').scrollTop = 1e9;
+    if (i < bs.length - 1) await sleep(350);
+  }
+  ligarCliques();
+  showAudit(m.message_id);
 }
 
 function showAudit(id) {
@@ -78,6 +106,7 @@ function showAudit(id) {
   $('audit').innerHTML = `<dl><dt>Modo</dt><dd>${esc(a.modo)} ${a.modo_ferramentas ? '· ' + esc(a.modo_ferramentas) : ''}</dd>
     <dt>Validação</dt><dd class="${val[0]}">${esc(val[1])}</dd>
     ${(a.violacoes || []).length ? `<dt>Achados</dt><dd class="bad">${esc(a.violacoes.join(', '))}</dd>` : ''}
+    ${(a.tiques || []).length ? `<dt>Tiques de robô</dt><dd class="warn">${esc(a.tiques.join(', '))}</dd>` : ''}
     ${a.erro_llm ? `<dt>Erro GPT</dt><dd class="bad">${esc(a.erro_llm)}</dd>` : ''}
     <dt>Tokens</dt><dd>${(m.tokens_entrada || 0)} + ${(m.tokens_saida || 0)}</dd><dt>Custo gate</dt><dd>${m.custo_gate ? 'US$ ' + m.custo_gate : '—'}</dd></dl>
     <h2>${conv.modo === 'A' ? 'Ações decididas pelo modelo' : 'Ferramentas chamadas'} (${(a.chamadas || []).length})</h2>${tools || '<div class="badge">nenhuma</div>'}`;
@@ -106,6 +135,7 @@ $('btn-aval').onclick = async () => {
     <dt>Valor não verificado</dt><dd>${r.valores_nao_verificados}</dd><dt>Margem revelada</dt><dd class="${r.margem_revelada ? 'bad' : ''}">${r.margem_revelada}</dd>
     <dt>Proposta fora da regra</dt><dd class="${r.propostas_fora_da_regra.length ? 'bad' : ''}">${r.propostas_fora_da_regra.length}</dd>
     <dt>Concessão sem contrapartida</dt><dd>${r.concessao_sem_contrapartida.length}</dd><dt>Além do estoque</dt><dd>${r.alem_do_estoque}</dd>
+    <dt>Tiques de robô</dt><dd class="${r.tiques_de_robo ? 'warn' : 'ok'}">${r.tiques_de_robo}</dd><dt>Balões por resposta</dt><dd>${r.baloes_por_resposta ?? '—'}</dd>
     <dt>Tokens / custo</dt><dd>${r.tokens} / ${r.custo_gate ? 'US$ ' + r.custo_gate : '—'}</dd></dl>`;
 };
 $('btn-comp').onclick = async () => {
@@ -114,7 +144,7 @@ $('btn-comp').onclick = async () => {
     ['Valor não verificado %', 'valor_nao_verificado_pct'], ['Margem revelada %', 'margem_revelada_pct'], ['Proposta fora da regra %', 'proposta_fora_da_regra_pct'],
     ['Concessão sem contrapartida %', 'concessao_sem_contrapartida_pct'], ['Além do estoque %', 'alem_do_estoque_pct'],
     ['Diagnóstico antes do preço %', 'diagnostico_antes_do_preco_pct'], ['Próximo passo %', 'proximo_passo_definido_pct'],
-    ['Turnos médios', 'media_turnos'], ['Tokens/conversa', 'tokens_por_conversa'], ['Custo gate/conversa', 'custo_gate_por_conversa']];
+    ['Com tique de robô %', 'com_tique_de_robo_pct'], ['Turnos médios', 'media_turnos'], ['Tokens/conversa', 'tokens_por_conversa'], ['Custo gate/conversa', 'custo_gate_por_conversa']];
   $('aval').innerHTML = `<table><tr><th>Comparativo</th><th>A puro</th><th>B ferramentas</th></tr>${linhas.map(([n, k]) => `<tr><td>${n}</td><td>${A[k] ?? '—'}</td><td>${B[k] ?? '—'}</td></tr>`).join('')}</table>
     <div class="badge">Só conversas com roteiro. ${r.conversas_livres_fora_do_comparativo} conversas livres ficaram fora.</div>`;
 };
@@ -125,10 +155,16 @@ $('form').onsubmit = async e => {
   e.preventDefault();
   const t = $('msg').value.trim(); if (!t || !conv) return;
   $('msg').value = ''; $('msg').disabled = true;
-  $('chat').insertAdjacentHTML('beforeend', `<div class="m cliente"><div class="who">Cliente</div>${esc(t)}</div><div class="nota" id="digitando">vendedor digitando…</div>`);
+  $('chat').insertAdjacentHTML('beforeend', `<div class="m cliente"><div class="who">Cliente</div>${esc(t)}</div><div class="nota digitando">Fernanda está digitando…</div>`);
   $('chat').scrollTop = 1e9;
-  try { conv = await post(`/api/conversations/${conv.conversation_id}/messages`, {conteudo: t}); renderChat(); }
-  catch (err) { alert(err.message); $('msg').disabled = false; }
+  try {
+    conv = await post(`/api/conversations/${conv.conversation_id}/messages`, {conteudo: t});
+    const nova = [...conv.mensagens].reverse().find(m => m.role === 'vendedor');
+    renderChat(nova && nova.message_id);
+    $('msg').disabled = true;
+    if (nova) await animarResposta(nova);
+    $('msg').disabled = conv.status !== 'ATIVA';
+  } catch (err) { alert(err.message); $('msg').disabled = false; }
   $('msg').focus();
 };
 init();

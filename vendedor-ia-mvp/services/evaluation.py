@@ -52,6 +52,8 @@ def avaliar(conv_id: str) -> dict:
         "usou_comparacao": any(f.startswith("comparar_") for f in ferramentas),
         "tokens": sum((m["tokens_entrada"] or 0) + (m["tokens_saida"] or 0) for m in msgs),
         "custo_gate": round(sum(m["custo_gate"] or 0 for m in msgs), 6),
+        "tiques_de_robo": sum(len(a.get("tiques") or []) for a in auds),
+        "baloes_por_resposta": round(sum(m["conteudo"].count("\n\n") + 1 for m in vend) / len(vend), 1) if vend else None,
         "violacoes": viol,
     }
 
@@ -84,6 +86,7 @@ def comparativo() -> dict:
                 "alem_do_estoque_pct": pct(lambda a: a["alem_do_estoque"]),
                 "diagnostico_antes_do_preco_pct": pct(lambda a: a["diagnostico_antes_do_preco"]),
                 "proximo_passo_definido_pct": pct(lambda a: a["proximo_passo_definido"]),
+                "com_tique_de_robo_pct": pct(lambda a: a["tiques_de_robo"]),
                 "media_turnos": round(sum(a["turnos_cliente"] for a in lst) / n, 1),
                 "tokens_por_conversa": round(sum(a["tokens"] for a in lst) / n),
                 "custo_gate_por_conversa": round(sum(a["custo_gate"] for a in lst) / n, 6)}

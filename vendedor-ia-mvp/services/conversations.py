@@ -87,7 +87,7 @@ def processar(conv_id: str, texto: str) -> dict:
     except llm_client.LLMUnavailable as e:
         r = {"texto": agent.CONTINGENCIA, "chamadas": [], "violacoes": [], "resultado_validacao": "contingencia",
              "erro_llm": str(e), "modo_ferramentas": None, "tokens_entrada": 0, "tokens_saida": 0, "custo_gate": 0}
-    auditoria = {k: r.get(k) for k in ("chamadas", "violacoes", "resultado_validacao", "modo_ferramentas", "erro_llm")}
+    auditoria = {k: r.get(k) for k in ("chamadas", "violacoes", "resultado_validacao", "modo_ferramentas", "erro_llm", "tiques")}
     auditoria["modo"] = row["modo"]
     _log(conv_id, "vendedor", r["texto"], auditoria, r)
     estado["memoria"] = ctx["memoria"]

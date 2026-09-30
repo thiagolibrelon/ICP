@@ -75,3 +75,19 @@ def validar(texto: str, saidas: list, houve_proposta: bool, houve_handoff: bool,
     if not texto.strip():
         v.append("RESPOSTA_VAZIA")
     return v
+
+
+# Naturalidade: fórmulas que denunciam robô. Não bloqueiam a mensagem; entram na avaliação para medir fluidez.
+TIQUES = ["entendo sua preocupacao", "entendo a sua preocupacao", "otima pergunta", "fico a disposicao", "estou a disposicao",
+          "como posso ajuda-lo", "como posso ajuda-la", "agradeco o contato", "prezado", "certamente!", "com certeza!",
+          "espero ter ajudado", "nao hesite", "qualquer duvida, estou aqui", "como assistente virtual, eu"]
+
+
+def tiques_de_robo(texto: str) -> list[str]:
+    t = norm(texto)
+    achados = [x for x in TIQUES if x in t]
+    if texto.count("?") > 1:
+        achados.append("mais_de_uma_pergunta")
+    if re.search(r"^\s*(?:[-•*]|\d+[.)])\s", texto, re.M):
+        achados.append("lista")
+    return achados

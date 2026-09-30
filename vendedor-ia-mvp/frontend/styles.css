@@ -14,6 +14,8 @@ aside,section{background:var(--card);border:1px solid var(--line);border-radius:
 #chat{flex:1;overflow:auto;padding:12px;display:flex;flex-direction:column;gap:8px}
 .m{max-width:80%;padding:8px 12px;border-radius:10px;white-space:pre-wrap}
 .m.vendedor{background:var(--bg);border:1px solid var(--line);align-self:flex-start;cursor:pointer}
+.m.vendedor+.m.vendedor{margin-top:-4px}
+.digitando{text-align:left;font-style:italic}
 .m.cliente{background:var(--brand);color:#fff;align-self:flex-end}
 .m.sel{outline:2px solid var(--brand)}.who{font-size:11px;opacity:.75;margin-bottom:2px}
 .m .flag{font-size:11px;margin-top:4px}
