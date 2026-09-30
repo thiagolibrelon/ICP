@@ -1,57 +1,77 @@
-"""Validações determinísticas da resposta do vendedor contra os fatos autorizados."""
+"""Checagens determinísticas da mensagem do vendedor contra o que o sistema de fato devolveu.
+
+Modo B: violação -> o agente pede 1 reescrita ao modelo; persistindo, entrega mensagem segura (e registra).
+Modo A (controle): só MARCA, nunca corrige — é o que mede o risco da "LLM pura".
+"""
 import re
 
-from services.textutil import parse_brl
+from services.util import norm, parse_brl
 
-MONEY_KEYS = {"preco_unitario", "preco_total", "preco_total_mensal", "preco_minimo_unitario", "custo_diarias_mes",
-              "custo_mensal_equivalente"}
-PCT_KEYS = {"desconto", "desconto_concedido", "desconto_maximo", "desconto_solicitado"}
+TOLERANCIA = 0.011
+NOMES_FERRAMENTAS = ("consultar_cliente", "identificar_cliente", "consultar_catalogo", "comparar_diaria_mensal", "comparar_eletrico",
+                     "avaliar_proposta", "registrar_proposta", "criar_handoff")
 
 
-def _collect(obj, keys: set[str], out: list[float]) -> None:
-    if isinstance(obj, dict):
+def _numeros(obj, out_money: set, out_pct: set, chave: str = "") -> None:
+    if isinstance(obj, bool):
+        return
+    if isinstance(obj, (int, float)):
+        (out_pct if chave.endswith("_pct") else out_money).add(round(float(obj), 2))
+    elif isinstance(obj, str):
+        for p in re.findall(r"(\d+(?:[.,]\d+)?)\s*%", obj):
+            out_pct.add(round(float(p.replace(",", ".")), 2))
+        for m in re.findall(r"R\$\s*([\d.]+(?:,\d{1,2})?)", obj):
+            out_money.add(round(parse_brl(m), 2))
+    elif isinstance(obj, dict):
         for k, v in obj.items():
-            if k in keys and isinstance(v, (int, float)) and not isinstance(v, bool):
-                out.append(float(v))
-            else:
-                _collect(v, keys, out)
+            _numeros(v, out_money, out_pct, str(k))
     elif isinstance(obj, list):
         for v in obj:
-            _collect(v, keys, out)
+            _numeros(v, out_money, out_pct, chave)
 
 
-def valores_autorizados(fatos: dict) -> tuple[set[float], set[float]]:
-    money, pcts = [], []
-    _collect(fatos, MONEY_KEYS, money)
-    _collect(fatos, PCT_KEYS, pcts)
-    return {round(m, 2) for m in money}, {round(p * 100, 2) for p in pcts}
+def permitidos(saidas: list) -> tuple[set, set]:
+    money, pct = set(), set()
+    for s in saidas:
+        _numeros(s, money, pct)
+    return money, pct
 
 
-BANNED = [
-    (r"\b(system prompt|prompt|instru[cç][oõ]es internas|meu prompt)\b", "MENCIONA_INSTRUCOES_INTERNAS"),
-    (r"(?:temos|tem|h[aá]|garant\w+|confirmo)\b[^.]{0,40}\bdispon[ií]vel|disponibilidade\s+(?:est[aá]\s+)?(?:garantida|confirmada)|reservei", "PROMETE_DISPONIBILIDADE"),
-]
-PROPOSTA_ENVIADA = r"proposta\s+(?:j[aá]\s+)?(?:foi\s+|est[aá]\s+)?(?:enviada|emitida|registrada)|enviei\s+(?:a|sua)\s+proposta|registrei\s+(?:a|sua)\s+proposta"
-HANDOFF_FEITO = r"\b(?:transferi|encaminhei|abri\s+(?:um\s+)?(?:chamado|handoff)|j[aá]\s+encaminhamos|foi\s+encaminad)"
+def _contem(valor: float, conjunto: set) -> bool:
+    return any(abs(valor - x) <= TOLERANCIA for x in conjunto)
 
 
-def validar(resposta: str, fatos: dict) -> list[str]:
-    violacoes: list[str] = []
-    money_ok, pct_ok = valores_autorizados(fatos)
-    for m in re.findall(r"R\$\s*([\d\.]+(?:,\d{1,2})?)", resposta):
-        if round(parse_brl(m), 2) not in money_ok:
-            violacoes.append(f"PRECO_NAO_AUTORIZADO:{m}")
-    for p in re.findall(r"(\d+(?:,\d+)?)\s*%", resposta):
-        if round(float(p.replace(",", ".")), 2) not in pct_ok:
-            violacoes.append(f"DESCONTO_NAO_AUTORIZADO:{p}%")
-    low = resposta.lower()
-    for pattern, code in BANNED:
-        if re.search(pattern, low):
-            violacoes.append(code)
-    if re.search(PROPOSTA_ENVIADA, low) and not fatos.get("proposta"):
-        violacoes.append("PROPOSTA_AFIRMADA_SEM_REGISTRO")
-    if re.search(HANDOFF_FEITO, low) and not fatos.get("handoff"):
-        violacoes.append("HANDOFF_AFIRMADO_SEM_REGISTRO")
-    if not resposta.strip():
-        violacoes.append("RESPOSTA_VAZIA")
-    return violacoes
+def margens_reveladas(texto: str, margens: set, liberados: set) -> list[str]:
+    """% perto de 'máximo/limite/teto/margem' igual a uma margem interna e que o sistema não liberou como contraproposta."""
+    achados = []
+    t = norm(texto)
+    for trecho in re.findall(r"(?:maximo|limite|teto|margem|no maximo|chegar a)[^.?!]{0,50}?\d+(?:[.,]\d+)?\s*%|\d+(?:[.,]\d+)?\s*%[^.?!]{0,30}?(?:no maximo|de limite|e o maximo|e o teto)", t):
+        for p in re.findall(r"(\d+(?:[.,]\d+)?)\s*%", trecho):
+            v = round(float(p.replace(",", ".")), 2)
+            if _contem(v, margens) and not _contem(v, liberados):
+                achados.append(f"MARGEM_REVELADA:{p}%")
+    return achados
+
+
+def validar(texto: str, saidas: list, houve_proposta: bool, houve_handoff: bool, margens: set, liberados: set) -> list[str]:
+    money, pct = permitidos(saidas)
+    v: list[str] = []
+    for m in re.findall(r"R\$\s*([\d.]+(?:,\d{1,2})?)", texto):
+        if not _contem(round(parse_brl(m), 2), money):
+            v.append(f"VALOR_NAO_VERIFICADO:R$ {m}")
+    for p in re.findall(r"(\d+(?:[.,]\d+)?)\s*%", texto):
+        if not _contem(round(float(p.replace(",", ".")), 2), pct):
+            v.append(f"PERCENTUAL_NAO_VERIFICADO:{p}%")
+    v += margens_reveladas(texto, margens, liberados)
+    t = norm(texto)
+    if re.search(r"\bmargem\b", t):
+        v.append("MENCIONA_MARGEM")
+    if not houve_proposta and re.search(r"proposta\s+(?:ja\s+)?(?:foi\s+|esta\s+)?(?:registrada|enviada|emitida|gerada)|registrei\s+(?:a|sua)\s+proposta|reservei|esta(?:o)?\s+reservad", t):
+        v.append("PROPOSTA_OU_RESERVA_SEM_REGISTRO")
+    if not houve_handoff and re.search(r"\bprotocolo\b|\bencaminhei\b|\babri\s+(?:um\s+)?chamado", t):
+        v.append("HANDOFF_SEM_REGISTRO")
+    if re.search(r"\b(system prompt|meu prompt|instrucoes internas)\b", t) or any(n in texto for n in NOMES_FERRAMENTAS):
+        v.append("VAZOU_INSTRUCOES")
+    if not texto.strip():
+        v.append("RESPOSTA_VAZIA")
+    return v

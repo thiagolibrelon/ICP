@@ -1,4 +1,4 @@
-let conv = null, auditOn = true, cenarios = [];
+let conv = null, clientes = [], roteiros = [], auditOn = true;
 const $ = id => document.getElementById(id);
 const api = async (url, opts) => {
   const r = await fetch(url, opts && {headers: {'Content-Type': 'application/json'}, ...opts});
@@ -7,97 +7,128 @@ const api = async (url, opts) => {
 };
 const post = (url, body) => api(url, {method: 'POST', body: JSON.stringify(body || {})});
 const esc = s => String(s ?? '').replace(/[&<>]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;'}[c]));
-const pct = v => v == null ? '—' : (v * 100).toFixed(1).replace('.0', '').replace('.', ',') + '%';
-const brl = v => v == null ? '—' : v.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
+const CIDADE = {'SAO PAULO': 'São Paulo', 'CURITIBA': 'Curitiba', 'BELO HORIZONTE': 'Belo Horizonte'};
 
 async function init() {
   const h = await api('/api/health');
-  $('llm').textContent = `LLM: ${h.llm_configurado ? 'configurado' : 'não configurado (vendedor offline)'} · modo ${h.llm_mode}`;
-  cenarios = await api('/api/scenarios');
-  $('cenario').innerHTML = cenarios.map(c => `<option value="${c.cenario_id}">${esc(c.titulo)}</option>`).join('');
+  $('llm').innerHTML = h.llm_configurado ? `<span class="ok">GPT configurado</span> · modo ${h.llm_mode}`
+    : `<span class="bad">GPT não configurado</span> — o vendedor responde com mensagem de contingência`;
+  [clientes, roteiros] = await Promise.all([api('/api/clientes'), api('/api/roteiros')]);
+  $('cliente').innerHTML = clientes.map(c => `<option value="${c.cliente_id}">${esc(c.razao_social)} (${c.icp})</option>`).join('');
+  $('cliente').onchange = preencherRoteiros; preencherRoteiros();
+  estoque();
+}
+
+function preencherRoteiros() {
+  const cid = $('cliente').value;
+  const proprio = roteiros.filter(r => r.cliente_id === cid);
+  const gen = roteiros.filter(r => r.generico);
+  $('roteiro').innerHTML = [...proprio.map(r => `<option value="${r.roteiro_id}">Roteiro do cliente</option>`),
+    ...gen.map(r => `<option value="${r.roteiro_id}">Roteiro: ${esc(r.titulo)}</option>`),
+    '<option value="__livre">Conversa livre (sem roteiro)</option>'].join('');
+}
+
+async function estoque() {
+  const e = await api('/api/estoque');
+  const modelos = [...new Set(e.map(x => x.modelo))], cidades = ['SAO PAULO', 'CURITIBA', 'BELO HORIZONTE'];
+  const cel = (m, c) => { const x = e.find(y => y.modelo === m && y.cidade === c); const cls = x.unidades === 0 ? 'zero' : x.unidades < x.unidades_iniciais ? 'baixo' : '';
+    return `<td class="${cls}" title="inicial ${x.unidades_iniciais} · entrega ${x.prazo_entrega_dias} dias se faltar">${x.unidades}</td>`; };
+  $('estoque').innerHTML = `<table><tr><th></th>${cidades.map(c => `<th>${CIDADE[c].replace('Belo Horizonte', 'BH').replace('São Paulo', 'SP')}</th>`).join('')}</tr>` +
+    modelos.map(m => `<tr><td>${m[0] + m.slice(1).toLowerCase()}</td>${cidades.map(c => cel(m, c)).join('')}</tr>`).join('') + '</table>';
 }
 
 function renderCliente() {
-  if (!conv) return;
-  const c = conv.cliente, r = conv.regra, o = conv.oportunidade;
-  $('cliente').innerHTML = `<dl>
-    <dt>Cliente</dt><dd>${esc(c.razao_social)}</dd><dt>Status</dt><dd>${esc(c.status_relacionamento)}</dd>
-    <dt>Volume atual</dt><dd>${c.volume_medio_ad + c.volume_medio_am} veículos (AD ${c.volume_medio_ad} / AM ${c.volume_medio_am})</dd>
-    <dt>Receita 12m</dt><dd>${brl(c.receita_12m)}</dd><dt>Perfil preço</dt><dd>${esc(c.perfil_preco)}</dd>
-    <dt>Oportunidade</dt><dd>${o ? esc(o.tipo) + ': ' + esc(o.motivo_oportunidade) : '—'}</dd>
-    <dt>Risco churn</dt><dd>${esc(c.risco_churn)}</dd><dt>Desconto máx.</dt><dd>${pct(r && r.desconto_maximo)}</dd>
-    <dt>Desfecho</dt><dd>${esc(conv.desfecho)}</dd></dl>`;
-  const m = (conv.cenario && conv.cenario.meta) || {};
-  const cod = [m.objecao && 'objeção ' + m.objecao, m.produto && 'produto ' + m.produto, m.dado_concreto && 'dado concreto ' + m.dado_concreto,
-               m.problema && 'problema ' + m.problema].filter(Boolean).join(' · ');
-  $('roteiro').innerHTML = m.roteiro ? `${esc(m.roteiro)}${cod ? `<div class="badge" style="margin-top:6px">${esc(cod)}</div>` : ''}` : '—';
+  const c = conv.cliente;
+  const mod = (c.modelo_atual || '').charAt(0) + (c.modelo_atual || '').slice(1).toLowerCase();
+  const uso = c.produto_atual === 'AD' ? `${c.qtd_atual} ${mod} na diária, ~${c.dias_diaria_mes} dias/mês`
+    : c.produto_atual === 'AM' ? `${c.qtd_atual} ${mod} no mensal${c.contrato_vence_dias ? `, vence em ${c.contrato_vence_dias} dias` : ''}`
+    : c.frota_propria ? `frota própria de ${c.frota_propria} carros` : 'sem locação';
+  $('info-cliente').innerHTML = `<dl><dt>Empresa</dt><dd>${esc(c.razao_social)}</dd><dt>CNPJ</dt><dd>${esc(c.cnpj)}</dd>
+    <dt>Perfil</dt><dd>${esc(c.icp)} · ${esc(c.cidade)}</dd><dt>Uso atual</dt><dd>${esc(uso)}</dd><dt>km/mês</dt><dd>${c.km_mes}</dd>
+    <dt>Preço</dt><dd>${esc(c.perfil_preco)}</dd><dt>Conversa</dt><dd>modo <b>${conv.modo}</b>${conv.livre ? ' · livre' : ''} · ${esc(conv.desfecho)}</dd></dl>`;
+  $('box-roteiro').hidden = !conv.roteiro;
+  if (conv.roteiro) $('roteiro-texto').textContent = conv.roteiro.texto;
 }
 
 function renderChat() {
-  $('chat').innerHTML = conv.mensagens.map(m => `<div class="m ${m.role}" data-id="${m.message_id}">
-    <div class="who">${m.role === 'vendedor' ? 'Vendedor IA' : 'Cliente'}</div>${esc(m.conteudo)}</div>`).join('');
+  renderCliente();
+  const vazia = !conv.mensagens.length;
+  $('chat').innerHTML = (vazia ? `<div class="nota">Atendimento receptivo: mande a primeira mensagem como <b>${esc(conv.cliente.razao_social)}</b>.</div>` : '') +
+    conv.mensagens.map(m => {
+      const a = m.auditoria || {};
+      const flag = m.role === 'vendedor' && (a.violacoes || []).length
+        ? `<div class="flag ${conv.modo === 'A' ? 'bad' : 'warn'}">${conv.modo === 'A' ? '⚑ marcado' : '⚑ corrigido pelo sistema'}: ${esc(a.violacoes.join(', '))}</div>` : '';
+      return `<div class="m ${m.role}" data-id="${m.message_id}"><div class="who">${m.role === 'vendedor' ? 'Vendedor IA' : 'Cliente'}</div>${esc(m.conteudo)}${flag}</div>`;
+    }).join('');
   $('chat').scrollTop = 1e9;
   document.querySelectorAll('.m.vendedor').forEach(el => el.onclick = () => showAudit(+el.dataset.id));
   const ativa = conv.status === 'ATIVA';
   $('msg').disabled = !ativa; $('form').querySelector('button').disabled = !ativa;
   const last = [...conv.mensagens].reverse().find(m => m.role === 'vendedor');
-  if (last) showAudit(last.message_id);
-  renderCliente();
+  if (last) showAudit(last.message_id); else $('audit').textContent = 'Sem respostas ainda.';
+  estoque();
 }
 
 function showAudit(id) {
   document.querySelectorAll('.m').forEach(e => e.classList.toggle('sel', +e.dataset.id === id));
-  const m = conv.mensagens.find(x => x.message_id === id), a = m && m.auditoria;
-  if (!a) { $('audit').textContent = '—'; return; }
-  const ferr = (a.ferramentas || []).map(f => `<b>${esc(f.nome)}</b>\n${esc(JSON.stringify(f.entrada))}\n→ ${esc(JSON.stringify(f.saida))}`).join('\n\n');
-  $('audit').innerHTML = `<dl>
-    <dt>Intenção</dt><dd>${esc(a.intencao)}</dd><dt>Confiança</dt><dd>${esc(a.confianca)}</dd>
-    <dt>Ação</dt><dd>${esc(a.acao)}</dd><dt>Regra</dt><dd>${esc(a.regra || '—')}</dd>
-    <dt>Alçada</dt><dd>${a.alcada == null ? '—' : 'Até ' + pct(a.alcada)}</dd><dt>Preço retornado</dt><dd>${brl(a.preco_retornado)}</dd>
-    <dt>Handoff</dt><dd>${a.handoff ? 'Sim' : 'Não'}</dd><dt>Fonte</dt><dd>${esc(a.fonte)}</dd>${a.challenger ? `<dt>Dado concreto</dt><dd>${esc(a.challenger)}</dd>` : ''}${a.problema ? `<dt>Problema</dt><dd>${esc(a.problema)}</dd>` : ''}${a.custo_gate != null ? `<dt>Custo gate</dt><dd>US$ ${a.custo_gate}</dd>` : ''}${a.erro_llm ? `<dt>Erro LLM</dt><dd class="bad">${esc(a.erro_llm)}</dd>` : ''}
-    <dt>Validação</dt><dd class="${a.validacao === 'OK' ? 'ok' : 'bad'}">${esc(a.validacao)}</dd></dl>
-    <h2 style="margin-top:10px">Ferramentas</h2><pre>${ferr || 'nenhuma'}</pre>`;
-  $('audit').style.display = auditOn ? '' : 'none';
+  const m = conv.mensagens.find(x => x.message_id === id), a = (m && m.auditoria) || {};
+  const val = {ok: ['ok', 'OK'], corrigida: ['warn', 'Corrigida pelo sistema (1 reescrita)'], mensagem_segura: ['bad', 'Bloqueada: mensagem segura enviada'],
+    limite_de_passos: ['bad', 'Limite de passos: mensagem segura'], marcado: ['bad', 'Marcada (modo A não corrige)'], contingencia: ['bad', 'Contingência (GPT indisponível)']}[a.resultado_validacao] || ['', a.resultado_validacao];
+  const tools = (a.chamadas || []).map(c => `<div class="tool"><b>${esc(c.nome)}</b>entrada: ${esc(JSON.stringify(c.entrada))}<pre>${esc(JSON.stringify(c.saida, null, 1))}</pre></div>`).join('');
+  $('audit').innerHTML = `<dl><dt>Modo</dt><dd>${esc(a.modo)} ${a.modo_ferramentas ? '· ' + esc(a.modo_ferramentas) : ''}</dd>
+    <dt>Validação</dt><dd class="${val[0]}">${esc(val[1])}</dd>
+    ${(a.violacoes || []).length ? `<dt>Achados</dt><dd class="bad">${esc(a.violacoes.join(', '))}</dd>` : ''}
+    ${a.erro_llm ? `<dt>Erro GPT</dt><dd class="bad">${esc(a.erro_llm)}</dd>` : ''}
+    <dt>Tokens</dt><dd>${(m.tokens_entrada || 0)} + ${(m.tokens_saida || 0)}</dd><dt>Custo gate</dt><dd>${m.custo_gate ? 'US$ ' + m.custo_gate : '—'}</dd></dl>
+    <h2>${conv.modo === 'A' ? 'Ações decididas pelo modelo' : 'Ferramentas chamadas'} (${(a.chamadas || []).length})</h2>${tools || '<div class="badge">nenhuma</div>'}`;
 }
 
 async function novo() {
-  const ident = $('ident').value.trim();
-  conv = await post('/api/conversations', ident ? {identificador: ident} : {cenario_id: $('cenario').value});
-  $('aval').textContent = '—'; renderChat();
+  const r = $('roteiro').value;
+  conv = await post('/api/conversations', {cliente_id: $('cliente').value, modo: $('modo').value, livre: r === '__livre', roteiro_id: r === '__livre' ? null : r});
+  $('aval').textContent = '—'; renderChat(); $('msg').focus();
 }
 
+const sim = v => v ? 'Sim' : 'Não';
 $('btn-novo').onclick = () => novo().catch(e => alert(e.message));
 $('btn-reset').onclick = async () => { if (conv) { conv = await post(`/api/conversations/${conv.conversation_id}/reset`); $('aval').textContent = '—'; renderChat(); } };
-$('btn-obj').onclick = () => {
-  const c = conv && cenarios.find(x => x.cenario_id === conv.cenario_id);
-  if (c) { $('msg').value = c.objecao_texto; $('msg').focus(); }
-};
-$('btn-dados').onclick = async () => {
-  if (!conv) return;
-  const box = $('dados');
-  if (!box.hidden) { box.hidden = true; return; }
-  const h = await api(`/api/customers/${conv.cliente_id}/history`);
-  box.innerHTML = '<h2>Histórico mensal</h2><pre>' + esc(h.map(x => `${x.mes_referencia} AD ${x.volume_medio_ad} AM ${x.volume_medio_am} rec ${brl(x.receita_ad + x.receita_am)} recl ${x.reclamacoes}`).join('\n')) + '</pre>';
-  box.hidden = false;
-};
-$('btn-audit').onclick = () => { auditOn = !auditOn; $('btn-audit').textContent = auditOn ? 'Ocultar auditoria' : 'Mostrar auditoria'; $('audit').style.display = auditOn ? '' : 'none'; };
+$('btn-fechar').onclick = async () => { if (conv) { conv = await post(`/api/conversations/${conv.conversation_id}/close`); renderChat(); } };
+$('btn-estoque').onclick = async () => { if (confirm('Voltar o estoque ao inicial? (afeta todas as conversas)')) { await post('/api/estoque/reiniciar'); estoque(); } };
+$('btn-audit').onclick = () => { auditOn = !auditOn; $('audit-box').hidden = !auditOn; $('btn-audit').textContent = auditOn ? 'Ocultar auditoria' : 'Mostrar auditoria'; };
 $('btn-aval').onclick = async () => {
   if (!conv) return;
   const r = await post(`/api/conversations/${conv.conversation_id}/evaluate`);
-  $('aval').innerHTML = `<dl><dt>Diagnóstico</dt><dd>${r.diagnostico}/5</dd><dt>Regras</dt><dd>${r.aderencia_regras}/5</dd>
-    <dt>Objeção</dt><dd>${r.tratamento_objecao ?? 'n/a'}</dd><dt>Próx. passo</dt><dd>${r.proximo_passo}/5</dd>
-    <dt>Inventou info</dt><dd>${r.informacao_inventada ? 'Sim' : 'Não'}</dd><dt>Desc. fora alçada</dt><dd>${r.desconto_fora_alcada ? 'Sim' : 'Não'}</dd>
-    <dt>Handoff correto</dt><dd>${r.handoff_correto ? 'Sim' : 'Não'}</dd>
-    <dt>Dado concreto</dt><dd>${esc(r.dado_concreto_usado || 'não usou')}${r.dado_concreto_esperado ? ' (esperado ' + esc(r.dado_concreto_esperado) + ')' : ''}</dd><dt>Desfecho</dt><dd class="${r.desfecho_ok ? 'ok' : 'bad'}">${esc(r.desfecho_observado)} (esperado: ${esc(r.desfecho_esperado)})</dd></dl>
-    <ul>${r.observacoes.map(o => `<li>${esc(o)}</li>`).join('')}</ul>`;
+  $('aval').innerHTML = `<dl><dt>Desfecho</dt><dd>${esc(r.desfecho)} (${r.turnos_cliente} turnos)</dd>
+    <dt>Diagnóstico antes do preço</dt><dd>${r.diagnostico_antes_do_preco == null ? '—' : sim(r.diagnostico_antes_do_preco)}</dd>
+    <dt>Próximo passo</dt><dd>${sim(r.proximo_passo_definido)}</dd><dt>Usou comparação (Challenger)</dt><dd>${sim(r.usou_comparacao)}</dd>
+    <dt>Problemas entregues</dt><dd class="${r.mensagens_com_problema_entregues ? 'bad' : 'ok'}">${r.mensagens_com_problema_entregues}</dd>
+    <dt>Correções automáticas (B)</dt><dd>${r.correcoes_automaticas_b}</dd>
+    <dt>Valor não verificado</dt><dd>${r.valores_nao_verificados}</dd><dt>Margem revelada</dt><dd class="${r.margem_revelada ? 'bad' : ''}">${r.margem_revelada}</dd>
+    <dt>Proposta fora da regra</dt><dd class="${r.propostas_fora_da_regra.length ? 'bad' : ''}">${r.propostas_fora_da_regra.length}</dd>
+    <dt>Concessão sem contrapartida</dt><dd>${r.concessao_sem_contrapartida.length}</dd><dt>Além do estoque</dt><dd>${r.alem_do_estoque}</dd>
+    <dt>Tokens / custo</dt><dd>${r.tokens} / ${r.custo_gate ? 'US$ ' + r.custo_gate : '—'}</dd></dl>`;
+};
+$('btn-comp').onclick = async () => {
+  const r = await api('/api/comparativo'), A = r.A_llm_pura, B = r.B_llm_com_ferramentas;
+  const linhas = [['Conversas', 'conversas'], ['Com proposta %', 'com_proposta_pct'], ['Problema entregue ao cliente %', 'com_problema_entregue_ao_cliente_pct'],
+    ['Valor não verificado %', 'valor_nao_verificado_pct'], ['Margem revelada %', 'margem_revelada_pct'], ['Proposta fora da regra %', 'proposta_fora_da_regra_pct'],
+    ['Concessão sem contrapartida %', 'concessao_sem_contrapartida_pct'], ['Além do estoque %', 'alem_do_estoque_pct'],
+    ['Diagnóstico antes do preço %', 'diagnostico_antes_do_preco_pct'], ['Próximo passo %', 'proximo_passo_definido_pct'],
+    ['Turnos médios', 'media_turnos'], ['Tokens/conversa', 'tokens_por_conversa'], ['Custo gate/conversa', 'custo_gate_por_conversa']];
+  $('aval').innerHTML = `<table><tr><th>Comparativo</th><th>A puro</th><th>B ferramentas</th></tr>${linhas.map(([n, k]) => `<tr><td>${n}</td><td>${A[k] ?? '—'}</td><td>${B[k] ?? '—'}</td></tr>`).join('')}</table>
+    <div class="badge">Só conversas com roteiro. ${r.conversas_livres_fora_do_comparativo} conversas livres ficaram fora.</div>`;
 };
 $('btn-json').onclick = () => conv && window.open(`/api/conversations/${conv.conversation_id}/export?formato=json`);
-$('btn-cls').onclick = () => window.open('/api/export/classificador.csv');
 $('btn-txt').onclick = () => conv && window.open(`/api/conversations/${conv.conversation_id}/export?formato=txt`);
+$('btn-cls').onclick = () => window.open('/api/export/classificador.csv');
 $('form').onsubmit = async e => {
   e.preventDefault();
   const t = $('msg').value.trim(); if (!t || !conv) return;
-  $('msg').value = '';
-  try { conv = await post(`/api/conversations/${conv.conversation_id}/messages`, {conteudo: t}); renderChat(); } catch (err) { alert(err.message); }
+  $('msg').value = ''; $('msg').disabled = true;
+  $('chat').insertAdjacentHTML('beforeend', `<div class="m cliente"><div class="who">Cliente</div>${esc(t)}</div><div class="nota" id="digitando">vendedor digitando…</div>`);
+  $('chat').scrollTop = 1e9;
+  try { conv = await post(`/api/conversations/${conv.conversation_id}/messages`, {conteudo: t}); renderChat(); }
+  catch (err) { alert(err.message); $('msg').disabled = false; }
+  $('msg').focus();
 };
 init();

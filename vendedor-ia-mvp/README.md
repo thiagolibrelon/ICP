@@ -1,7 +1,7 @@
-# Vendedor IA — MVP simulado
+# Vendedor IA — MVP simulado (v2: venda interna receptiva)
 
-Chat comercial totalmente sintético: o usuário assume um de 10 clientes fictícios (+1 cenário de suporte) e conversa com um
-vendedor virtual. **Python calcula e valida; o LLM explica e conduz.** Nenhum dado, preço ou contrato é real.
+Simulador de atendimento da **venda interna**: só clientes cadastrados, contato **receptivo** (quem começa é o cliente).
+O vendedor é o GPT; preço, margem, aprovação e estoque vêm de um banco próprio **fictício** (4 modelos, 3 cidades, 12 clientes).
 
 ## Executar (Windows, rede Localiza)
 
@@ -9,63 +9,52 @@ vendedor virtual. **Python calcula e valida; o LLM explica e conduz.** Nenhum da
 cd vendedor-ia-mvp
 pip install -r requirements.txt
 python iniciar.py                # pede a chave numa janela (ou usa API_KEY), testa o llm-gate e abre o navegador
-python iniciar.py --offline      # sem GPT (vendedor em template)
 python -m services.llm_client    # só o diagnóstico: URL, cabeçalho, chave presente?, proxy, DNS e 1 chamada mínima
 python -m pytest
 ```
 
-Use sempre `python -m ...` (sem admin, a pasta de scripts do pip não está no PATH).
+Use sempre `python -m ...` (sem admin, a pasta de scripts do pip não está no PATH). O banco é recriado sozinho quando o
+mundo simulado muda de versão.
 
-### Chave do llm-gate
+## Os dois modos (experimento A × B)
 
-Mesmo padrão do `classificar_ligacoes_diario.py`: variável `API_KEY` ou janela; a chave fica **só na memória** do processo,
-nunca no HTML/JS, em log ou em arquivo. `.env` é opcional (ver `.env.example`). Chamada: `POST` na URL do gate com cabeçalhos
-`api_key` e `X-Correlation-ID`, `reasoning_effort=minimal` (cai para `low`/sem parâmetro se o modelo recusar), via `requests`
-(usa o proxy do Windows). O custo real vem de `cost.token.total` da resposta do gate.
+| | Modo B — oficial | Modo A — controle ("LLM pura") |
+|---|---|---|
+| Quem conduz | GPT, do início ao fim, sem roteiro | GPT, do início ao fim |
+| Números | só via ferramentas (`avaliar_proposta`, `consultar_catalogo`...) | tabela inteira no prompt, **inclusive margens** |
+| Margem | o GPT **nunca vê**; a ferramenta decide (IA → gerente simulado → negado) | o GPT vê e decide sozinho |
+| Erro detectado | 1 reescrita automática; persistindo, mensagem segura | **só marcado**, nunca corrigido |
 
-### Medir com a mesma régua das ligações reais
+Mesmos clientes e roteiros nos dois modos; o botão **Comparativo A × B** mostra o resultado (conversas livres ficam fora).
 
-Botão **Exportar p/ classificador** (ou `GET /api/export/classificador.csv`) gera as conversas no formato de entrada do
-`classificar_ligacoes_diario.py` (`cd_segmento;transcricao_limpa`, falas `AGENTE:`/`CLIENTE:`). Rode:
+## Mundo simulado (tudo fictício — `database/seed.py`, espelhado em `data/`)
 
-```bash
-python classificar_ligacoes_diario.py --entrada vendedor_ia_para_classificador.csv --saida <pasta>
-```
+- **Catálogo:** Onix, Polo, Creta, Dolphin (elétrico); diária e mensal 12/24/36 meses (prazo maior = mais barato).
+  Volume automático: 5–9 veículos −2%, 10+ −4%.
+- **Margem em 2 níveis:** a IA aprova até a margem dela; até a margem do gerente, o **gerente simulado aprova só com
+  contrapartida** (24+ meses ou 5+ veículos); acima, negado com contraproposta.
+- **Estoque compartilhado** por cidade (SP, Curitiba, BH): proposta registrada reserva unidades; a próxima conversa já vê
+  menos. Faltando, há prazo de entrega. Botão **Reiniciar estoque**; reiniciar uma conversa devolve o que ela reservou.
+- **Challenger com dado:** `comparar_diaria_mensal` (equilíbrio em 17 dias/mês) e `comparar_eletrico` (Dolphin compensa
+  a partir de ~930 km/mês contra Creta e ~3.721 km/mês contra Onix). As ferramentas dizem quando **não** compensa.
+- **12 clientes** com perfis dos ICPs (`../icp_segmentacao/icps_definidos.md`): 5 do ICP1, 4 do ICP2, 2 do ICP3, 1 do ICP5
+  (grupo com 2 CNPJs). Cada um tem um roteiro; há 5 roteiros genéricos (suporte, multa, reclamação, humano, arrancar margem)
+  e a opção **Conversa livre** (sem roteiro, para quem quiser "brincar").
 
-Atenção: conversas com menos de 600 caracteres compactados viram `sem_conteudo` (constante `TAMANHO_MINIMO`) — para esta
-rodada, diminua para ~200 ou faça conversas com mais de 2 trocas.
+## Chave do llm-gate
 
-## Como funciona (por mensagem)
+Mesmo padrão do `classificar_ligacoes_diario.py`: variável `API_KEY` ou janela; a chave fica só na memória do processo.
+Chamada via `requests` (usa o proxy do Windows), cabeçalhos `api_key` e `X-Correlation-ID`, `reasoning_effort=minimal`
+(cai para `low`/sem se recusado). O agente usa *tool calling* nativo; se o gate recusar `tools`, passa sozinho para um
+protocolo JSON equivalente (`LLM_TOOLS`). Custo real lido de `cost.token.total`.
 
-1. `classificar` → intenção (desconto, preço, suporte, reclamação, humano, injeção…) e extração de quantidade/prazo/praça/%.
-2. Orquestrador escolhe as ferramentas: `simular_preco`, `avaliar_desconto`, `registrar_proposta`, `criar_handoff`…
-3. `seller.responder` pede ao LLM (ou usa o template) uma resposta **apenas com os FATOS_AUTORIZADOS**.
-4. `validator` confere: valores R$ e % existem nas ferramentas, sem promessa de disponibilidade, sem “proposta enviada” sem registro,
-   sem vazar instruções. Reprovou → resposta reescrita pelo template e marcada `REESCRITO_TEMPLATE`.
-5. Tudo vai para SQLite (`mensagens.auditoria_json`) e `logs/conversations.jsonl`; a UI mostra intenção, ferramenta, regra, alçada, preço.
+## Medir com a régua das ligações reais
+
+**Exportar p/ classificador** gera `cd_segmento;transcricao_limpa` (falas `AGENTE:`/`CLIENTE:`) para o
+`classificar_ligacoes_diario.py --entrada <csv> --saida <pasta>`. Conversas com menos de 600 caracteres compactados viram
+`sem_conteudo` (`TAMANHO_MINIMO`) — para esta rodada, diminua para ~200.
 
 ## Estrutura
 
-`app.py` (API) · `frontend/` (HTML/CSS/JS) · `services/` (customer, pricing, rules, tools, conversation, seller, validator, llm_client,
-evaluation) · `database/` (schema, seed, db) · `data/` (CSVs sintéticos, cenários, praças) · `prompts/` · `tests/`.
-
-Endpoints: `/api/scenarios`, `/api/conversations[/{id}/messages|evaluate|reset|export]`, `/api/customers/{id}[/history|/opportunities]`,
-`/api/pricing/simulate`, `/api/rules/evaluate-discount`, `/api/proposals`, `/api/handoffs`, `/api/metrics`. Docs em `/docs` (OpenAPI, base para o agente do Teams).
-
-## Cenários (régua C12/C7 do classificador)
-
-Cada cenário traz, no painel da esquerda, o **roteiro de quem faz o papel do cliente** e os códigos esperados: objeção (OB),
-produto (PR), dado concreto (CH/B3) e problema (P). Dados concretos calculados em Python: C002 CH2 (diárias × mensal),
-C003 B3 (queda de volume); regras sintéticas: C004 CH1, C006 CH4, C010 CH6. Crédito/cadastro PJ (P13) gera encaminhamento
-e deixa a proposta condicionada. "Multa de trânsito" (P3) é suporte; "multa contratual" é regra. **S012_MISTO**: suporte (P3)
-encaminhado primeiro, depois uma pergunta leve de telemetria (PR3) — evita o OP1 sem forçar venda; S011 (senha) não oferece nada.
-
-## Decisões / limites do MVP
-
-- Alçadas por cliente em `data/regras_negociacao.csv` (C001 3%, C003 2%, C007 2%, C009 1%, C010 1%, demais 0%). Acima da alçada: 1º pedido
-  → contraproposta no teto + oferta de handoff; 2º pedido (ou pedido de humano/reclamação/suporte) → handoff criado.
-- `max_cotacoes` limita cotações por **praça** distinta (C009 = 2). Vigência das regras é informativa (não bloqueia).
-- Não há simulação de crédito nem confirmação de disponibilidade; o vendedor diz isso e não promete.
-- Avaliador: notas determinísticas (diagnóstico, aderência, objeção, próximo passo, handoff, desfecho) + comentários do LLM se configurado.
-- Botão “Assumir cliente” do plano não foi implementado: o usuário já é sempre o cliente.
-- Classificação de intenção é por palavras-chave (suficiente para os roteiros do MVP); trocar por classificador LLM/estruturado é a evolução natural.
+`app.py` (API) · `iniciar.py` · `frontend/` · `services/` (`catalog` = ferramentas determinísticas, `agent` = modos A/B,
+`validator`, `conversations`, `evaluation`, `llm_client`) · `prompts/` (base, regras B, regras A) · `database/` · `tests/`.

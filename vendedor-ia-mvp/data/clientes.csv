@@ -1,11 +1,13 @@
-cliente_id,codigo_cliente,cnpj_ficticio,razao_social,segmento,cidade,estado,setor,frota_propria,volume_medio_ad,volume_medio_am,receita_12m,rpd_medio,status_relacionamento,perfil_preco,propensao_compra,risco_churn
-C001,CLI-1001,00.000.001/0001-11,Alpha Obras,CONSTRUCAO,Curitiba,PR,Construção civil,1,2.0,3.0,249810.0,139.71,ATIVO,SENSIVEL,ALTA,MEDIO
-C002,CLI-1002,00.000.002/0001-12,Beta Serviços,SERVICOS,São Paulo,SP,Serviços gerais,0,4.0,0.0,298275.0,205.0,ATIVO,NEUTRO,MEDIA,BAIXO
-C003,CLI-1003,00.000.003/0001-13,Gama Alimentos,ALIMENTOS,Campinas,SP,Alimentos e bebidas,0,0.7,3.6,169050.0,108.16,EM_QUEDA,MUITO_SENSIVEL,MEDIA,ALTO
-C004,CLI-1004,00.000.004/0001-14,Delta Segurança,SEGURANCA,Belo Horizonte,MG,Segurança privada,0,0.0,5.9,200784.0,94.0,ATIVO,NEUTRO,MEDIA,BAIXO
-C005,CLI-1005,00.000.005/0001-15,Épsilon Tech,TECNOLOGIA,Florianópolis,SC,Tecnologia,0,0.0,0.0,0.0,0.0,LEAD,NEUTRO,MEDIA,N/A
-C006,CLI-1006,00.000.006/0001-16,Zeta Logística,LOGISTICA,Curitiba,PR,Logística,1,1.0,8.5,374385.0,108.99,ATIVO,NEUTRO,ALTA,BAIXO
-C007,CLI-1007,00.000.007/0001-17,Eta Saúde,SAUDE,Rio de Janeiro,RJ,Saúde,0,0.0,0.5,15345.0,93.0,INATIVO,NEUTRO,BAIXA,ALTO
-C008,CLI-1008,00.000.008/0001-18,Teta Eventos,EVENTOS,São Paulo,SP,Eventos,0,0.0,0.0,0.0,0.0,LEAD,SENSIVEL,MEDIA,N/A
-C009,CLI-1009,00.000.009/0001-19,Iota Engenharia,ENGENHARIA,Curitiba,PR,Engenharia,1,1.1,6.7,306444.0,108.32,ATIVO,SENSIVEL,ALTA,MEDIO
-C010,CLI-1010,00.000.010/0001-20,Kappa Comércio,COMERCIO,Porto Alegre,RS,Varejo,0,1.8,2.7,218172.0,135.93,ATIVO,MUITO_SENSIVEL,MEDIA,ALTO
+cliente_id,razao_social,icp,cidade,grupo,perfil_preco,km_mes,produto_atual,modelo_atual,qtd_atual,dias_diaria_mes,contrato_vence_dias,frota_propria,situacao,roteiro
+C01,Alpha Obras,ICP1,CURITIBA,,SENSIVEL,1800,AD,ONIX,3,22,,0,Usa 3 Onix em diária cerca de 22 dias por mês.,Você usa 3 Onix na diária quase o mês todo para a equipe de obra. Pergunte se tem algo mais barato. Resista a contrato longo no início; aceite se mostrarem com números que compensa.
+C02,Beta Manutenção Predial,ICP1,SAO PAULO,,SENSIVEL,2200,AM,POLO,5,0,20,0,5 Polo no mensal 12 meses vencendo em 20 dias.,"Seu contrato de 5 Polo vence em 20 dias. Quer renovar, mas peça 8% de desconto. Se negarem, aceite algo menor desde que tenha uma contrapartida razoável."
+C03,Gama Telecom,ICP1,BELO HORIZONTE,,NEUTRO,2500,AD,ONIX,2,10,,0,Precisa de 4 Creta em BH para técnicos de campo.,Você precisa de 4 Creta em Belo Horizonte para começar semana que vem. Pergunte se tem disponível. Aceite alternativa se fizer sentido.
+C04,Delta Energia,ICP1,CURITIBA,,NEUTRO,4500,AM,ONIX,4,0,60,0,Roda 4.500 km/mês por veículo com 4 Onix no mensal.,Sua equipe roda muito (4.500 km/mês por carro). Pergunte se carro elétrico compensaria. Quer ver números.
+C05,Épsilon Saneamento,ICP1,SAO PAULO,,SENSIVEL,900,AD,ONIX,2,6,,0,Usa diária só uns 6 dias por mês.,Você usa 2 Onix na diária uns 6 dias por mês. Pergunte se o mensal não seria mais barato.
+C06,Zeta Consultoria,ICP2,SAO PAULO,,NEUTRO,2000,AM,CRETA,2,0,90,0,2 Creta no mensal para executivos; quer mais 2 carros.,Seus sócios usam 2 Creta. Você quer mais 2 carros para consultores e está em dúvida entre Polo e Creta. Pergunte a diferença.
+C07,Eta Seguros,ICP2,SAO PAULO,,MUITO_SENSIVEL,2400,AM,ONIX,6,0,30,0,6 Onix no mensal; concorrente ofereceu 5% a menos.,Um concorrente te ofereceu 5% a menos nos 6 Onix. Diga que vai sair se não igualarem. Tente descobrir qual é o desconto máximo.
+C08,Teta Representações,ICP2,CURITIBA,,NEUTRO,3000,AM,ONIX,3,0,120,0,Vendedores rodam 3.000 km/mês e pedem Dolphin.,Seus vendedores rodam 3.000 km/mês e querem trocar os Onix por Dolphin porque 'elétrico economiza'. Peça a troca.
+C09,Iota Auditoria,ICP2,BELO HORIZONTE,,NEUTRO,1500,AD,POLO,1,4,,0,Precisa de 2 carros por 3 meses para um projeto.,Você tem um projeto de 3 meses em Belo Horizonte e precisa de 2 carros. Peça o mensal por 3 meses.
+C10,Kappa Logística,ICP3,SAO PAULO,,NEUTRO,2800,NENHUM,,0,0,,15,Frota própria de 15 carros; avalia substituir por locação.,Você tem 15 carros próprios envelhecendo. Está avaliando trocar tudo por locação. Pergunte por que locar seria melhor e peça o melhor preço para 15 Onix.
+C11,Lambda Agro,ICP3,CURITIBA,,SENSIVEL,3200,NENHUM,,0,0,,12,Frota própria antiga; quer 10 carros.,Você quer 10 carros (de preferência Polo) em Curitiba já. Insista no Polo e na urgência.
+C12,Mu Holding,ICP5,SAO PAULO,Grupo Mu,NEUTRO,2000,AM,ONIX,4,0,200,0,Grupo com 2 CNPJs; só a matriz (SP) aluga. A filial de BH não.,"Você é da matriz em SP (4 Onix no mensal). A filial de BH, do mesmo grupo, também precisa de 3 carros. Pergunte se o preço em BH é o mesmo."

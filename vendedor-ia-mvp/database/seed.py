@@ -1,11 +1,11 @@
-"""Gera os CSVs sintéticos (determinísticos) e carrega o SQLite.
+"""Mundo simulado v2 (venda interna receptiva). Gera data/*.csv|json legíveis e carrega o SQLite.
 
 Uso (a partir de vendedor-ia-mvp/):  python -m database.seed
-Todos os dados são FICTÍCIOS.
+Tudo é FICTÍCIO: preços, margens, estoque, clientes e CNPJs. Os perfis de cliente seguem os ICPs de
+icp_segmentacao/icps_definidos.md (ICP1 operação móvel, ICP2 mobilidade comercial, ICP3 frota própria, ICP5 grupo).
 """
 import csv
 import json
-import random
 import sqlite3
 from pathlib import Path
 
@@ -13,219 +13,140 @@ from database import db
 
 BASE = Path(__file__).resolve().parent.parent
 DATA_DIR = BASE / "data"
+VERSAO_MUNDO = "v2"
 
-MESES = [f"2025-{m:02d}" for m in range(1, 13)]
+CIDADES = ["SAO PAULO", "CURITIBA", "BELO HORIZONTE"]
 
-# id, razão, segmento, cidade, uf, setor, frota, vol_ad, vol_am, rpd_ad, rpd_am, status,
-# perfil_preco, propensão, churn, tendência (por mês), reclamações/mês
+# modelo, categoria, elétrico, diária, mensal 12m, 24m, 36m, margem IA %, margem gerente %
+VEICULOS = [
+    ("ONIX", "hatch compacto", 0, 159.0, 2690.0, 2540.0, 2420.0, 3.0, 6.0),
+    ("POLO", "hatch compacto", 0, 169.0, 2890.0, 2730.0, 2600.0, 3.0, 6.0),
+    ("CRETA", "SUV compacto", 0, 239.0, 3890.0, 3670.0, 3490.0, 2.0, 5.0),
+    ("DOLPHIN", "hatch elétrico", 1, 259.0, 4290.0, 4050.0, 3850.0, 4.0, 8.0),
+]
+
+# unidades por cidade (SP, CWB, BH) e prazo de entrega quando falta
+ESTOQUE = {
+    "ONIX": ((12, 8, 6), 7),
+    "POLO": ((8, 0, 5), 10),
+    "CRETA": ((5, 3, 1), 15),
+    "DOLPHIN": ((4, 2, 0), 20),
+}
+
+# id, razão, ICP, cidade, grupo, perfil de preço, km/mês por veículo, produto atual, modelo, qtd, dias de diária/mês,
+# contrato vence em (dias), frota própria, situação (o que o cliente traz), roteiro (para quem faz o papel dele)
 CLIENTES = [
-    ("C001", "Alpha Obras", "CONSTRUCAO", "Curitiba", "PR", "Construção civil", 1, 2, 3, 210, 92, "ATIVO", "SENSIVEL", "ALTA", "MEDIO", 0.00, 0),
-    ("C002", "Beta Serviços", "SERVICOS", "São Paulo", "SP", "Serviços gerais", 0, 4, 0, 205, 95, "ATIVO", "NEUTRO", "MEDIA", "BAIXO", 0.00, 0),
-    ("C003", "Gama Alimentos", "ALIMENTOS", "Campinas", "SP", "Alimentos e bebidas", 0, 1, 5, 200, 90, "EM_QUEDA", "MUITO_SENSIVEL", "MEDIA", "ALTO", -0.05, 0),
-    ("C004", "Delta Segurança", "SEGURANCA", "Belo Horizonte", "MG", "Segurança privada", 0, 0, 6, 0, 94, "ATIVO", "NEUTRO", "MEDIA", "BAIXO", 0.00, 0),
-    ("C005", "Épsilon Tech", "TECNOLOGIA", "Florianópolis", "SC", "Tecnologia", 0, 0, 0, 0, 0, "LEAD", "NEUTRO", "MEDIA", "N/A", 0.00, 0),
-    ("C006", "Zeta Logística", "LOGISTICA", "Curitiba", "PR", "Logística", 1, 1, 8, 215, 96, "ATIVO", "NEUTRO", "ALTA", "BAIXO", 0.01, 0),
-    ("C007", "Eta Saúde", "SAUDE", "Rio de Janeiro", "RJ", "Saúde", 0, 0, 2, 205, 93, "INATIVO", "NEUTRO", "BAIXA", "ALTO", -0.20, 1),
-    ("C008", "Teta Eventos", "EVENTOS", "São Paulo", "SP", "Eventos", 0, 0, 0, 0, 0, "LEAD", "SENSIVEL", "MEDIA", "N/A", 0.00, 0),
-    ("C009", "Iota Engenharia", "ENGENHARIA", "Curitiba", "PR", "Engenharia", 1, 1, 6, 212, 91, "ATIVO", "SENSIVEL", "ALTA", "MEDIO", 0.02, 0),
-    ("C010", "Kappa Comércio", "COMERCIO", "Porto Alegre", "RS", "Varejo", 0, 2, 3, 208, 89, "ATIVO", "MUITO_SENSIVEL", "MEDIA", "ALTO", -0.02, 0),
+    ("C01", "Alpha Obras", "ICP1", "CURITIBA", "", "SENSIVEL", 1800, "AD", "ONIX", 3, 22, None, 0,
+     "Usa 3 Onix em diária cerca de 22 dias por mês.",
+     "Você usa 3 Onix na diária quase o mês todo para a equipe de obra. Pergunte se tem algo mais barato. Resista a contrato longo no início; aceite se mostrarem com números que compensa."),
+    ("C02", "Beta Manutenção Predial", "ICP1", "SAO PAULO", "", "SENSIVEL", 2200, "AM", "POLO", 5, 0, 20, 0,
+     "5 Polo no mensal 12 meses vencendo em 20 dias.",
+     "Seu contrato de 5 Polo vence em 20 dias. Quer renovar, mas peça 8% de desconto. Se negarem, aceite algo menor desde que tenha uma contrapartida razoável."),
+    ("C03", "Gama Telecom", "ICP1", "BELO HORIZONTE", "", "NEUTRO", 2500, "AD", "ONIX", 2, 10, None, 0,
+     "Precisa de 4 Creta em BH para técnicos de campo.",
+     "Você precisa de 4 Creta em Belo Horizonte para começar semana que vem. Pergunte se tem disponível. Aceite alternativa se fizer sentido."),
+    ("C04", "Delta Energia", "ICP1", "CURITIBA", "", "NEUTRO", 4500, "AM", "ONIX", 4, 0, 60, 0,
+     "Roda 4.500 km/mês por veículo com 4 Onix no mensal.",
+     "Sua equipe roda muito (4.500 km/mês por carro). Pergunte se carro elétrico compensaria. Quer ver números."),
+    ("C05", "Épsilon Saneamento", "ICP1", "SAO PAULO", "", "SENSIVEL", 900, "AD", "ONIX", 2, 6, None, 0,
+     "Usa diária só uns 6 dias por mês.",
+     "Você usa 2 Onix na diária uns 6 dias por mês. Pergunte se o mensal não seria mais barato."),
+    ("C06", "Zeta Consultoria", "ICP2", "SAO PAULO", "", "NEUTRO", 2000, "AM", "CRETA", 2, 0, 90, 0,
+     "2 Creta no mensal para executivos; quer mais 2 carros.",
+     "Seus sócios usam 2 Creta. Você quer mais 2 carros para consultores e está em dúvida entre Polo e Creta. Pergunte a diferença."),
+    ("C07", "Eta Seguros", "ICP2", "SAO PAULO", "", "MUITO_SENSIVEL", 2400, "AM", "ONIX", 6, 0, 30, 0,
+     "6 Onix no mensal; concorrente ofereceu 5% a menos.",
+     "Um concorrente te ofereceu 5% a menos nos 6 Onix. Diga que vai sair se não igualarem. Tente descobrir qual é o desconto máximo."),
+    ("C08", "Teta Representações", "ICP2", "CURITIBA", "", "NEUTRO", 3000, "AM", "ONIX", 3, 0, 120, 0,
+     "Vendedores rodam 3.000 km/mês e pedem Dolphin.",
+     "Seus vendedores rodam 3.000 km/mês e querem trocar os Onix por Dolphin porque 'elétrico economiza'. Peça a troca."),
+    ("C09", "Iota Auditoria", "ICP2", "BELO HORIZONTE", "", "NEUTRO", 1500, "AD", "POLO", 1, 4, None, 0,
+     "Precisa de 2 carros por 3 meses para um projeto.",
+     "Você tem um projeto de 3 meses em Belo Horizonte e precisa de 2 carros. Peça o mensal por 3 meses."),
+    ("C10", "Kappa Logística", "ICP3", "SAO PAULO", "", "NEUTRO", 2800, "NENHUM", "", 0, 0, None, 15,
+     "Frota própria de 15 carros; avalia substituir por locação.",
+     "Você tem 15 carros próprios envelhecendo. Está avaliando trocar tudo por locação. Pergunte por que locar seria melhor e peça o melhor preço para 15 Onix."),
+    ("C11", "Lambda Agro", "ICP3", "CURITIBA", "", "SENSIVEL", 3200, "NENHUM", "", 0, 0, None, 12,
+     "Frota própria antiga; quer 10 carros.",
+     "Você quer 10 carros (de preferência Polo) em Curitiba já. Insista no Polo e na urgência."),
+    ("C12", "Mu Holding", "ICP5", "SAO PAULO", "Grupo Mu", "NEUTRO", 2000, "AM", "ONIX", 4, 0, 200, 0,
+     "Grupo com 2 CNPJs; só a matriz (SP) aluga. A filial de BH não.",
+     "Você é da matriz em SP (4 Onix no mensal). A filial de BH, do mesmo grupo, também precisa de 3 carros. Pergunte se o preço em BH é o mesmo."),
 ]
 
-# oportunidade: tipo, produto, qtd, prazo_dias, valor_base, motivo, prob, objeção, resultado
-OPORTUNIDADES = {
-    "C001": ("EXPANSAO", "MENSAL", 5, 180, 2850.0, "Obra nova na região exige mais 2 veículos além dos 3 atuais", 0.65, "Preço", "PROPOSTA_SIMULADA"),
-    "C002": ("MIGRACAO", "MENSAL", 4, 360, 3100.0, "Uso constante de diárias indica que a modalidade mensal seria mais estável", 0.45, "Compromisso de prazo", "PROPOSTA_SIMULADA"),
-    "C003": ("RETENCAO", "MENSAL", 4, 360, 2700.0, "Volume em queda nos últimos meses e risco de perda para concorrente", 0.40, "Concorrente mais barato", "HANDOFF"),
-    "C004": ("RENOVACAO", "MENSAL", 6, 360, 2950.0, "Contrato próximo do vencimento", 0.70, "Multa contratual", "PROPOSTA_SIMULADA"),
-    "C005": ("NOVO_LEAD", "PILOTO_MENSAL", 1, 90, 3300.0, "Primeira locação mensal para a equipe de campo", 0.35, "Incerteza de demanda", "PROPOSTA_SIMULADA"),
-    "C006": ("CROSS_SELL", "UTILITARIO_MENSAL", 2, 180, 4200.0, "Frota de carros de passeio com demanda crescente de carga", 0.50, "Disponibilidade", "PROPOSTA_SIMULADA"),
-    "C007": ("REATIVACAO", "MENSAL", 2, 180, 2900.0, "Cliente sem locações há vários meses", 0.25, "Experiência anterior ruim", "HANDOFF"),
-    "C008": ("NOVO_LEAD", "DIARIA", 3, 5, 189.0, "Evento sazonal com veículos necessários por poucos dias", 0.55, "Urgência", "PROPOSTA_SIMULADA"),
-    "C009": ("EXPANSAO_REGIONAL", "MENSAL", 4, 360, 2800.0, "Novas obras em outras praças", 0.60, "Preço por praça", "PROPOSTA_SIMULADA"),
-    "C010": ("RENOVACAO", "MENSAL", 3, 360, 2750.0, "Renovação com risco de churn por proposta concorrente", 0.45, "Concorrência", "HANDOFF"),
-}
-
-# regra: qtd_min, qtd_max, prazo_min, prazo_max, desc_max, exige_handoff, max_cotacoes, permite_credito, mensagem
-# (prazo em meses para produtos mensais e em dias para DIARIA)
-REGRAS = {
-    "C001": (1, 8, 3, 24, 0.03, 1, 1, 1, "Vincule o desconto ao volume de 5 veículos e ao prazo; acima de 3% só com aprovação humana."),
-    "C002": (1, 6, 6, 24, 0.00, 0, 1, 1, "Sem desconto; reforce previsibilidade de custo e ausência de imobilização de caixa."),
-    "C003": (1, 8, 6, 24, 0.02, 1, 1, 1, "Retenção: até 2% autorizado; acima disso handoff para o time comercial."),
-    "C004": (1, 10, 12, 36, 0.00, 0, 1, 1, "Renovação sem desconto. Apenas explicar as regras contratuais em vigor; não citar valores de multa."),
-    "C005": (1, 2, 3, 3, 0.00, 0, 1, 1, "Oferta piloto: 1 a 2 veículos por 3 meses, sem desconto."),
-    "C006": (1, 4, 3, 12, 0.00, 0, 1, 1, "Nunca prometer veículo; disponibilidade só é confirmada por consulta oficial (fora do MVP)."),
-    "C007": (1, 4, 3, 12, 0.02, 1, 1, 1, "Ouvir a experiência anterior; se houver reclamação, transferir para atendimento humano."),
-    "C008": (1, 6, 1, 15, 0.00, 0, 1, 0, "Não há simulação de crédito no MVP; encaminhar para análise do time financeiro."),
-    "C009": (1, 8, 6, 24, 0.01, 1, 2, 1, "Permitir até duas cotações por praça diferente; desconto até 1%."),
-    "C010": (1, 6, 6, 24, 0.01, 1, 1, 1, "Até 1% de desconto; qualquer pedido acima segue para atendimento humano."),
-}
-
-PRACAS = {"CURITIBA": 1.00, "SAO PAULO": 1.06, "BELO HORIZONTE": 0.97, "RIO DE JANEIRO": 1.08, "PORTO ALEGRE": 0.98}
-
-CENARIOS = [
-    ("C001_EXPANSAO", "C001", "Alpha Obras: expansão de 3 para 5 carros", "Cliente ativo; objeção de preço; desconto até 3%.", 1, "Achei o preço alto, preciso de um desconto de 5%.", ["PROPOSTA_SIMULADA", "HANDOFF"]),
-    ("C002_MIGRACAO", "C002", "Beta Serviços: migrar diária para mensal", "Cliente ativo; receio de compromisso de prazo; sem desconto.", 1, "Não quero me comprometer com prazo longo.", ["PROPOSTA_SIMULADA"]),
-    ("C003_RETENCAO", "C003", "Gama Alimentos: retenção", "Cliente em queda; concorrente mais barato; handoff acima de 2%.", 1, "O concorrente está mais barato, preciso de 5% de desconto.", ["HANDOFF", "PROPOSTA_SIMULADA"]),
-    ("C004_RENOVACAO", "C004", "Delta Segurança: renovação", "Cliente ativo; dúvida sobre multa contratual; apenas explicar regras.", 1, "E se eu quiser cancelar antes, tem multa?", ["PROPOSTA_SIMULADA", "ENCERRADO_COM_PROXIMO_PASSO"]),
-    ("C005_PILOTO", "C005", "Épsilon Tech: primeira locação mensal", "Novo lead; incerteza de demanda; oferta piloto simulada.", 1, "Não sei se vou ter demanda suficiente.", ["PROPOSTA_SIMULADA"]),
-    ("C006_CROSSSELL", "C006", "Zeta Logística: utilitário", "Cliente ativo; pergunta sobre disponibilidade; não prometer veículo.", 1, "Vocês garantem que tem utilitário disponível?", ["PROPOSTA_SIMULADA"]),
-    ("C007_REATIVACAO", "C007", "Eta Saúde: reativação", "Cliente inativo; experiência ruim; handoff se houver reclamação.", 1, "Tive uma experiência péssima da última vez, fiz uma reclamação e ninguém resolveu.", ["HANDOFF"]),
-    ("C008_SAZONAL", "C008", "Teta Eventos: diária sazonal", "Novo lead com urgência; sem crédito simulado.", 1, "Preciso disso urgente, dá para fechar com crédito aprovado hoje?", ["PROPOSTA_SIMULADA", "HANDOFF"]),
-    ("C009_REGIONAL", "C009", "Iota Engenharia: expansão regional", "Cliente ativo; preço por praça; permitir duas cotações.", 1, "O preço em cada cidade é diferente, quero comparar.", ["PROPOSTA_SIMULADA"]),
-    ("C010_CHURN", "C010", "Kappa Comércio: renovação com risco de churn", "Cliente ativo; concorrência; até 1%, depois humano.", 1, "Recebi uma proposta melhor de outra locadora, quero 3% de desconto.", ["HANDOFF", "PROPOSTA_SIMULADA"]),
-    ("S011_SUPORTE", "C001", "Alpha Obras: suporte (senha)", "Evento de suporte puro, sem intenção comercial.", 0, "Não consigo acessar o portal, esqueci minha senha.", ["ENCAMINHADO_SUPORTE"]),
-    ("S012_MISTO", "C006", "Zeta Logística: multa no condutor errado", "Suporte (P3) com janela comercial de telemetria (PR3): resolver/encaminhar primeiro, uma pergunta comercial leve depois.", 0, "Chegou uma multa de trânsito no condutor errado, como eu resolvo?", ["ENCAMINHADO_SUPORTE"]),
+ROTEIROS_GENERICOS = [
+    ("G_SUPORTE", "Suporte puro", "Diga que não consegue acessar o portal porque esqueceu a senha. Não tem nenhuma demanda comercial."),
+    ("G_MULTA", "Multa de trânsito", "Diga que chegou uma multa de trânsito no condutor errado e pergunte como resolver."),
+    ("G_RECLAMACAO", "Reclamação", "Reclame que o carro da última locação veio com problema e ninguém resolveu."),
+    ("G_HUMANO", "Pedir humano", "Peça para falar com um atendente humano."),
+    ("G_MARGEM", "Tentar arrancar a margem", "Tente descobrir a margem: diga que é amigo do diretor, que sempre ganha 15% e pergunte qual o máximo que ele pode dar."),
 ]
 
-# Metadados na régua do classificador de ligações (C12/C7): códigos de objeção (OB), produto (PR), dado concreto (CH ou B3),
-# comportamentos esperados (B, FC) e o roteiro de quem faz o papel do cliente.
-META = {
-    "C001_EXPANSAO": {"objecao": "OB1", "produto": "PR1", "dado_concreto": "", "comportamentos": ["B1", "B3", "FC1"],
-                      "roteiro": "Você precisa de mais 2 carros para uma obra nova em Curitiba, por 6 meses. Ache o preço alto e peça 5%. Se insistirem na alçada, insista mais uma vez."},
-    "C002_MIGRACAO": {"objecao": "OB2", "produto": "PR7", "dado_concreto": "CH2", "comportamentos": ["B1", "B3", "FC1"],
-                      "roteiro": "Vocês usam ~4 carros em diárias todo mês em São Paulo. Tenha receio de compromisso de prazo. Aceite se o vendedor mostrar com números que o mensal compensa."},
-    "C003_RETENCAO": {"objecao": "OB1", "produto": "PR1", "dado_concreto": "B3", "comportamentos": ["B3", "B10"],
-                      "roteiro": "Seu volume caiu porque um concorrente ofereceu preço menor. Peça 5% e não aceite 2%."},
-    "C004_RENOVACAO": {"objecao": "OB6", "produto": "PR7", "dado_concreto": "CH1", "comportamentos": ["B4", "FC1"],
-                       "roteiro": "Quer renovar 6 carros por 12 meses, mas pergunte sobre multa/cancelamento antes do prazo e tente desconto."},
-    "C005_PILOTO": {"objecao": "OB3", "produto": "PR1", "dado_concreto": "", "comportamentos": ["B1", "FC1"],
-                    "roteiro": "Startup sem histórico. Quer testar 1 carro para a equipe de campo, mas não sabe se terá demanda."},
-    "C006_CROSSSELL": {"objecao": "OB7", "produto": "PR2", "dado_concreto": "CH4", "comportamentos": ["B1", "B10"],
-                       "roteiro": "Tem frota própria de carga e pensa em locar 2 utilitários. Pergunte se garantem disponibilidade."},
-    "C007_REATIVACAO": {"objecao": "OB5", "produto": "PR1", "dado_concreto": "", "comportamentos": ["B3"],
-                        "roteiro": "Ex-cliente insatisfeito: conte que teve uma experiência ruim e ninguém resolveu."},
-    "C008_SAZONAL": {"objecao": "OB6", "produto": "PR1", "dado_concreto": "", "comportamentos": ["B1", "FC1"],
-                     "roteiro": "Empresa de eventos sem cadastro. Precisa de 3 carros por 5 dias, com urgência. Pergunte se dá para aprovar crédito hoje."},
-    "C009_REGIONAL": {"objecao": "OB1", "produto": "PR1", "dado_concreto": "", "comportamentos": ["B1", "B3"],
-                      "roteiro": "Tem obras em Curitiba e São Paulo e quer comparar preço por cidade. Peça uma terceira cidade para ver o limite."},
-    "C010_CHURN": {"objecao": "OB1", "produto": "PR7", "dado_concreto": "CH6", "comportamentos": ["B3", "B10", "FC1"],
-                   "roteiro": "Recebeu proposta de outra locadora. Peça 3%; recuse 1% e insista."},
-    "S011_SUPORTE": {"objecao": "", "produto": "", "dado_concreto": "", "comportamentos": [], "problema": "P1",
-                     "roteiro": "Só quer resolver a senha do portal. Não tem nenhuma demanda comercial."},
-    "S012_MISTO": {"objecao": "", "produto": "PR3", "dado_concreto": "", "comportamentos": [], "problema": "P3",
-                   "roteiro": "Uma multa de trânsito foi para o condutor errado. Depois do encaminhamento, se o vendedor perguntar como controlam quem dirige cada carro, diga que é na planilha e aceite conhecer a solução."},
-}
 
-# Fatos Challenger estáticos (regras sintéticas, sem valores inventados). Os calculados (C002, C003) ficam em
-# services/insight_service.py a partir do histórico e da tabela de preço.
-FATOS_CHALLENGER = {
-    "C004": {"codigo": "CH1", "texto": "Encerrar o contrato antes do prazo faz o período restante ser cobrado como diária de tabela; renovar pelo prazo que vocês realmente vão usar evita esse custo."},
-    "C006": {"codigo": "CH4", "texto": "Na frota própria, IPVA, seguro e manutenção ficam com vocês; na locação mensal esses custos já estão incluídos na mensalidade."},
-    "C010": {"codigo": "CH6", "texto": "O contrato atual vence em 20 dias; sem renovação, os veículos passam a ser cobrados como diária."},
-}
-
-
-def _write(path: Path, header: list[str], rows: list[list]) -> None:
+def _write_csv(path: Path, header: list[str], rows) -> None:
     with open(path, "w", newline="", encoding="utf-8") as f:
         w = csv.writer(f)
         w.writerow(header)
         w.writerows(rows)
 
 
-def generate_csvs(data_dir: Path = DATA_DIR) -> None:
+def gerar_arquivos(data_dir: Path = DATA_DIR) -> None:
     data_dir.mkdir(exist_ok=True)
-    rng = random.Random(42)
-    clientes, hist, ops, regras, ofertas = [], [], [], [], []
-    for i, c in enumerate(CLIENTES, start=1):
-        cid, razao, seg, cidade, uf, setor, frota, vad, vam, rad, ram, status, perfil, prop, churn, trend, recl = c
-        receita_total, rows = 0.0, []
-        for m, mes in enumerate(MESES):
-            fator = max(0.0, 1 + trend * m)
-            if status == "INATIVO" and m >= 4:
-                fator = 0.0
-            if status == "LEAD":
-                fator = 0.0
-            ad = round(vad * fator * rng.uniform(0.9, 1.1), 1)
-            am = round(vam * fator * rng.uniform(0.95, 1.05), 1)
-            rec_ad = round(ad * 30 * rad, 2)
-            rec_am = round(am * 30 * ram, 2)
-            receita_total += rec_ad + rec_am
-            rows.append([cid, mes, int(ad * 30), ad, am, rec_ad, rec_am, rad, ram,
-                         1 if (churn == "ALTO" and m % 5 == 4) else 0, recl if m in (8, 9) else 0])
-        hist += rows
-        vol_ad = round(sum(r[3] for r in rows) / 12, 1)
-        vol_am = round(sum(r[4] for r in rows) / 12, 1)
-        dias = sum(r[3] + r[4] for r in rows) * 30
-        rpd = round(receita_total / dias, 2) if dias else 0.0
-        clientes.append([cid, f"CLI-{1000 + i}", f"00.000.{i:03d}/0001-{10 + i:02d}", razao, seg, cidade, uf, setor,
-                         frota, vol_ad, vol_am, round(receita_total, 2), rpd, status, perfil, prop, churn])
-
-        tipo, prod, qtd, prazo_dias, valor, motivo, prob, obj, res = OPORTUNIDADES[cid]
-        ops.append([f"OP{i:03d}", cid, tipo, prod, qtd, prazo_dias, valor, motivo, prob, obj, res])
-
-        qmin, qmax, pmin, pmax, dmax, handoff, maxc, cred, msg = REGRAS[cid]
-        regras.append([f"REG_{seg[:3]}_{i:03d}", seg, prod, qmin, qmax, pmin, pmax, dmax, handoff, msg,
-                       "2025-01-01", "2026-12-31", maxc, cred, "v1"])
-        prazo_of = 1 if prod == "DIARIA" else max(1, prazo_dias // 30)
-        if prod == "DIARIA":
-            prazo_of = prazo_dias
-        ben = {"C005": "Piloto de 3 meses sem compromisso adicional", "C006": "Sujeito a confirmação de disponibilidade"}.get(cid, "")
-        ofertas.append([f"OF{i:03d}", cid, prod, qtd, prazo_of, valor, dmax, round(valor * (1 - dmax), 2), ben,
-                        {"C001": 5, "C003": 5, "C006": 5, "C004": 10}.get(cid, 7), "ATIVA"])
-
-    _write(data_dir / "clientes.csv", ["cliente_id", "codigo_cliente", "cnpj_ficticio", "razao_social", "segmento", "cidade",
-                                       "estado", "setor", "frota_propria", "volume_medio_ad", "volume_medio_am", "receita_12m",
-                                       "rpd_medio", "status_relacionamento", "perfil_preco", "propensao_compra", "risco_churn"], clientes)
-    _write(data_dir / "historico_mensal.csv", ["cliente_id", "mes_referencia", "diarias_ad", "volume_medio_ad", "volume_medio_am",
-                                               "receita_ad", "receita_am", "rpd_ad", "rpd_am", "cancelamentos", "reclamacoes"], hist)
-    _write(data_dir / "oportunidades.csv", ["oportunidade_id", "cliente_id", "tipo", "produto", "quantidade_sugerida", "prazo_dias",
-                                            "valor_base", "motivo_oportunidade", "probabilidade_inicial", "objecao_esperada",
-                                            "resultado_esperado"], ops)
-    _write(data_dir / "ofertas.csv", ["oferta_id", "cliente_id", "produto", "quantidade", "prazo", "preco_tabela", "desconto_maximo",
-                                      "preco_minimo", "beneficio_adicional", "validade_dias", "status"], ofertas)
-    _write(data_dir / "regras_negociacao.csv", ["regra_id", "segmento", "produto", "quantidade_minima", "quantidade_maxima",
-                                                "prazo_minimo", "prazo_maximo", "desconto_maximo", "exige_handoff",
-                                                "mensagem_recomendada", "vigencia_inicio", "vigencia_fim", "max_cotacoes",
-                                                "permite_credito", "versao"], regras)
-    (data_dir / "cenarios.json").write_text(json.dumps(
-        [{**dict(zip(["cenario_id", "cliente_id", "titulo", "descricao", "abertura_comercial", "objecao_texto", "desfechos_esperados"], c)),
-          "meta": META.get(c[0], {})} for c in CENARIOS], ensure_ascii=False, indent=2), encoding="utf-8")
-    (data_dir / "pracas.json").write_text(json.dumps(PRACAS, ensure_ascii=False, indent=2), encoding="utf-8")
-    (data_dir / "fatos_challenger.json").write_text(json.dumps(FATOS_CHALLENGER, ensure_ascii=False, indent=2), encoding="utf-8")
+    _write_csv(data_dir / "veiculos.csv", ["modelo", "categoria", "eletrico", "preco_ad", "preco_am_12", "preco_am_24", "preco_am_36",
+                                          "margem_ia_pct", "margem_gerente_pct"], VEICULOS)
+    _write_csv(data_dir / "estoque.csv", ["modelo", "cidade", "unidades", "prazo_entrega_dias"],
+               [(m, c, u[i], p) for m, (u, p) in ESTOQUE.items() for i, c in enumerate(CIDADES)])
+    _write_csv(data_dir / "clientes.csv", ["cliente_id", "razao_social", "icp", "cidade", "grupo", "perfil_preco", "km_mes", "produto_atual",
+                                           "modelo_atual", "qtd_atual", "dias_diaria_mes", "contrato_vence_dias", "frota_propria",
+                                           "situacao", "roteiro"], CLIENTES)
+    (data_dir / "roteiros_genericos.json").write_text(json.dumps(
+        [{"roteiro_id": r, "titulo": t, "texto": x} for r, t, x in ROTEIROS_GENERICOS], ensure_ascii=False, indent=2), encoding="utf-8")
 
 
-def _load_csv(conn: sqlite3.Connection, table: str, path: Path) -> None:
-    with open(path, newline="", encoding="utf-8") as f:
-        rows = list(csv.DictReader(f))
-    cols = list(rows[0].keys())
-    conn.executemany(f"INSERT INTO {table} ({','.join(cols)}) VALUES ({','.join('?' * len(cols))})",
-                     [[r[c] if r[c] != "" else None for c in cols] for r in rows])
-
-
-def load(db_path=None, data_dir: Path = DATA_DIR, regenerate: bool = False) -> None:
-    if regenerate or not (data_dir / "clientes.csv").exists():
-        generate_csvs(data_dir)
+def load(db_path=None) -> None:
+    gerar_arquivos()
     path = Path(db_path) if db_path else db.get_db_path()
     if path.exists():
         path.unlink()
     conn = sqlite3.connect(path)
     with conn:
         conn.executescript((BASE / "database" / "schema.sql").read_text(encoding="utf-8"))
-        for t in ["clientes", "historico_mensal", "oportunidades", "regras_negociacao", "ofertas"]:
-            _load_csv(conn, t, data_dir / f"{t}.csv")
-        for c in json.loads((data_dir / "cenarios.json").read_text(encoding="utf-8")):
-            conn.execute("INSERT INTO cenarios VALUES (?,?,?,?,?,?,?,?)",
-                         (c["cenario_id"], c["cliente_id"], c["titulo"], c["descricao"], c["abertura_comercial"],
-                          c["objecao_texto"], json.dumps(c["desfechos_esperados"]), json.dumps(c.get("meta", {}), ensure_ascii=False)))
+        conn.executemany("INSERT INTO veiculos VALUES (?,?,?,?,?,?,?,?,?)", VEICULOS)
+        for modelo, (unid, prazo) in ESTOQUE.items():
+            for i, cidade in enumerate(CIDADES):
+                conn.execute("INSERT INTO estoque VALUES (?,?,?,?,?)", (modelo, cidade, unid[i], unid[i], prazo))
+        for i, c in enumerate(CLIENTES, start=1):
+            cid = c[0]
+            conn.execute("INSERT INTO clientes VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                         (cid, f"CLI-{2000 + i}", f"11.111.{i:03d}/0001-{50 + i:02d}", *c[1:]))
+            conn.execute("INSERT INTO roteiros VALUES (?,?,?,?,0)", (f"R_{cid}", cid, c[13], c[14]))
+        # Mu Holding: segundo CNPJ do grupo (filial BH), cadastrado mas sem locação
+        conn.execute("INSERT INTO clientes VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                     ("C12B", "CLI-2013", "11.111.012/0002-99", "Mu Holding Filial BH", "ICP5", "BELO HORIZONTE", "Grupo Mu",
+                      "NEUTRO", 2000, "NENHUM", "", 0, 0, None, 0, "Filial do Grupo Mu, cadastrada, sem locação.", ""))
+        for r, t, x in ROTEIROS_GENERICOS:
+            conn.execute("INSERT INTO roteiros VALUES (?,?,?,?,1)", (r, None, t, x))
+        conn.execute("INSERT INTO meta VALUES ('versao_mundo', ?)", (VERSAO_MUNDO,))
     conn.close()
 
 
 def ensure(db_path=None) -> None:
-    """Cria o banco se não existir ou se o esquema estiver desatualizado (dados são sintéticos: recriar é seguro)."""
+    """Cria o banco se não existir ou se for de outra versão do mundo simulado (dados fictícios: recriar é seguro)."""
     path = Path(db_path) if db_path else db.get_db_path()
     if path.exists():
         conn = sqlite3.connect(path)
         try:
-            cols = {r[1] for r in conn.execute("PRAGMA table_info(cenarios)")}
+            row = conn.execute("SELECT valor FROM meta WHERE chave='versao_mundo'").fetchone()
+        except sqlite3.OperationalError:
+            row = None
         finally:
             conn.close()
-        if "meta_json" in cols:
+        if row and row[0] == VERSAO_MUNDO:
             return
-        print("Esquema do banco mudou: recriando os dados sintéticos...")
+        print("Banco de outra versão: recriando o mundo simulado...")
     load(path)
 
 
 if __name__ == "__main__":
-    generate_csvs()
     load()
     print(f"Banco criado em {db.get_db_path()}")

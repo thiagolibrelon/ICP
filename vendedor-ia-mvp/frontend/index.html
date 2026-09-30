@@ -8,30 +8,43 @@
 </head>
 <body>
 <header>
-  <h1>Vendedor IA <small>ambiente simulado · dados fictícios</small></h1>
+  <h1>Vendedor IA <small>venda interna receptiva · ambiente simulado · dados fictícios</small></h1>
   <div class="controls">
-    <select id="cenario"></select>
-    <input id="ident" placeholder="ou CNPJ/código fictício">
-    <button id="btn-novo">Novo cenário</button>
-    <button id="btn-obj">Forçar objeção</button>
+    <select id="cliente" title="Cliente cadastrado que você vai interpretar"></select>
+    <select id="modo" title="Modo do vendedor">
+      <option value="B">Modo B — GPT + ferramentas (oficial)</option>
+      <option value="A">Modo A — GPT puro (controle)</option>
+    </select>
+    <select id="roteiro" title="Roteiro de quem faz o papel do cliente"></select>
+    <button id="btn-novo" class="primary">Nova conversa</button>
     <button id="btn-reset">Reiniciar conversa</button>
-    <button id="btn-dados">Mostrar dados</button>
-    <button id="btn-audit">Ocultar auditoria</button>
-    <button id="btn-aval">Gerar avaliação</button>
+    <button id="btn-fechar">Encerrar</button>
+    <button id="btn-estoque">Reiniciar estoque</button>
+  </div>
+  <div class="controls">
+    <button id="btn-aval">Avaliar conversa</button>
+    <button id="btn-comp">Comparativo A × B</button>
     <button id="btn-json">Exportar JSON</button>
     <button id="btn-txt">Exportar transcrição</button>
     <button id="btn-cls" title="Todas as conversas no formato de entrada do classificar_ligacoes_diario.py">Exportar p/ classificador</button>
+    <button id="btn-audit">Ocultar auditoria</button>
     <span id="llm" class="badge"></span>
   </div>
 </header>
 <main>
-  <aside id="col-cliente"><h2>Contexto do cliente</h2><div id="cliente">Selecione um cenário.</div>
-    <h2 style="margin-top:12px">Seu papel (cliente)</h2><div id="roteiro" class="roteiro">—</div><div id="dados" hidden></div></aside>
+  <aside id="col-cliente">
+    <h2>Cliente</h2><div id="info-cliente">—</div>
+    <div id="box-roteiro"><h2>Seu papel (roteiro)</h2><div id="roteiro-texto" class="roteiro">—</div></div>
+    <h2>Estoque ao vivo <small>(compartilhado)</small></h2><div id="estoque"></div>
+  </aside>
   <section id="col-chat">
-    <div id="chat"></div>
-    <form id="form"><input id="msg" autocomplete="off" placeholder="Você é o cliente. Escreva sua mensagem..." disabled><button disabled>Enviar</button></form>
+    <div id="chat"><div class="nota">Escolha um cliente e clique em <b>Nova conversa</b>. O atendimento é receptivo: quem começa é você, no papel do cliente.</div></div>
+    <form id="form"><input id="msg" autocomplete="off" placeholder="Escreva como o cliente..." disabled><button disabled>Enviar</button></form>
   </section>
-  <aside id="col-audit"><h2>Auditoria</h2><div id="audit">Clique em uma resposta do vendedor.</div><h2>Avaliação</h2><div id="aval">—</div></aside>
+  <aside id="col-audit">
+    <div id="audit-box"><h2>Auditoria</h2><div id="audit">Clique numa resposta do vendedor.</div></div>
+    <h2>Avaliação</h2><div id="aval">—</div>
+  </aside>
 </main>
 <script src="/static/app.js"></script>
 </body>

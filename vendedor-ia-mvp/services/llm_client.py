@@ -83,8 +83,13 @@ def _verify():
     return v if v else True
 
 
-def chat(messages: list[dict], max_tokens: int = 1500, retries: int = 2, json_mode: bool = False) -> dict:
-    """Retorna {"texto", "tokens_entrada", "tokens_saida", "custo_gate"} ou levanta LLMUnavailable."""
+class ToolsNaoSuportadas(LLMUnavailable):
+    """O gateway recusou o parâmetro 'tools' (o agente passa a usar o protocolo JSON)."""
+
+
+def completar(messages: list[dict], max_tokens: int = 1500, retries: int = 2, json_mode: bool = False,
+              tools: list[dict] | None = None) -> dict:
+    """Chamada crua: {"message": {...}, "tokens_entrada", "tokens_saida", "tokens_cache", "custo_gate", "finish_reason"}."""
     if mode() == "mock" or (mode() == "auto" and not configured()):
         raise LLMUnavailable("LLM desabilitado ou não configurado")
     if not configured():
@@ -92,6 +97,8 @@ def chat(messages: list[dict], max_tokens: int = 1500, retries: int = 2, json_mo
     timeout = float(os.getenv("LLM_TIMEOUT_SECONDS", "60"))
     last = ""
     body = payload(messages, max_tokens, json_mode)
+    if tools:
+        body["tools"] = tools
     fallback_effort = ["low", None]  # igual ao script do time: se o modelo recusar o valor, tenta "low" e depois sem o parâmetro
     tentativas = 0
     while tentativas <= retries:
@@ -108,6 +115,8 @@ def chat(messages: list[dict], max_tokens: int = 1500, retries: int = 2, json_mo
                 else:
                     body.pop("reasoning_effort")
                 continue  # não conta como tentativa
+            if r.status_code == 400 and tools and "tool" in r.text.lower():
+                raise ToolsNaoSuportadas(redact(f"HTTP 400: {r.text[:200]}"))
             if r.status_code >= 400:
                 last = f"HTTP {r.status_code}: {r.text[:300]}"
                 if r.status_code in (400, 401, 403, 404):  # erro de configuração: não adianta repetir
@@ -115,17 +124,24 @@ def chat(messages: list[dict], max_tokens: int = 1500, retries: int = 2, json_mo
             else:
                 data = r.json()
                 usage = data.get("usage", {})
-                texto = (data["choices"][0]["message"].get("content") or "").strip()
-                if texto:
-                    return {"texto": texto, "tokens_entrada": usage.get("prompt_tokens", 0),
-                            "tokens_saida": usage.get("completion_tokens", 0),
-                            "tokens_cache": (usage.get("prompt_tokens_details") or {}).get("cached_tokens", 0),
-                            # o llm-gate devolve o custo real em cost.token.total (mesma leitura do classificador)
-                            "custo_gate": ((data.get("cost") or {}).get("token") or {}).get("total")}
-                last = f"Resposta vazia do modelo (finish_reason={data['choices'][0].get('finish_reason')})"
+                choice = data["choices"][0]
+                return {"message": choice.get("message") or {}, "finish_reason": choice.get("finish_reason"),
+                        "tokens_entrada": usage.get("prompt_tokens", 0), "tokens_saida": usage.get("completion_tokens", 0),
+                        "tokens_cache": (usage.get("prompt_tokens_details") or {}).get("cached_tokens", 0),
+                        # o llm-gate devolve o custo real em cost.token.total (mesma leitura do classificador)
+                        "custo_gate": ((data.get("cost") or {}).get("token") or {}).get("total")}
         tentativas += 1
         time.sleep(0.5 * tentativas)
     raise LLMUnavailable(redact(f"Falha ao chamar o LLM: {last}"))
+
+
+def chat(messages: list[dict], max_tokens: int = 1500, retries: int = 2, json_mode: bool = False) -> dict:
+    """Atalho texto: {"texto", "tokens_entrada", "tokens_saida", "tokens_cache", "custo_gate"}."""
+    r = completar(messages, max_tokens, retries, json_mode)
+    texto = (r["message"].get("content") or "").strip()
+    if not texto:
+        raise LLMUnavailable(f"Resposta vazia do modelo (finish_reason={r['finish_reason']})")
+    return {"texto": texto, **{k: r[k] for k in ("tokens_entrada", "tokens_saida", "tokens_cache", "custo_gate")}}
 
 
 def diagnosticar() -> int:

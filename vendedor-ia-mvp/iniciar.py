@@ -2,7 +2,7 @@
 se não existir, pede a chave numa janela e NÃO salva em lugar nenhum. Testa a conexão antes de abrir.
 
 Uso:  python iniciar.py            (abre em http://127.0.0.1:8000)
-      python iniciar.py --offline  (sem GPT, vendedor em template)
+      python iniciar.py --offline  (sem GPT: só para ver telas, catálogo e estoque; o vendedor responde contingência)
 """
 import os
 import sys

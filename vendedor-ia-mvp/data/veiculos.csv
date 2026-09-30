@@ -1,0 +1,5 @@
+modelo,categoria,eletrico,preco_ad,preco_am_12,preco_am_24,preco_am_36,margem_ia_pct,margem_gerente_pct
+ONIX,hatch compacto,0,159.0,2690.0,2540.0,2420.0,3.0,6.0
+POLO,hatch compacto,0,169.0,2890.0,2730.0,2600.0,3.0,6.0
+CRETA,SUV compacto,0,239.0,3890.0,3670.0,3490.0,2.0,5.0
+DOLPHIN,hatch elétrico,1,259.0,4290.0,4050.0,3850.0,4.0,8.0
