@@ -13,7 +13,7 @@ from database import db
 
 BASE = Path(__file__).resolve().parent.parent
 DATA_DIR = BASE / "data"
-VERSAO_MUNDO = "v3"
+VERSAO_MUNDO = "v4"
 
 CIDADES = ["SAO PAULO", "CURITIBA", "BELO HORIZONTE"]
 

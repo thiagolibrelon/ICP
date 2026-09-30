@@ -47,6 +47,13 @@ Adicionais no mensal (proteção, telemetria, km extra), roteamento por tier (Ti
 qualificação do decisor, handoff com briefing montado pelo sistema, **Painel do gerente** (concessões e fila de handoffs)
 e **áudio** (🎤 → transcrição pelo llm-gate em `/audio/transcriptions`; `LLM_STT_MODEL`, `LLM_STT_URL`).
 
+## Modo treino (vendedor humano) — http://127.0.0.1:8000/treino
+
+O GPT interpreta o cliente (persona com segredos, objeções e condição de aceite; 3 dificuldades) e o vendedor humano vende,
+usando a calculadora da alçada. **Modo treino** (coach com dicas) ou **modo prova** (sem dicas). Ao encerrar: nota 0–10
+por dimensão da régua C12, com justificativa, trecho da própria fala, como melhorar e exemplo. Disciplina de margem e
+informações descobertas são calculadas pelo sistema. Evolução por vendedor em ordem alfabética (sem ranking).
+
 ## Chave do llm-gate
 
 Mesmo padrão do `classificar_ligacoes_diario.py`: variável `API_KEY` ou janela; a chave fica só na memória do processo.

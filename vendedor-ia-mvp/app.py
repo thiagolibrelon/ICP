@@ -10,7 +10,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from database import db, seed
-from services import catalog, conversations as conv, evaluation, llm_client
+from services import catalog, conversations as conv, evaluation, llm_client, training
 
 BASE = Path(__file__).resolve().parent
 
@@ -35,6 +35,25 @@ class Audio(BaseModel):
     audio_base64: str = Field(min_length=10, max_length=15_000_000)
     mime: str = "audio/webm"
     duracao_s: float | None = None
+
+
+class NovoTreino(BaseModel):
+    vendedor: str = Field(min_length=1, max_length=80)
+    cliente_id: str
+    modo: str = Field("TREINO", pattern="^(PROVA|TREINO)$")
+    dificuldade: str = Field("medio", pattern="^(facil|medio|dificil)$")
+
+
+class Condicao(BaseModel):
+    modelo: str
+    quantidade: int = Field(gt=0)
+    cidade: str
+    produto: str = "AM"
+    prazo_meses: int | None = None
+    dias: int | None = None
+    desconto_pct: float = 0.0
+    adicionais: list[str] = []
+    pacotes_km_extra: int | None = None
 
 
 class Mensagem(BaseModel):
@@ -170,9 +189,64 @@ def exportar_classificador(ids: str | None = None):
                     headers={"Content-Disposition": 'attachment; filename="vendedor_ia_para_classificador.csv"'})
 
 
+# ------------------------------------------------------------------ MODO TREINO (vendedor humano x cliente simulado)
+@app.get("/api/treino/personas")
+def treino_personas():
+    return training.personas()
+
+
+@app.post("/api/treino", status_code=201)
+def treino_novo(body: NovoTreino):
+    return _tratar(training.iniciar, body.vendedor, body.cliente_id, body.modo, body.dificuldade)
+
+
+@app.get("/api/treino/historico")
+def treino_historico(vendedor: str | None = None):
+    return training.historico(vendedor)
+
+
+@app.get("/api/treino/{tid}")
+def treino_obter(tid: str):
+    return _tratar(training.obter, tid)
+
+
+@app.post("/api/treino/{tid}/mensagem")
+def treino_mensagem(tid: str, body: Mensagem):
+    return _tratar(training.mensagem, tid, body.conteudo)
+
+
+@app.post("/api/treino/{tid}/audio")
+def treino_audio(tid: str, body: Audio):
+    import base64
+    try:
+        return _tratar(training.audio, tid, base64.b64decode(body.audio_base64.split(",")[-1]), body.mime, body.duracao_s)
+    except llm_client.TranscricaoIndisponivel as e:
+        raise HTTPException(503, f"Transcrição indisponível: {e}")
+
+
+@app.post("/api/treino/{tid}/avaliar-condicao")
+def treino_avaliar(tid: str, body: Condicao):
+    return _tratar(training.avaliar_condicao, tid, body.model_dump())
+
+
+@app.post("/api/treino/{tid}/registrar-proposta")
+def treino_registrar(tid: str, body: Condicao):
+    return _tratar(training.registrar, tid, body.model_dump())
+
+
+@app.post("/api/treino/{tid}/encerrar")
+def treino_encerrar(tid: str):
+    return _tratar(training.encerrar, tid)
+
+
 app.mount("/static", StaticFiles(directory=BASE / "frontend"), name="static")
 
 
 @app.get("/")
 def index():
     return FileResponse(BASE / "frontend" / "index.html")
+
+
+@app.get("/treino")
+def pagina_treino():
+    return FileResponse(BASE / "frontend" / "treino.html")

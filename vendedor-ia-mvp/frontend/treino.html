@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vendedor IA — Treino</title>
+<link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+<header>
+  <h1>Treino de vendas <small>você é o vendedor · o GPT é o cliente · nota pela régua C12</small> <a class="link-treino" href="/">← Simulador da Fernanda</a></h1>
+  <div class="controls">
+    <input id="vendedor" placeholder="Seu nome" size="16">
+    <select id="cliente"></select>
+    <select id="dificuldade"><option value="facil">Fácil</option><option value="medio" selected>Médio</option><option value="dificil">Difícil</option></select>
+    <select id="modo"><option value="TREINO">Modo treino (com dicas do coach)</option><option value="PROVA">Modo prova (sem dicas)</option></select>
+    <button id="btn-iniciar" class="primary">Iniciar</button>
+    <button id="btn-encerrar" disabled>Encerrar e ver nota</button>
+    <button id="btn-historico">Minha evolução / gestor</button>
+    <span id="llm" class="badge"></span>
+  </div>
+</header>
+<main>
+  <aside>
+    <h2>Cadastro do cliente (CRM)</h2><div id="info">—</div>
+    <div class="progresso" id="progresso"></div>
+    <h2>Calculadora (sua alçada)</h2>
+    <form id="calc" class="calc">
+      <label>Modelo<select name="modelo"><option>Onix</option><option>Polo</option><option>Creta</option><option>Dolphin</option></select></label>
+      <label>Cidade<select name="cidade"><option value="sp">São Paulo</option><option value="curitiba">Curitiba</option><option value="bh">Belo Horizonte</option></select></label>
+      <label>Produto<select name="produto"><option value="AM">Mensal</option><option value="AD">Diária</option></select></label>
+      <label>Qtd<input name="quantidade" type="number" min="1" value="1"></label>
+      <label>Prazo (meses)<select name="prazo_meses"><option>12</option><option>24</option><option>36</option></select></label>
+      <label>Dias (diária)<input name="dias" type="number" min="1" placeholder="—"></label>
+      <label>Desconto %<input name="desconto_pct" type="number" min="0" step="0.5" value="0"></label>
+      <label>Pacotes +1.000 km<input name="pacotes_km_extra" type="number" min="0" value="0"></label>
+      <label class="full"><span><input type="checkbox" name="PROTECAO_TOTAL"> Proteção total <input type="checkbox" name="TELEMETRIA"> Telemetria</span></label>
+      <button type="button" id="btn-avaliar">Avaliar condição</button><button type="button" id="btn-registrar">Registrar proposta</button>
+    </form>
+    <div id="calc-res" class="tool">Use a calculadora antes de falar preço ou desconto: é assim que um vendedor faz no dia a dia.</div>
+  </aside>
+  <section id="col-chat">
+    <div id="chat"><div class="nota">Informe seu nome, escolha o cliente, a dificuldade e o modo, e clique em <b>Iniciar</b>. O cliente vai te chamar no WhatsApp.</div></div>
+    <form id="form"><button type="button" id="btn-mic" disabled title="Responder por áudio">🎤</button><input id="msg" autocomplete="off" placeholder="Responda como vendedor..." disabled><button id="btn-enviar" disabled>Enviar</button></form>
+  </section>
+  <aside id="lado">
+    <h2>Coach</h2><div id="coach" class="badge">No modo treino, as dicas aparecem aqui e no chat.</div>
+    <h2>Resultado</h2><div id="resultado">A nota aparece quando você encerra.</div>
+  </aside>
+</main>
+<div id="modal" hidden><div class="modal-box"><div class="modal-top"><h2 id="modal-titulo">Resultado</h2><button id="btn-fechar-modal">Fechar</button></div><div id="modal-conteudo"></div></div></div>
+<script src="/static/treino.js"></script>
+</body>
+</html>

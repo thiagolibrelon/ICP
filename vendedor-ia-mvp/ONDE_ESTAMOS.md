@@ -98,7 +98,26 @@ As comparações dizem a verdade quando **não** compensa (ex.: diária é melho
   segue o mesmo fluxo, marcado como [ÁUDIO TRANSCRITO] (a Fernanda confirma números/cidade se algo parecer estranho).
   O diagnóstico (`python -m services.llm_client`) informa se o gate tem transcrição; se não tiver, o botão desativa.
 
-### 3.6 Governança e medição
+### 3.6 Modo treino (vendedor humano) — `/treino`
+
+Os papéis se invertem: **o GPT faz o cliente e o vendedor humano vende**. No fim, uma nota pela **régua C12**.
+
+- **12 personas** (uma por cliente) com contato, abertura (receptivo), **segredos** que só aparecem com boas perguntas
+  (25 no total), **objeções** com códigos OB, condição de aceite, desafio Challenger e janela de adicional.
+- **3 dificuldades** (fácil, médio, difícil) e **2 modos**: *treino* (coach dá uma dica a cada troca) e *prova* (sem dicas).
+- O vendedor usa a **calculadora da alçada** (mesmas regras de preço, volume, gerente e estoque) e pode registrar
+  proposta — sem mexer no estoque do simulador. Pode responder por áudio 🎤.
+- **Nota final (0–10) por dimensão**, com justificativa, trecho literal da fala do vendedor (conferido pelo sistema),
+  "como melhorar" e "você poderia ter dito": diagnóstico, Challenger com dado (régua C12; sem dado concreto, máximo 4),
+  objeções (R1–R6), qualificação, adicionais, fechamento (FC1–FC5, próximo passo, prazo), tom e **disciplina de margem**
+  (100% calculada pelo sistema: desconto sem contrapartida, limite revelado, preço que não bate com a tabela).
+  O diagnóstico mistura a avaliação com o que o sistema sabe que foi descoberto (x de y informações-chave).
+- **Quem vê:** o próprio vendedor (nota e justificativa ao encerrar) e o gestor em "Minha evolução / gestor" —
+  **em ordem alfabética, sem ranking** (ferramenta de desenvolvimento). Mostra evolução e ponto a desenvolver.
+- **Piloto sugerido:** 3 a 5 vendedores e 1 gestor. Antes de a nota "valer", 2–3 gestores avaliam as mesmas ~20
+  conversas para calibrar o avaliador.
+
+### 3.7 Governança e medição
 
 - **Validador**: todo R$ e % dito ao cliente precisa ter vindo de uma ferramenta; detecta margem revelada, proposta/
   protocolo afirmados sem registro e vazamento de instruções.
@@ -107,9 +126,9 @@ As comparações dizem a verdade quando **não** compensa (ex.: diária é melho
 - **Exportar p/ classificador**: gera o CSV no formato de entrada do `classificar_ligacoes_diario.py` → o vendedor IA é
   medido com a **mesma régua C12** das ligações reais.
 - **Chave**: variável `API_KEY` ou janela; fica só na memória (nunca em HTML, log ou arquivo versionado).
-- **Testes automáticos**: 54 (preço, alçada, gerente, estoque, comparações, agente A/B, validador, API, cliente do LLM).
+- **Testes automáticos**: 66 (preço, alçada, gerente, estoque, comparações, agente A/B, validador, API, cliente do LLM).
 
-### 3.7 Como rodar
+### 3.8 Como rodar
 
 ```bash
 cd vendedor-ia-mvp
