@@ -34,7 +34,7 @@ CLIENTES = [
 # oportunidade: tipo, produto, qtd, prazo_dias, valor_base, motivo, prob, objeção, resultado
 OPORTUNIDADES = {
     "C001": ("EXPANSAO", "MENSAL", 5, 180, 2850.0, "Obra nova na região exige mais 2 veículos além dos 3 atuais", 0.65, "Preço", "PROPOSTA_SIMULADA"),
-    "C002": ("MIGRACAO", "MENSAL", 2, 360, 3100.0, "Uso constante de diárias indica que a modalidade mensal seria mais estável", 0.45, "Compromisso de prazo", "PROPOSTA_SIMULADA"),
+    "C002": ("MIGRACAO", "MENSAL", 4, 360, 3100.0, "Uso constante de diárias indica que a modalidade mensal seria mais estável", 0.45, "Compromisso de prazo", "PROPOSTA_SIMULADA"),
     "C003": ("RETENCAO", "MENSAL", 4, 360, 2700.0, "Volume em queda nos últimos meses e risco de perda para concorrente", 0.40, "Concorrente mais barato", "HANDOFF"),
     "C004": ("RENOVACAO", "MENSAL", 6, 360, 2950.0, "Contrato próximo do vencimento", 0.70, "Multa contratual", "PROPOSTA_SIMULADA"),
     "C005": ("NOVO_LEAD", "PILOTO_MENSAL", 1, 90, 3300.0, "Primeira locação mensal para a equipe de campo", 0.35, "Incerteza de demanda", "PROPOSTA_SIMULADA"),
@@ -74,7 +74,45 @@ CENARIOS = [
     ("C009_REGIONAL", "C009", "Iota Engenharia: expansão regional", "Cliente ativo; preço por praça; permitir duas cotações.", 1, "O preço em cada cidade é diferente, quero comparar.", ["PROPOSTA_SIMULADA"]),
     ("C010_CHURN", "C010", "Kappa Comércio: renovação com risco de churn", "Cliente ativo; concorrência; até 1%, depois humano.", 1, "Recebi uma proposta melhor de outra locadora, quero 3% de desconto.", ["HANDOFF", "PROPOSTA_SIMULADA"]),
     ("S011_SUPORTE", "C001", "Alpha Obras: suporte (senha)", "Evento de suporte puro, sem intenção comercial.", 0, "Não consigo acessar o portal, esqueci minha senha.", ["ENCAMINHADO_SUPORTE"]),
+    ("S012_MISTO", "C006", "Zeta Logística: multa no condutor errado", "Suporte (P3) com janela comercial de telemetria (PR3): resolver/encaminhar primeiro, uma pergunta comercial leve depois.", 0, "Chegou uma multa de trânsito no condutor errado, como eu resolvo?", ["ENCAMINHADO_SUPORTE"]),
 ]
+
+# Metadados na régua do classificador de ligações (C12/C7): códigos de objeção (OB), produto (PR), dado concreto (CH ou B3),
+# comportamentos esperados (B, FC) e o roteiro de quem faz o papel do cliente.
+META = {
+    "C001_EXPANSAO": {"objecao": "OB1", "produto": "PR1", "dado_concreto": "", "comportamentos": ["B1", "B3", "FC1"],
+                      "roteiro": "Você precisa de mais 2 carros para uma obra nova em Curitiba, por 6 meses. Ache o preço alto e peça 5%. Se insistirem na alçada, insista mais uma vez."},
+    "C002_MIGRACAO": {"objecao": "OB2", "produto": "PR7", "dado_concreto": "CH2", "comportamentos": ["B1", "B3", "FC1"],
+                      "roteiro": "Vocês usam ~4 carros em diárias todo mês em São Paulo. Tenha receio de compromisso de prazo. Aceite se o vendedor mostrar com números que o mensal compensa."},
+    "C003_RETENCAO": {"objecao": "OB1", "produto": "PR1", "dado_concreto": "B3", "comportamentos": ["B3", "B10"],
+                      "roteiro": "Seu volume caiu porque um concorrente ofereceu preço menor. Peça 5% e não aceite 2%."},
+    "C004_RENOVACAO": {"objecao": "OB6", "produto": "PR7", "dado_concreto": "CH1", "comportamentos": ["B4", "FC1"],
+                       "roteiro": "Quer renovar 6 carros por 12 meses, mas pergunte sobre multa/cancelamento antes do prazo e tente desconto."},
+    "C005_PILOTO": {"objecao": "OB3", "produto": "PR1", "dado_concreto": "", "comportamentos": ["B1", "FC1"],
+                    "roteiro": "Startup sem histórico. Quer testar 1 carro para a equipe de campo, mas não sabe se terá demanda."},
+    "C006_CROSSSELL": {"objecao": "OB7", "produto": "PR2", "dado_concreto": "CH4", "comportamentos": ["B1", "B10"],
+                       "roteiro": "Tem frota própria de carga e pensa em locar 2 utilitários. Pergunte se garantem disponibilidade."},
+    "C007_REATIVACAO": {"objecao": "OB5", "produto": "PR1", "dado_concreto": "", "comportamentos": ["B3"],
+                        "roteiro": "Ex-cliente insatisfeito: conte que teve uma experiência ruim e ninguém resolveu."},
+    "C008_SAZONAL": {"objecao": "OB6", "produto": "PR1", "dado_concreto": "", "comportamentos": ["B1", "FC1"],
+                     "roteiro": "Empresa de eventos sem cadastro. Precisa de 3 carros por 5 dias, com urgência. Pergunte se dá para aprovar crédito hoje."},
+    "C009_REGIONAL": {"objecao": "OB1", "produto": "PR1", "dado_concreto": "", "comportamentos": ["B1", "B3"],
+                      "roteiro": "Tem obras em Curitiba e São Paulo e quer comparar preço por cidade. Peça uma terceira cidade para ver o limite."},
+    "C010_CHURN": {"objecao": "OB1", "produto": "PR7", "dado_concreto": "CH6", "comportamentos": ["B3", "B10", "FC1"],
+                   "roteiro": "Recebeu proposta de outra locadora. Peça 3%; recuse 1% e insista."},
+    "S011_SUPORTE": {"objecao": "", "produto": "", "dado_concreto": "", "comportamentos": [], "problema": "P1",
+                     "roteiro": "Só quer resolver a senha do portal. Não tem nenhuma demanda comercial."},
+    "S012_MISTO": {"objecao": "", "produto": "PR3", "dado_concreto": "", "comportamentos": [], "problema": "P3",
+                   "roteiro": "Uma multa de trânsito foi para o condutor errado. Depois do encaminhamento, se o vendedor perguntar como controlam quem dirige cada carro, diga que é na planilha e aceite conhecer a solução."},
+}
+
+# Fatos Challenger estáticos (regras sintéticas, sem valores inventados). Os calculados (C002, C003) ficam em
+# services/insight_service.py a partir do histórico e da tabela de preço.
+FATOS_CHALLENGER = {
+    "C004": {"codigo": "CH1", "texto": "Encerrar o contrato antes do prazo faz o período restante ser cobrado como diária de tabela; renovar pelo prazo que vocês realmente vão usar evita esse custo."},
+    "C006": {"codigo": "CH4", "texto": "Na frota própria, IPVA, seguro e manutenção ficam com vocês; na locação mensal esses custos já estão incluídos na mensalidade."},
+    "C010": {"codigo": "CH6", "texto": "O contrato atual vence em 20 dias; sem renovação, os veículos passam a ser cobrados como diária."},
+}
 
 
 def _write(path: Path, header: list[str], rows: list[list]) -> None:
@@ -140,9 +178,10 @@ def generate_csvs(data_dir: Path = DATA_DIR) -> None:
                                                 "mensagem_recomendada", "vigencia_inicio", "vigencia_fim", "max_cotacoes",
                                                 "permite_credito", "versao"], regras)
     (data_dir / "cenarios.json").write_text(json.dumps(
-        [dict(zip(["cenario_id", "cliente_id", "titulo", "descricao", "abertura_comercial", "objecao_texto", "desfechos_esperados"], c))
-         for c in CENARIOS], ensure_ascii=False, indent=2), encoding="utf-8")
+        [{**dict(zip(["cenario_id", "cliente_id", "titulo", "descricao", "abertura_comercial", "objecao_texto", "desfechos_esperados"], c)),
+          "meta": META.get(c[0], {})} for c in CENARIOS], ensure_ascii=False, indent=2), encoding="utf-8")
     (data_dir / "pracas.json").write_text(json.dumps(PRACAS, ensure_ascii=False, indent=2), encoding="utf-8")
+    (data_dir / "fatos_challenger.json").write_text(json.dumps(FATOS_CHALLENGER, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
 def _load_csv(conn: sqlite3.Connection, table: str, path: Path) -> None:
@@ -165,10 +204,25 @@ def load(db_path=None, data_dir: Path = DATA_DIR, regenerate: bool = False) -> N
         for t in ["clientes", "historico_mensal", "oportunidades", "regras_negociacao", "ofertas"]:
             _load_csv(conn, t, data_dir / f"{t}.csv")
         for c in json.loads((data_dir / "cenarios.json").read_text(encoding="utf-8")):
-            conn.execute("INSERT INTO cenarios VALUES (?,?,?,?,?,?,?)",
+            conn.execute("INSERT INTO cenarios VALUES (?,?,?,?,?,?,?,?)",
                          (c["cenario_id"], c["cliente_id"], c["titulo"], c["descricao"], c["abertura_comercial"],
-                          c["objecao_texto"], json.dumps(c["desfechos_esperados"])))
+                          c["objecao_texto"], json.dumps(c["desfechos_esperados"]), json.dumps(c.get("meta", {}), ensure_ascii=False)))
     conn.close()
+
+
+def ensure(db_path=None) -> None:
+    """Cria o banco se não existir ou se o esquema estiver desatualizado (dados são sintéticos: recriar é seguro)."""
+    path = Path(db_path) if db_path else db.get_db_path()
+    if path.exists():
+        conn = sqlite3.connect(path)
+        try:
+            cols = {r[1] for r in conn.execute("PRAGMA table_info(cenarios)")}
+        finally:
+            conn.close()
+        if "meta_json" in cols:
+            return
+        print("Esquema do banco mudou: recriando os dados sintéticos...")
+    load(path)
 
 
 if __name__ == "__main__":

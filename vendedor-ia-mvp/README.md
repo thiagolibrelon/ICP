@@ -3,22 +3,37 @@
 Chat comercial totalmente sintético: o usuário assume um de 10 clientes fictícios (+1 cenário de suporte) e conversa com um
 vendedor virtual. **Python calcula e valida; o LLM explica e conduz.** Nenhum dado, preço ou contrato é real.
 
-## Executar
+## Executar (Windows, rede Localiza)
 
 ```bash
 cd vendedor-ia-mvp
 pip install -r requirements.txt
-python -m database.seed          # gera data/*.csv e database/mvp.db (opcional: o app cria no 1º start)
-python -m uvicorn app:app --reload   # abre http://localhost:8000 (use python -m no Windows sem admin)
+python iniciar.py                # pede a chave numa janela (ou usa API_KEY), testa o llm-gate e abre o navegador
+python iniciar.py --offline      # sem GPT (vendedor em template)
+python -m services.llm_client    # só o diagnóstico: URL, cabeçalho, chave presente?, proxy, DNS e 1 chamada mínima
 python -m pytest
 ```
 
-### LLM (opcional)
+Use sempre `python -m ...` (sem admin, a pasta de scripts do pip não está no PATH).
 
-Sem chave, o sistema roda 100% offline com o vendedor determinístico (templates). Para usar o GPT via endpoint autorizado:
-`cp .env.example .env` e preencha `LLM_API_KEY`, `LLM_BASE_URL`, `LLM_MODEL`. A chave fica **só no backend** (nunca no HTML/JS).
-`LLM_MODE`: `auto` (LLM se houver chave), `mock` (nunca chama), `llm` (falha do LLM → mensagem de contingência).
-Formato esperado do endpoint: `POST {LLM_BASE_URL}/chat/completions` (compatível com OpenAI).
+### Chave do llm-gate
+
+Mesmo padrão do `classificar_ligacoes_diario.py`: variável `API_KEY` ou janela; a chave fica **só na memória** do processo,
+nunca no HTML/JS, em log ou em arquivo. `.env` é opcional (ver `.env.example`). Chamada: `POST` na URL do gate com cabeçalhos
+`api_key` e `X-Correlation-ID`, `reasoning_effort=minimal` (cai para `low`/sem parâmetro se o modelo recusar), via `requests`
+(usa o proxy do Windows). O custo real vem de `cost.token.total` da resposta do gate.
+
+### Medir com a mesma régua das ligações reais
+
+Botão **Exportar p/ classificador** (ou `GET /api/export/classificador.csv`) gera as conversas no formato de entrada do
+`classificar_ligacoes_diario.py` (`cd_segmento;transcricao_limpa`, falas `AGENTE:`/`CLIENTE:`). Rode:
+
+```bash
+python classificar_ligacoes_diario.py --entrada vendedor_ia_para_classificador.csv --saida <pasta>
+```
+
+Atenção: conversas com menos de 600 caracteres compactados viram `sem_conteudo` (constante `TAMANHO_MINIMO`) — para esta
+rodada, diminua para ~200 ou faça conversas com mais de 2 trocas.
 
 ## Como funciona (por mensagem)
 
@@ -36,6 +51,14 @@ evaluation) · `database/` (schema, seed, db) · `data/` (CSVs sintéticos, cen�
 
 Endpoints: `/api/scenarios`, `/api/conversations[/{id}/messages|evaluate|reset|export]`, `/api/customers/{id}[/history|/opportunities]`,
 `/api/pricing/simulate`, `/api/rules/evaluate-discount`, `/api/proposals`, `/api/handoffs`, `/api/metrics`. Docs em `/docs` (OpenAPI, base para o agente do Teams).
+
+## Cenários (régua C12/C7 do classificador)
+
+Cada cenário traz, no painel da esquerda, o **roteiro de quem faz o papel do cliente** e os códigos esperados: objeção (OB),
+produto (PR), dado concreto (CH/B3) e problema (P). Dados concretos calculados em Python: C002 CH2 (diárias × mensal),
+C003 B3 (queda de volume); regras sintéticas: C004 CH1, C006 CH4, C010 CH6. Crédito/cadastro PJ (P13) gera encaminhamento
+e deixa a proposta condicionada. "Multa de trânsito" (P3) é suporte; "multa contratual" é regra. **S012_MISTO**: suporte (P3)
+encaminhado primeiro, depois uma pergunta leve de telemetria (PR3) — evita o OP1 sem forçar venda; S011 (senha) não oferece nada.
 
 ## Decisões / limites do MVP
 

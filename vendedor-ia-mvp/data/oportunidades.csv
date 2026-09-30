@@ -1,6 +1,6 @@
 oportunidade_id,cliente_id,tipo,produto,quantidade_sugerida,prazo_dias,valor_base,motivo_oportunidade,probabilidade_inicial,objecao_esperada,resultado_esperado
 OP001,C001,EXPANSAO,MENSAL,5,180,2850.0,Obra nova na região exige mais 2 veículos além dos 3 atuais,0.65,Preço,PROPOSTA_SIMULADA
-OP002,C002,MIGRACAO,MENSAL,2,360,3100.0,Uso constante de diárias indica que a modalidade mensal seria mais estável,0.45,Compromisso de prazo,PROPOSTA_SIMULADA
+OP002,C002,MIGRACAO,MENSAL,4,360,3100.0,Uso constante de diárias indica que a modalidade mensal seria mais estável,0.45,Compromisso de prazo,PROPOSTA_SIMULADA
 OP003,C003,RETENCAO,MENSAL,4,360,2700.0,Volume em queda nos últimos meses e risco de perda para concorrente,0.4,Concorrente mais barato,HANDOFF
 OP004,C004,RENOVACAO,MENSAL,6,360,2950.0,Contrato próximo do vencimento,0.7,Multa contratual,PROPOSTA_SIMULADA
 OP005,C005,NOVO_LEAD,PILOTO_MENSAL,1,90,3300.0,Primeira locação mensal para a equipe de campo,0.35,Incerteza de demanda,PROPOSTA_SIMULADA

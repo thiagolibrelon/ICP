@@ -27,6 +27,10 @@ function renderCliente() {
     <dt>Oportunidade</dt><dd>${o ? esc(o.tipo) + ': ' + esc(o.motivo_oportunidade) : '—'}</dd>
     <dt>Risco churn</dt><dd>${esc(c.risco_churn)}</dd><dt>Desconto máx.</dt><dd>${pct(r && r.desconto_maximo)}</dd>
     <dt>Desfecho</dt><dd>${esc(conv.desfecho)}</dd></dl>`;
+  const m = (conv.cenario && conv.cenario.meta) || {};
+  const cod = [m.objecao && 'objeção ' + m.objecao, m.produto && 'produto ' + m.produto, m.dado_concreto && 'dado concreto ' + m.dado_concreto,
+               m.problema && 'problema ' + m.problema].filter(Boolean).join(' · ');
+  $('roteiro').innerHTML = m.roteiro ? `${esc(m.roteiro)}${cod ? `<div class="badge" style="margin-top:6px">${esc(cod)}</div>` : ''}` : '—';
 }
 
 function renderChat() {
@@ -50,7 +54,7 @@ function showAudit(id) {
     <dt>Intenção</dt><dd>${esc(a.intencao)}</dd><dt>Confiança</dt><dd>${esc(a.confianca)}</dd>
     <dt>Ação</dt><dd>${esc(a.acao)}</dd><dt>Regra</dt><dd>${esc(a.regra || '—')}</dd>
     <dt>Alçada</dt><dd>${a.alcada == null ? '—' : 'Até ' + pct(a.alcada)}</dd><dt>Preço retornado</dt><dd>${brl(a.preco_retornado)}</dd>
-    <dt>Handoff</dt><dd>${a.handoff ? 'Sim' : 'Não'}</dd><dt>Fonte</dt><dd>${esc(a.fonte)}</dd>${a.erro_llm ? `<dt>Erro LLM</dt><dd class="bad">${esc(a.erro_llm)}</dd>` : ''}
+    <dt>Handoff</dt><dd>${a.handoff ? 'Sim' : 'Não'}</dd><dt>Fonte</dt><dd>${esc(a.fonte)}</dd>${a.challenger ? `<dt>Dado concreto</dt><dd>${esc(a.challenger)}</dd>` : ''}${a.problema ? `<dt>Problema</dt><dd>${esc(a.problema)}</dd>` : ''}${a.custo_gate != null ? `<dt>Custo gate</dt><dd>US$ ${a.custo_gate}</dd>` : ''}${a.erro_llm ? `<dt>Erro LLM</dt><dd class="bad">${esc(a.erro_llm)}</dd>` : ''}
     <dt>Validação</dt><dd class="${a.validacao === 'OK' ? 'ok' : 'bad'}">${esc(a.validacao)}</dd></dl>
     <h2 style="margin-top:10px">Ferramentas</h2><pre>${ferr || 'nenhuma'}</pre>`;
   $('audit').style.display = auditOn ? '' : 'none';
@@ -83,10 +87,12 @@ $('btn-aval').onclick = async () => {
   $('aval').innerHTML = `<dl><dt>Diagnóstico</dt><dd>${r.diagnostico}/5</dd><dt>Regras</dt><dd>${r.aderencia_regras}/5</dd>
     <dt>Objeção</dt><dd>${r.tratamento_objecao ?? 'n/a'}</dd><dt>Próx. passo</dt><dd>${r.proximo_passo}/5</dd>
     <dt>Inventou info</dt><dd>${r.informacao_inventada ? 'Sim' : 'Não'}</dd><dt>Desc. fora alçada</dt><dd>${r.desconto_fora_alcada ? 'Sim' : 'Não'}</dd>
-    <dt>Handoff correto</dt><dd>${r.handoff_correto ? 'Sim' : 'Não'}</dd><dt>Desfecho</dt><dd class="${r.desfecho_ok ? 'ok' : 'bad'}">${esc(r.desfecho_observado)} (esperado: ${esc(r.desfecho_esperado)})</dd></dl>
+    <dt>Handoff correto</dt><dd>${r.handoff_correto ? 'Sim' : 'Não'}</dd>
+    <dt>Dado concreto</dt><dd>${esc(r.dado_concreto_usado || 'não usou')}${r.dado_concreto_esperado ? ' (esperado ' + esc(r.dado_concreto_esperado) + ')' : ''}</dd><dt>Desfecho</dt><dd class="${r.desfecho_ok ? 'ok' : 'bad'}">${esc(r.desfecho_observado)} (esperado: ${esc(r.desfecho_esperado)})</dd></dl>
     <ul>${r.observacoes.map(o => `<li>${esc(o)}</li>`).join('')}</ul>`;
 };
 $('btn-json').onclick = () => conv && window.open(`/api/conversations/${conv.conversation_id}/export?formato=json`);
+$('btn-cls').onclick = () => window.open('/api/export/classificador.csv');
 $('btn-txt').onclick = () => conv && window.open(`/api/conversations/${conv.conversation_id}/export?formato=txt`);
 $('form').onsubmit = async e => {
   e.preventDefault();

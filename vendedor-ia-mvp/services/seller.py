@@ -1,5 +1,6 @@
 """Redação da resposta do vendedor: LLM quando disponível, template determinístico como base/fallback."""
 import json
+import re
 from pathlib import Path
 
 from services import llm_client, validator
@@ -12,13 +13,14 @@ CONTINGENCIA = ("No momento estou com uma instabilidade para consultar as condi�
 
 
 MOTIVOS = {"DESCONTO_ACIMA_DA_ALCADA": "desconto acima da alçada", "SOLICITACAO_CLIENTE": "pedido de atendimento humano",
-           "RECLAMACAO": "reclamação", "SUPORTE": "suporte"}
+           "RECLAMACAO": "reclamação", "SUPORTE": "suporte", "ANALISE_CREDITO": "análise de crédito e cadastro PJ",
+           "INTERESSE_COMERCIAL": "interesse comercial"}
 
 
 def _cot(f: dict) -> str:
     c = f["cotacao"]
     un = "diárias" if c["produto"] == "DIARIA" else "meses"
-    praca = f" em {c['praca'].title()}" if c.get("praca") else ""
+    praca = f" em {PRACAS_NOME.get(c['praca'], c['praca'].title())}" if c.get("praca") else ""
     if c["produto"] == "DIARIA":
         return (f"{c['quantidade']} veículo(s) por {c['prazo']} dia(s){praca}: {brl(c['preco_unitario'])} por diária por veículo, "
                 f"total de {brl(c['preco_total'])}")
@@ -26,7 +28,25 @@ def _cot(f: dict) -> str:
             f"total de {brl(c['preco_total'])} por mês")
 
 
+PRACAS_NOME = {"SAO PAULO": "São Paulo", "CURITIBA": "Curitiba", "BELO HORIZONTE": "Belo Horizonte",
+               "RIO DE JANEIRO": "Rio de Janeiro", "PORTO ALEGRE": "Porto Alegre"}
+OBJECOES_NOME = {"PRECO": "preço", "CONCORRENCIA": "concorrência", "COMPROMISSO": "compromisso de prazo",
+                 "INCERTEZA_DEMANDA": "incerteza de demanda", "URGENCIA": "urgência", "PRECO_POR_PRACA": "preço por cidade",
+                 "GERAL": "condições"}
+
+
 def template(acao: str, f: dict) -> str:
+    """Texto base; o fato Challenger (dado concreto) entra ANTES da pergunta final, não depois dela."""
+    texto = _template(acao, f)
+    ch = f.get("challenger")
+    if not ch:
+        return texto
+    frases = re.split(r"(?<=[.!?])\s+", texto)
+    i = max((k for k, fr in enumerate(frases) if fr.endswith("?")), default=len(frases))
+    return " ".join(frases[:i] + [ch["texto"]] + frases[i:])
+
+
+def _template(acao: str, f: dict) -> str:
     nome = f.get("cliente", {}).get("razao_social", "")
     if acao == "ABERTURA":
         return (f"Olá! Sou o assistente comercial virtual (ambiente de simulação). Falando com {nome}: {f['motivo']}. "
@@ -54,26 +74,39 @@ def template(acao: str, f: dict) -> str:
         return (f"Entendido. Encaminhei sua solicitação para um atendente humano (protocolo {f['handoff']['handoff_id']}, motivo: "
                 f"{MOTIVOS.get(f['handoff']['motivo'], 'solicitação')}). O retorno acontece em até {f['prazo_retorno']}.")
     if acao == "ENCAMINHAR_SUPORTE":
-        return (f"Isso é um assunto de suporte, então não vou te oferecer nada comercial agora. Abri um encaminhamento para o time de "
-                f"suporte (protocolo {f['handoff']['handoff_id']}); eles retornam em até {f['prazo_retorno']}.")
+        base = (f"Abri um encaminhamento para o time de suporte (protocolo {f['handoff']['handoff_id']}); "
+                f"eles retornam em até {f['prazo_retorno']}.")
+        if f.get("janela"):
+            return f"Entendi, vamos resolver isso primeiro. {base} {f['janela']['pergunta']}"
+        return f"Isso é um assunto de suporte, então não vou te oferecer nada comercial agora. {base}"
+    if acao == "REGISTRAR_INTERESSE":
+        return (f"Combinado! Registrei seu interesse em conhecer a {f['janela']['nome']} (protocolo {f['interesse']['handoff_id']}); "
+                f"o time comercial entra em contato em até {f['prazo_retorno']}. O caso original segue com o suporte "
+                f"(protocolo {f['handoff']['handoff_id']}).")
+    if acao == "RESPEITAR_RECUSA":
+        return (f"Sem problema! O seu caso segue com o suporte (protocolo {f['handoff']['handoff_id']}), com retorno em até "
+                f"{f['prazo_retorno']}. Posso ajudar em mais alguma coisa?")
     if acao == "REGISTRAR_PROPOSTA":
         p = f["proposta"]
-        return (f"Pronto! Registrei a proposta simulada {p['proposta_id']} com valor de {brl(p['preco_unitario'])} por veículo, "
-                f"válida por {p['validade_dias']} dias. Próximo passo: nosso time confirma os detalhes e retorna em até {f['prazo_retorno']}. "
-                "Lembrando que é um ambiente de simulação.")
+        cond = f" Ela fica sujeita a {' e '.join(p['condicoes'])}." if p.get("condicoes") else ""
+        unidade = "por diária por veículo" if f.get("cotacao", {}).get("produto") == "DIARIA" else "por veículo/mês"
+        return (f"Pronto! Registrei a proposta simulada {p['proposta_id']} com valor de {brl(p['preco_unitario'])} {unidade}, "
+                f"válida por {p['validade_dias']} dias.{cond} Próximo passo: nosso time confirma os detalhes e retorna em até "
+                f"{f['prazo_retorno']}. Lembrando que é um ambiente de simulação.")
     if acao == "EXPLICAR_REGRAS":
         return (f"Sobre as regras: {f['regra_msg']} Posso seguir com a proposta nas condições atuais?")
     if acao == "TRATAR_OBJECAO":
-        hist = f.get("historico_txt", "")
+        hist = "" if f.get("challenger") else f.get("historico_txt", "")
         cot = f" A condição consultada é {_cot(f)}." if f.get("cotacao") else ""
-        return (f"Entendo a sua preocupação ({f['objecao'].lower()}). {hist} {f['regra_msg']}{cot} "
+        return (f"Entendo a sua preocupação com {OBJECOES_NOME.get(f['objecao'], 'as condições')}. {hist} {f['regra_msg']}{cot} "
                 "Qual seria o ponto principal para você avançar?").replace("  ", " ")
     if acao == "INFORMAR_DISPONIBILIDADE":
         return ("Não consigo confirmar disponibilidade de veículo por aqui, então não vou prometer. O que posso fazer é registrar a proposta "
                 "sujeita à confirmação de disponibilidade pelo time responsável. Quer seguir assim?")
     if acao == "INFORMAR_SEM_CREDITO":
-        return ("Não faço análise nem simulação de crédito por aqui. Posso encaminhar o seu caso ao time financeiro, "
-                "ou seguimos com a cotação sem considerar crédito. O que prefere?")
+        return (f"Não consigo aprovar crédito por aqui, então não vou prometer prazo de aprovação. Encaminhei para análise de crédito e "
+                f"cadastro PJ (protocolo {f['handoff']['handoff_id']}), com retorno em até {f['prazo_retorno']}. Enquanto isso, posso "
+                "deixar a cotação registrada, sujeita a essa análise. Quer seguir assim?")
     if acao == "LIMITE_COTACOES":
         return ("Já fiz o número de cotações permitido por conversa. Posso encaminhar para um atendente humano para novas comparações "
                 "ou seguimos com uma das cotações já apresentadas.")
@@ -116,6 +149,6 @@ def responder(acao: str, fatos: dict, historico: list[dict], texto_cliente: str)
     viol = validator.validar(r["texto"], fatos)
     if viol:
         return {"texto": base, "fonte": "template_reescrito", "violacoes_brutas": viol,
-                "tokens_entrada": r["tokens_entrada"], "tokens_saida": r["tokens_saida"]}
+                "tokens_entrada": r["tokens_entrada"], "tokens_saida": r["tokens_saida"], "custo_gate": r.get("custo_gate")}
     return {"texto": r["texto"], "fonte": "llm", "violacoes_brutas": [], "tokens_entrada": r["tokens_entrada"],
-            "tokens_saida": r["tokens_saida"]}
+            "tokens_saida": r["tokens_saida"], "custo_gate": r.get("custo_gate")}

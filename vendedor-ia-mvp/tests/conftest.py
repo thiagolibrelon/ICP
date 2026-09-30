@@ -14,6 +14,8 @@ from services import conversation_service  # noqa: E402
 @pytest.fixture(autouse=True)
 def banco(tmp_path, monkeypatch):
     monkeypatch.setenv("LLM_MODE", "mock")
+    for var in ("API_KEY", "LLM_API_KEY", "LLM_BASE_URL", "LLM_AUTH_HEADER"):
+        monkeypatch.delenv(var, raising=False)
     monkeypatch.setattr(conversation_service, "LOG_FILE", tmp_path / "conversations.jsonl")
     path = tmp_path / "test.db"
     db.set_db_path(path)

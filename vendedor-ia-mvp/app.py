@@ -1,9 +1,11 @@
-"""API FastAPI do Vendedor IA (MVP simulado). Executar: uvicorn app:app --reload"""
-import json
+"""API FastAPI do Vendedor IA (MVP simulado). Executar: python iniciar.py  (ou python -m uvicorn app:app --reload)"""
+import csv
+import io
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse, PlainTextResponse
+from fastapi.responses import FileResponse, PlainTextResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
@@ -12,13 +14,15 @@ from services import (conversation_service as conv, customer_service, evaluation
                       rules_service, tools)
 
 BASE = Path(__file__).resolve().parent
-app = FastAPI(title="Vendedor IA — MVP simulado", version="0.1.0")
 
 
-@app.on_event("startup")
-def _startup() -> None:
-    if not db.get_db_path().exists():
-        seed.load()
+@asynccontextmanager
+async def _lifespan(_app):
+    seed.ensure()
+    yield
+
+
+app = FastAPI(title="Vendedor IA — MVP simulado", version="0.2.0", lifespan=_lifespan)
 
 
 class NovaConversa(BaseModel):
@@ -113,6 +117,29 @@ def exportar(cid: str, formato: str = "json"):
             linhas.append(f"[{m['timestamp']}] {'Vendedor IA' if m['role'] == 'vendedor' else 'Cliente'}: {m['conteudo']}")
         return PlainTextResponse("\n".join(linhas), headers={"Content-Disposition": f'attachment; filename="{cid}.txt"'})
     return c
+
+
+@app.get("/api/export/classificador.csv")
+def exportar_classificador(ids: str | None = None):
+    """Conversas no formato de ENTRADA do classificar_ligacoes_diario.py (';', colunas cd_segmento e transcricao_limpa).
+    Assim o vendedor IA é medido com a mesma régua (C12) das ligações reais."""
+    convs = db.fetch_all("SELECT conversation_id, cenario_id, inicio FROM conversas ORDER BY inicio")
+    if ids:
+        alvo = set(ids.split(","))
+        convs = [c for c in convs if c["conversation_id"] in alvo]
+    buf = io.StringIO()
+    w = csv.writer(buf, delimiter=";")
+    w.writerow(["cd_segmento", "data_hora_inicio", "direcao", "nome_agente_1", "status_transcricao", "cenario_id", "transcricao_limpa"])
+    for c in convs:
+        msgs = db.fetch_all("SELECT role, conteudo FROM mensagens WHERE conversation_id=? ORDER BY message_id", (c["conversation_id"],))
+        if not any(m["role"] == "cliente" for m in msgs):
+            continue
+        texto = " | ".join(f"{'AGENTE' if m['role'] == 'vendedor' else 'CLIENTE'}: {' '.join(m['conteudo'].split())}" for m in msgs)
+        suporte = c["cenario_id"].startswith("S")
+        w.writerow([c["conversation_id"], c["inicio"].replace("T", " ").split("+")[0], "Inbound" if suporte else "Outbound",
+                    "Vendedor IA", "success", c["cenario_id"], texto])
+    return Response(("\ufeff" + buf.getvalue()).encode("utf-8"), media_type="text/csv",
+                    headers={"Content-Disposition": 'attachment; filename="vendedor_ia_para_classificador.csv"'})
 
 
 @app.get("/api/customers/{cid}")

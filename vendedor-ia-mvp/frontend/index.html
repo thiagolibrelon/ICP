@@ -20,11 +20,13 @@
     <button id="btn-aval">Gerar avaliação</button>
     <button id="btn-json">Exportar JSON</button>
     <button id="btn-txt">Exportar transcrição</button>
+    <button id="btn-cls" title="Todas as conversas no formato de entrada do classificar_ligacoes_diario.py">Exportar p/ classificador</button>
     <span id="llm" class="badge"></span>
   </div>
 </header>
 <main>
-  <aside id="col-cliente"><h2>Contexto do cliente</h2><div id="cliente">Selecione um cenário.</div><div id="dados" hidden></div></aside>
+  <aside id="col-cliente"><h2>Contexto do cliente</h2><div id="cliente">Selecione um cenário.</div>
+    <h2 style="margin-top:12px">Seu papel (cliente)</h2><div id="roteiro" class="roteiro">—</div><div id="dados" hidden></div></aside>
   <section id="col-chat">
     <div id="chat"></div>
     <form id="form"><input id="msg" autocomplete="off" placeholder="Você é o cliente. Escreva sua mensagem..." disabled><button disabled>Enviar</button></form>

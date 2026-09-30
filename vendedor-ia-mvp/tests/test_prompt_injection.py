@@ -85,9 +85,9 @@ def test_config_do_llm(monkeypatch):
         monkeypatch.setenv("LLM_BASE_URL", url)
         assert llm_client.endpoint() == "https://gw/v2/chat/completions"
     monkeypatch.delenv("LLM_AUTH_HEADER", raising=False)
+    assert llm_client.headers()["api_key"] == "segredo"  # padrão do llm-gate
+    monkeypatch.setenv("LLM_AUTH_HEADER", "Authorization")
     assert llm_client.headers()["Authorization"] == "Bearer segredo"
-    monkeypatch.setenv("LLM_AUTH_HEADER", "api-key")
-    assert llm_client.headers()["api-key"] == "segredo"
     monkeypatch.setenv("LLM_REASONING_EFFORT", "minimal")
     assert llm_client.payload([], 100)["reasoning_effort"] == "minimal"
     assert llm_client.redact("x segredo y") == "x *** y"
@@ -132,3 +132,26 @@ def test_gateway_401_nao_repete_e_nao_vaza_chave(monkeypatch):
     with pytest.raises(llm_client.LLMUnavailable) as e:
         llm_client.chat([])
     assert len(n) == 1 and "HTTP 401" in str(e.value) and "segredo" not in str(e.value)
+
+
+
+def test_aceita_api_key_do_classificador_e_url_padrao(monkeypatch):
+    monkeypatch.delenv("LLM_API_KEY", raising=False)
+    monkeypatch.delenv("LLM_BASE_URL", raising=False)
+    monkeypatch.setenv("API_KEY", "chave-do-time")
+    assert llm_client.configured() and llm_client.api_key() == "chave-do-time"
+    assert llm_client.endpoint() == llm_client.URL_PADRAO
+
+
+def test_json_mode_e_custo_do_gate(monkeypatch):
+    monkeypatch.setenv("LLM_MODE", "llm")
+    monkeypatch.setenv("LLM_API_KEY", "segredo")
+    enviados = []
+
+    def post(url, json, headers, **kw):
+        enviados.append(json)
+        return _Resp(200, {"choices": [{"message": {"content": "{}"}}], "usage": {"prompt_tokens": 10, "completion_tokens": 2},
+                           "cost": {"token": {"total": 0.0012}}})
+    monkeypatch.setattr(llm_client.requests, "post", post)
+    r = llm_client.chat([], json_mode=True)
+    assert enviados[0]["response_format"] == {"type": "json_object"} and r["custo_gate"] == 0.0012

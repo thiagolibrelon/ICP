@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS ofertas (
 );
 CREATE TABLE IF NOT EXISTS cenarios (
   cenario_id TEXT PRIMARY KEY, cliente_id TEXT, titulo TEXT, descricao TEXT,
-  abertura_comercial INTEGER, objecao_texto TEXT, desfechos_esperados TEXT
+  abertura_comercial INTEGER, objecao_texto TEXT, desfechos_esperados TEXT, meta_json TEXT
 );
 CREATE TABLE IF NOT EXISTS conversas (
   conversation_id TEXT PRIMARY KEY, cliente_id TEXT, inicio TEXT, fim TEXT, cenario_id TEXT,

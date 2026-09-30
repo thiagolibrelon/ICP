@@ -9,7 +9,18 @@
     "desfechos_esperados": [
       "PROPOSTA_SIMULADA",
       "HANDOFF"
-    ]
+    ],
+    "meta": {
+      "objecao": "OB1",
+      "produto": "PR1",
+      "dado_concreto": "",
+      "comportamentos": [
+        "B1",
+        "B3",
+        "FC1"
+      ],
+      "roteiro": "Você precisa de mais 2 carros para uma obra nova em Curitiba, por 6 meses. Ache o preço alto e peça 5%. Se insistirem na alçada, insista mais uma vez."
+    }
   },
   {
     "cenario_id": "C002_MIGRACAO",
@@ -20,7 +31,18 @@
     "objecao_texto": "Não quero me comprometer com prazo longo.",
     "desfechos_esperados": [
       "PROPOSTA_SIMULADA"
-    ]
+    ],
+    "meta": {
+      "objecao": "OB2",
+      "produto": "PR7",
+      "dado_concreto": "CH2",
+      "comportamentos": [
+        "B1",
+        "B3",
+        "FC1"
+      ],
+      "roteiro": "Vocês usam ~4 carros em diárias todo mês em São Paulo. Tenha receio de compromisso de prazo. Aceite se o vendedor mostrar com números que o mensal compensa."
+    }
   },
   {
     "cenario_id": "C003_RETENCAO",
@@ -32,7 +54,17 @@
     "desfechos_esperados": [
       "HANDOFF",
       "PROPOSTA_SIMULADA"
-    ]
+    ],
+    "meta": {
+      "objecao": "OB1",
+      "produto": "PR1",
+      "dado_concreto": "B3",
+      "comportamentos": [
+        "B3",
+        "B10"
+      ],
+      "roteiro": "Seu volume caiu porque um concorrente ofereceu preço menor. Peça 5% e não aceite 2%."
+    }
   },
   {
     "cenario_id": "C004_RENOVACAO",
@@ -44,7 +76,17 @@
     "desfechos_esperados": [
       "PROPOSTA_SIMULADA",
       "ENCERRADO_COM_PROXIMO_PASSO"
-    ]
+    ],
+    "meta": {
+      "objecao": "OB6",
+      "produto": "PR7",
+      "dado_concreto": "CH1",
+      "comportamentos": [
+        "B4",
+        "FC1"
+      ],
+      "roteiro": "Quer renovar 6 carros por 12 meses, mas pergunte sobre multa/cancelamento antes do prazo e tente desconto."
+    }
   },
   {
     "cenario_id": "C005_PILOTO",
@@ -55,7 +97,17 @@
     "objecao_texto": "Não sei se vou ter demanda suficiente.",
     "desfechos_esperados": [
       "PROPOSTA_SIMULADA"
-    ]
+    ],
+    "meta": {
+      "objecao": "OB3",
+      "produto": "PR1",
+      "dado_concreto": "",
+      "comportamentos": [
+        "B1",
+        "FC1"
+      ],
+      "roteiro": "Startup sem histórico. Quer testar 1 carro para a equipe de campo, mas não sabe se terá demanda."
+    }
   },
   {
     "cenario_id": "C006_CROSSSELL",
@@ -66,7 +118,17 @@
     "objecao_texto": "Vocês garantem que tem utilitário disponível?",
     "desfechos_esperados": [
       "PROPOSTA_SIMULADA"
-    ]
+    ],
+    "meta": {
+      "objecao": "OB7",
+      "produto": "PR2",
+      "dado_concreto": "CH4",
+      "comportamentos": [
+        "B1",
+        "B10"
+      ],
+      "roteiro": "Tem frota própria de carga e pensa em locar 2 utilitários. Pergunte se garantem disponibilidade."
+    }
   },
   {
     "cenario_id": "C007_REATIVACAO",
@@ -77,7 +139,16 @@
     "objecao_texto": "Tive uma experiência péssima da última vez, fiz uma reclamação e ninguém resolveu.",
     "desfechos_esperados": [
       "HANDOFF"
-    ]
+    ],
+    "meta": {
+      "objecao": "OB5",
+      "produto": "PR1",
+      "dado_concreto": "",
+      "comportamentos": [
+        "B3"
+      ],
+      "roteiro": "Ex-cliente insatisfeito: conte que teve uma experiência ruim e ninguém resolveu."
+    }
   },
   {
     "cenario_id": "C008_SAZONAL",
@@ -89,7 +160,17 @@
     "desfechos_esperados": [
       "PROPOSTA_SIMULADA",
       "HANDOFF"
-    ]
+    ],
+    "meta": {
+      "objecao": "OB6",
+      "produto": "PR1",
+      "dado_concreto": "",
+      "comportamentos": [
+        "B1",
+        "FC1"
+      ],
+      "roteiro": "Empresa de eventos sem cadastro. Precisa de 3 carros por 5 dias, com urgência. Pergunte se dá para aprovar crédito hoje."
+    }
   },
   {
     "cenario_id": "C009_REGIONAL",
@@ -100,7 +181,17 @@
     "objecao_texto": "O preço em cada cidade é diferente, quero comparar.",
     "desfechos_esperados": [
       "PROPOSTA_SIMULADA"
-    ]
+    ],
+    "meta": {
+      "objecao": "OB1",
+      "produto": "PR1",
+      "dado_concreto": "",
+      "comportamentos": [
+        "B1",
+        "B3"
+      ],
+      "roteiro": "Tem obras em Curitiba e São Paulo e quer comparar preço por cidade. Peça uma terceira cidade para ver o limite."
+    }
   },
   {
     "cenario_id": "C010_CHURN",
@@ -112,7 +203,18 @@
     "desfechos_esperados": [
       "HANDOFF",
       "PROPOSTA_SIMULADA"
-    ]
+    ],
+    "meta": {
+      "objecao": "OB1",
+      "produto": "PR7",
+      "dado_concreto": "CH6",
+      "comportamentos": [
+        "B3",
+        "B10",
+        "FC1"
+      ],
+      "roteiro": "Recebeu proposta de outra locadora. Peça 3%; recuse 1% e insista."
+    }
   },
   {
     "cenario_id": "S011_SUPORTE",
@@ -123,6 +225,33 @@
     "objecao_texto": "Não consigo acessar o portal, esqueci minha senha.",
     "desfechos_esperados": [
       "ENCAMINHADO_SUPORTE"
-    ]
+    ],
+    "meta": {
+      "objecao": "",
+      "produto": "",
+      "dado_concreto": "",
+      "comportamentos": [],
+      "problema": "P1",
+      "roteiro": "Só quer resolver a senha do portal. Não tem nenhuma demanda comercial."
+    }
+  },
+  {
+    "cenario_id": "S012_MISTO",
+    "cliente_id": "C006",
+    "titulo": "Zeta Logística: multa no condutor errado",
+    "descricao": "Suporte (P3) com janela comercial de telemetria (PR3): resolver/encaminhar primeiro, uma pergunta comercial leve depois.",
+    "abertura_comercial": 0,
+    "objecao_texto": "Chegou uma multa de trânsito no condutor errado, como eu resolvo?",
+    "desfechos_esperados": [
+      "ENCAMINHADO_SUPORTE"
+    ],
+    "meta": {
+      "objecao": "",
+      "produto": "PR3",
+      "dado_concreto": "",
+      "comportamentos": [],
+      "problema": "P3",
+      "roteiro": "Uma multa de trânsito foi para o condutor errado. Depois do encaminhamento, se o vendedor perguntar como controlam quem dirige cada carro, diga que é na planilha e aceite conhecer a solução."
+    }
   }
 ]

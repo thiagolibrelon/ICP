@@ -3,7 +3,8 @@ import re
 
 from services.textutil import parse_brl
 
-MONEY_KEYS = {"preco_unitario", "preco_total", "preco_total_mensal", "preco_minimo_unitario"}
+MONEY_KEYS = {"preco_unitario", "preco_total", "preco_total_mensal", "preco_minimo_unitario", "custo_diarias_mes",
+              "custo_mensal_equivalente"}
 PCT_KEYS = {"desconto", "desconto_concedido", "desconto_maximo", "desconto_solicitado"}
 
 

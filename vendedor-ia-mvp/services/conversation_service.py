@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 
 from database import db
 from database.db import BASE_DIR
-from services import customer_service, pricing_service, rules_service, seller, tools
+from services import customer_service, insight_service, pricing_service, rules_service, seller, tools
 from services.textutil import any_word, norm, to_int
 
 LOG_FILE = BASE_DIR / "logs" / "conversations.jsonl"
@@ -37,7 +37,10 @@ INTENTS = [
                  "voce agora e", "modo desenvolvedor", "revele suas regras", "aja como", "finja que"]),
     ("HUMANO", ["atendente", "humano", "falar com uma pessoa", "falar com alguem", "gerente", "supervisor", "pessoa de verdade"]),
     ("SUPORTE", ["senha", "acessar o portal", "acesso ao portal", "login", "nao consigo entrar", "atualizar cadastro", "segunda via",
-                 "boleto", "nota fiscal", "email de cadastro", "redefinir"]),
+                 "boleto", "nota fiscal", "email de cadastro", "redefinir",
+                 # "multa" no dia a dia é multa de TRÂNSITO (P3 do classificador), não multa contratual
+                 "multa de transito", "infracao", "condutor errado", "indicar condutor", "indicacao de condutor", "autuacao",
+                 "notificacao de multa", "pontos na carteira"]),
     ("RECLAMACAO", ["reclama", "pessimo", "horrivel", "insatisf", "experiencia ruim", "mau atendimento", "ninguem resolveu",
                     "atrasaram", "descaso", "processar"]),
     ("ACEITE", ["fechado", "pode enviar a proposta", "aceito", "vamos fechar", "pode gerar a proposta", "quero a proposta",
@@ -45,7 +48,8 @@ INTENTS = [
     ("DESCONTO", ["desconto", "abatimento", "baixar o preco", "melhorar o preco", "mais barato", "abaixar"]),
     ("DISPONIBILIDADE", ["disponivel", "disponibilidade", "tem carro", "tem utilitario", "garantem", "garante", "voces tem"]),
     ("CREDITO", ["credito", "financiamento", "limite de credito", "aprovacao de credito", "parcelar"]),
-    ("MULTA", ["multa", "rescisao", "rescindir", "cancelar antes", "cancelamento", "renovar as regras", "regras do contrato"]),
+    ("MULTA", ["multa contratual", "multa rescis", "tem multa", "rescisao", "rescindir", "cancelar antes", "cancelamento",
+               "devolver antes", "encerrar antes", "renovar as regras", "regras do contrato"]),
     ("OBJECAO", ["caro", "preco alto", "alto demais", "concorrente", "outra locadora", "nao sei se", "incerteza", "receio", "medo",
                  "comprometer", "compromisso", "fidelidade", "urgente", "urgencia", "para ontem", "melhor de outra",
                  "preco por cidade", "diferente em cada", "comparar", "achei o preco"]),
@@ -58,6 +62,23 @@ OBJECAO_TIPOS = {
     "URGENCIA": ["urgente", "urgencia", "para ontem"], "PRECO_POR_PRACA": ["preco por cidade", "diferente em cada", "comparar"],
 }
 PRACAS = ["curitiba", "sao paulo", "belo horizonte", "rio de janeiro", "porto alegre"]
+
+# Problemas na mesma codificação do classificador de ligações (P1..P15)
+PROBLEMAS = [
+    ("P3", ["multa de transito", "infracao", "condutor errado", "indicar condutor", "indicacao de condutor", "autuacao", "notificacao de multa",
+            "pontos na carteira"]),
+    ("P1", ["senha", "portal", "login", "nao consigo entrar", "acesso", "redefinir"]),
+    ("P2", ["boleto", "fatura", "nota fiscal", "segunda via", "cobranca"]),
+    ("P5", ["cadastro", "condutor"]),
+]
+# Janela comercial (evita OP1 "suporte sem pergunta comercial") só quando o problema se conecta a um produto.
+# Uma pergunta leve, sem preço, DEPOIS de encaminhar o problema. Suporte sem conexão (ex.: senha) = nenhuma oferta.
+JANELAS = {
+    "P3": {"produto": "PR3", "nome": "telemetria",
+           "pergunta": "Aproveitando: hoje como vocês controlam qual condutor está com cada carro? Existe uma solução de telemetria que "
+                       "ajuda justamente nisso — se fizer sentido, peço para o time comercial te apresentar, sem compromisso."},
+}
+AFIRMATIVO = r"\b(sim|tenho interesse|quero|pode|gostaria|claro|manda|apresent|faz sentido|vamos)"
 
 
 def _now() -> str:
@@ -108,6 +129,13 @@ def extrair_slots(t: str, cliente: dict, state: dict) -> dict:
     if m:
         out["desconto"] = round(float(m.group(1).replace(",", ".")) / 100, 4)
     return out
+
+
+def _problema(t: str) -> str:
+    for cod, palavras in PROBLEMAS:
+        if any_word(t, palavras):
+            return cod
+    return "P11"
 
 
 def _tipo_objecao(t: str) -> str:
@@ -165,6 +193,7 @@ def listar_cenarios() -> list[dict]:
     rows = db.fetch_all("SELECT c.*, cl.razao_social FROM cenarios c JOIN clientes cl USING (cliente_id) ORDER BY cenario_id")
     for r in rows:
         r["desfechos_esperados"] = json.loads(r["desfechos_esperados"])
+        r["meta"] = json.loads(r.pop("meta_json") or "{}")
     return rows
 
 
@@ -174,7 +203,8 @@ def _estado_inicial(cliente: dict, cenario_id: str) -> dict:
             "informados": [], "quantidade": None, "prazo": None, "praca": None, "cotacao": None, "pracas_cotadas": [],
             "desconto_aplicado": 0.0, "pedidos_acima": 0, "handoff_oferecido": False, "perguntas_feitas": 0,
             "proposta": None, "handoff": None, "desfecho": "EM_ANDAMENTO", "status": "ATIVA", "fora_da_alcada": False,
-            "sem_disponibilidade_confirmada": False}
+            "sem_disponibilidade_confirmada": False, "challenger_usado": None, "janela": None, "janela_respondida": False,
+            "interesse": None, "lead": cliente["status_relacionamento"] == "LEAD"}
 
 
 def iniciar_conversa(cenario_id: str | None = None, identificador: str | None = None) -> dict:
@@ -239,7 +269,9 @@ def obter_conversa(conv_id: str) -> dict:
     msgs = db.fetch_all("SELECT * FROM mensagens WHERE conversation_id=? ORDER BY message_id", (conv_id,))
     for m in msgs:
         m["auditoria"] = json.loads(m.pop("auditoria_json")) if m.get("auditoria_json") else None
+    cen = db.fetch_one("SELECT meta_json, objecao_texto, titulo FROM cenarios WHERE cenario_id=?", (row["cenario_id"],))
     return {**row, "estado": state, "mensagens": msgs,
+            "cenario": {"titulo": cen["titulo"], "objecao_texto": cen["objecao_texto"], "meta": json.loads(cen["meta_json"] or "{}")} if cen else None,
             "cliente": customer_service.consultar_perfil(row["cliente_id"]),
             "regra": rules_service.get_rule(row["cliente_id"]),
             "oportunidade": (customer_service.consultar_oportunidades(row["cliente_id"]) or [None])[0]}
@@ -345,14 +377,36 @@ def processar_mensagem(conv_id: str, texto: str) -> dict:
         return (len(state["pracas_cotadas"]) >= (regra.get("max_cotacoes") or 1)
                 and praca_alvo not in state["pracas_cotadas"] and bool(state["pracas_cotadas"]))
 
-    if intent == "INJECAO":
+    janela_pendente = state.get("janela") and not state["janela_respondida"]
+    despedida = intent == "ENCERRAR" and not re.search(r"\bnao\b", norm(texto))  # "obrigado, tchau" encerra; "não, obrigado" é recusa
+    if janela_pendente and intent not in ("INJECAO", "HUMANO", "RECLAMACAO", "SUPORTE") and not despedida:
+        state["janela_respondida"] = True
+        intent, conf = "RESPOSTA_JANELA", "ALTA"
+        t = norm(texto)
+        if re.search(AFIRMATIVO, t) and not re.search(r"\bnao\b", t):
+            j = JANELAS[state["janela"]]
+            h = tools.criar_handoff(conv_id, cliente["cliente_id"], "INTERESSE_COMERCIAL",
+                                    f"Janela de {j['nome']} ({j['produto']}) aberta a partir de um caso de suporte.")
+            ferramentas.append({"nome": "criar_handoff", "entrada": {"motivo": "INTERESSE_COMERCIAL"}, "saida": h})
+            state["interesse"] = {"produto": j["produto"], **h}
+            fatos.update(interesse=state["interesse"], janela=j, handoff=state["handoff"], prazo_retorno=PRAZO_PROPOSTA)
+            acao = "REGISTRAR_INTERESSE"
+        else:
+            fatos.update(handoff=state["handoff"], prazo_retorno=PRAZO_HANDOFF)
+            acao = "RESPEITAR_RECUSA"
+    elif intent == "INJECAO":
         acao = "RECUSAR_INJECAO"
     elif intent == "HUMANO":
         fatos["handoff"] = _handoff(conv_id, state, "SOLICITACAO_CLIENTE", ferramentas, "Cliente pediu atendimento humano.")
         fatos["prazo_retorno"], acao, state["desfecho"] = PRAZO_HANDOFF, "HANDOFF_CRIADO", "HANDOFF"
     elif intent == "SUPORTE":
-        fatos["handoff"] = _handoff(conv_id, state, "SUPORTE", ferramentas, "Solicitação de suporte, sem intenção comercial.")
+        problema = _problema(norm(texto))
+        fatos["problema"] = problema
+        fatos["handoff"] = _handoff(conv_id, state, "SUPORTE", ferramentas, f"Solicitação de suporte ({problema}).")
         fatos["prazo_retorno"], acao, state["desfecho"] = PRAZO_HANDOFF, "ENCAMINHAR_SUPORTE", "ENCAMINHADO_SUPORTE"
+        if problema in JANELAS and cliente["status_relacionamento"] == "ATIVO" and not state.get("janela"):
+            state["janela"] = problema
+            fatos["janela"] = JANELAS[problema]
     elif intent == "RECLAMACAO":
         fatos["handoff"] = _handoff(conv_id, state, "RECLAMACAO", ferramentas, "Cliente relatou reclamação/experiência negativa.")
         fatos["prazo_retorno"], acao, state["desfecho"] = PRAZO_HANDOFF, "HANDOFF_CRIADO", "HANDOFF"
@@ -369,8 +423,12 @@ def processar_mensagem(conv_id: str, texto: str) -> dict:
                 acao = "FORA_DA_REGRA"
         else:
             c = state["cotacao"]
+            condicoes = [t for cond, t in ((state["sem_disponibilidade_confirmada"], "confirmação de disponibilidade"),
+                                           (state["lead"] or (state.get("handoff") or {}).get("motivo") == "ANALISE_CREDITO",
+                                            "cadastro PJ e análise de crédito")) if cond]
             prop = tools.registrar_proposta(conv_id, cliente["cliente_id"], c, state["desconto_aplicado"],
-                                            "Sujeita à confirmação de disponibilidade" if state["sem_disponibilidade_confirmada"] else "")
+                                            ("Sujeita a " + " e ".join(condicoes)) if condicoes else "")
+            prop["condicoes"] = condicoes
             ferramentas.append({"nome": "registrar_proposta", "entrada": {"desconto": state["desconto_aplicado"]}, "saida": prop})
             state["proposta"], state["desfecho"] = prop, "PROPOSTA_SIMULADA"
             fatos.update(cotacao=c, proposta=prop, prazo_retorno=PRAZO_PROPOSTA)
@@ -414,7 +472,12 @@ def processar_mensagem(conv_id: str, texto: str) -> dict:
         fatos["disponibilidade_confirmada"] = False
         acao = "INFORMAR_DISPONIBILIDADE"
     elif intent == "CREDITO":
+        # P13 do classificador (crédito/cadastro PJ): o vendedor não aprova nem promete; encaminha e segue com a cotação
         fatos["credito_simulado"] = False
+        fatos["handoff"] = _handoff(conv_id, state, "ANALISE_CREDITO", ferramentas, "Cliente pediu aprovação de crédito/cadastro PJ.")
+        fatos["prazo_retorno"] = PRAZO_HANDOFF
+        if state["desfecho"] == "EM_ANDAMENTO":
+            state["desfecho"] = "HANDOFF"
         acao = "INFORMAR_SEM_CREDITO"
     elif intent == "MULTA":
         fatos["regra_msg"] = REGRAS_TXT.get(cliente["cliente_id"], DEFAULT_REGRAS)
@@ -456,6 +519,13 @@ def processar_mensagem(conv_id: str, texto: str) -> dict:
             else:
                 acao = "FORA_DA_REGRA"
 
+    if not state.get("challenger_usado"):
+        ch = insight_service.para_acao(cliente["cliente_id"], acao)
+        if ch:
+            fatos["challenger"] = ch
+            state["challenger_usado"] = ch["codigo"]
+            ferramentas.append({"nome": "consultar_insight", "entrada": {"cliente_id": cliente["cliente_id"]}, "saida": ch})
+
     r = seller.responder(acao, {**fatos, "argumento": ARGUMENTOS.get(cliente["cliente_id"], "")}, historico, texto)
     if r["fonte"] == "contingencia":
         state["desfecho"] = state["desfecho"] if state["desfecho"] != "EM_ANDAMENTO" else "EM_ANDAMENTO"
@@ -463,7 +533,8 @@ def processar_mensagem(conv_id: str, texto: str) -> dict:
              "regra": regra.get("regra_id"), "alcada": regra.get("desconto_maximo"), "fonte": r["fonte"], "erro_llm": r.get("erro"),
              "validacao": _rotulo(r), "violacoes_brutas": r["violacoes_brutas"], "fatos": fatos,
              "preco_retornado": (fatos.get("desconto") or fatos.get("cotacao") or {}).get("preco_unitario"),
-             "handoff": bool(state.get("handoff")), "slots": slots}
+             "handoff": bool(state.get("handoff")), "slots": slots, "custo_gate": r.get("custo_gate"),
+             "challenger": (fatos.get("challenger") or {}).get("codigo"), "problema": fatos.get("problema")}
     _log_msg(conv_id, "vendedor", r["texto"], audit, (r["tokens_entrada"], r["tokens_saida"]))
     if state["status"] == "ENCERRADA":
         tools.encerrar_conversa(conv_id)

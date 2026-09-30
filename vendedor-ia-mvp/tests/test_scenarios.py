@@ -24,6 +24,8 @@ ROTEIROS = {
     "C010_CHURN": (["Preciso renovar 3 carros por 12 meses em Porto Alegre", "Recebi uma proposta melhor de outra locadora, quero 3% de desconto",
                     "Quero 3% mesmo"], "HANDOFF"),
     "S011_SUPORTE": (["Não consigo acessar o portal, esqueci minha senha"], "ENCAMINHADO_SUPORTE"),
+    "S012_MISTO": (["Chegou uma multa de trânsito no condutor errado, como eu resolvo?",
+                    "Hoje é na planilha, pode me apresentar sim"], "ENCAMINHADO_SUPORTE"),
 }
 
 
@@ -34,8 +36,9 @@ def rodar(cenario, falas):
     return c
 
 
-def test_cenarios_cobrem_10_mais_suporte():
-    assert len(cs.listar_cenarios()) == 11
+def test_cenarios_cobrem_10_mais_suporte_e_misto():
+    cen = cs.listar_cenarios()
+    assert len(cen) == 12 and all("roteiro" in c["meta"] for c in cen)
 
 
 @pytest.mark.parametrize("cenario", ROTEIROS)
@@ -138,3 +141,78 @@ def test_conversa_encerrada_nao_aceita_mensagem():
 def test_inicio_por_cnpj_ficticio():
     c = cs.iniciar_conversa(identificador="00.000.003/0001-13")
     assert c["cliente_id"] == "C003"
+
+
+def test_multa_de_transito_e_suporte_multa_contratual_e_regra():
+    c = rodar("C004_RENOVACAO", ["E se eu quiser cancelar antes, tem multa?"])
+    assert c["mensagens"][-1]["acao_sugerida"] == "EXPLICAR_REGRAS"
+    c = rodar("C004_RENOVACAO", ["Recebi uma multa de trânsito no condutor errado"])
+    assert c["mensagens"][-1]["acao_sugerida"] == "ENCAMINHAR_SUPORTE"
+
+
+def test_misto_encaminha_primeiro_e_abre_janela_sem_preco():
+    c = rodar("S012_MISTO", ROTEIROS["S012_MISTO"][0][:1])
+    ultima = c["mensagens"][-1]
+    assert ultima["auditoria"]["problema"] == "P3" and "telemetria" in ultima["conteudo"] and "R$" not in ultima["conteudo"]
+    c = cs.processar_mensagem(c["conversation_id"], ROTEIROS["S012_MISTO"][0][1])
+    assert c["estado"]["interesse"]["produto"] == "PR3" and c["mensagens"][-1]["acao_sugerida"] == "REGISTRAR_INTERESSE"
+    assert evaluation_service.avaliar(c["conversation_id"])["proximo_passo"] == 5
+
+
+def test_misto_respeita_recusa():
+    c = rodar("S012_MISTO", [ROTEIROS["S012_MISTO"][0][0], "Não, obrigado, só quero resolver a multa"])
+    assert c["estado"]["interesse"] is None and c["mensagens"][-1]["acao_sugerida"] == "RESPEITAR_RECUSA"
+
+
+def test_suporte_puro_nao_abre_janela():
+    c = rodar("S011_SUPORTE", ROTEIROS["S011_SUPORTE"][0])
+    assert c["estado"]["janela"] is None and "telemetria" not in c["mensagens"][-1]["conteudo"]
+
+
+def test_c002_challenger_roi_com_dado_calculado():
+    c = rodar("C002_MIGRACAO", ROTEIROS["C002_MIGRACAO"][0][:1])
+    m = c["mensagens"][-1]
+    ch = m["auditoria"]["fatos"]["challenger"]
+    assert ch["codigo"] == "CH2" and ch["custo_diarias_mes"] > ch["custo_mensal_equivalente"]
+    assert "gastaram em média" in m["conteudo"] and m["validacao"] == "OK"
+    assert validator.validar(m["conteudo"], m["auditoria"]["fatos"]) == []
+
+
+def test_challenger_usado_uma_vez_so():
+    c = rodar("C001_EXPANSAO", [])
+    c = rodar("C004_RENOVACAO", ["Quero renovar 6 carros por 12 meses em Belo Horizonte", "E se eu quiser cancelar antes, tem multa?"])
+    usados = [m["auditoria"]["challenger"] for m in c["mensagens"] if m["role"] == "vendedor" and m["auditoria"].get("challenger")]
+    assert usados == ["CH1"]
+
+
+def test_c008_credito_encaminha_e_proposta_fica_condicionada():
+    c = rodar("C008_SAZONAL", ROTEIROS["C008_SAZONAL"][0])
+    assert c["estado"]["handoff"]["motivo"] == "ANALISE_CREDITO"
+    assert "cadastro PJ e análise de crédito" in c["estado"]["proposta"]["condicoes"]
+
+
+def test_export_formato_do_classificador():
+    import csv
+    import io
+    from fastapi.testclient import TestClient
+
+    import app as A
+    rodar("C001_EXPANSAO", ROTEIROS["C001_EXPANSAO"][0])
+    r = TestClient(A.app).get("/api/export/classificador.csv")
+    linhas = list(csv.DictReader(io.StringIO(r.content.decode("utf-8-sig")), delimiter=";"))
+    assert linhas and {"cd_segmento", "transcricao_limpa", "status_transcricao"} <= set(linhas[0])
+    assert linhas[0]["transcricao_limpa"].startswith("AGENTE: ") and " | CLIENTE: " in linhas[0]["transcricao_limpa"]
+
+
+def test_banco_antigo_e_recriado(tmp_path):
+    import sqlite3
+
+    from database import seed
+    velho = tmp_path / "velho.db"
+    conn = sqlite3.connect(velho)
+    conn.execute("CREATE TABLE cenarios (cenario_id TEXT)")
+    conn.close()
+    seed.ensure(velho)
+    conn = sqlite3.connect(velho)
+    assert "meta_json" in {r[1] for r in conn.execute("PRAGMA table_info(cenarios)")}
+    conn.close()
