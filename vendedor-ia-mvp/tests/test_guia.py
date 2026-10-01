@@ -174,6 +174,18 @@ def test_como_utilizar_e_o_roteiro_de_testes():
     assert "|---" not in r["html"] and "**" not in r["html"]  # nada de Markdown cru sobrando
 
 
+def test_aba_laboratorio_do_guia():
+    r = guia.laboratorio()
+    assert r["arquivo"] == "LABORATORIO.md" and "é ajuste de prompt" in r["html"]
+    md = guia.LABORATORIO.read_text(encoding="utf-8").splitlines()
+    assert r["html"].count("<tr>") == sum(1 for ln in md if ln.startswith("|") and not re.fullmatch(r"\|[-| :]+\|", ln))
+    assert any("Quando der errado" in t["titulo"] for t in r["toc"])
+    assert "|---" not in r["html"] and "**" not in r["html"]
+    with TestClient(A.app) as c:
+        assert c.get("/api/guia/laboratorio").json()["toc"]
+        assert 'id="tab-laboratorio"' in c.get("/guia").text
+
+
 # ------------------------------------------------------------------ HTTP
 def test_api_guia_e_roadmap():
     with TestClient(A.app) as c:

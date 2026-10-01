@@ -5,6 +5,7 @@ O conteúdo vem de arquivos legíveis, editáveis à mão:
   guia/roadmap.json            fases e itens (a definição, versionada no Git)
   guia/roadmap_progresso.json  status, notas e itens próprios (o avanço de quem usa; fica fora do Git)
   ROTEIRO_DE_TESTES.md         vira a aba "Como utilizar", sem cópia
+  LABORATORIO.md               vira a aba "Laboratório" (como usar e o que fazer quando der errado)
 O progresso é separado da definição de propósito: atualizar o roadmap no Git não apaga o avanço já registrado.
 """
 import json
@@ -20,6 +21,7 @@ from pathlib import Path
 BASE = Path(__file__).resolve().parent.parent
 GUIA_DIR = BASE / "guia"
 ROTEIRO = BASE / "ROTEIRO_DE_TESTES.md"
+LABORATORIO = BASE / "LABORATORIO.md"
 
 STATUS = {"nao_iniciado": "Não iniciado", "em_andamento": "Em andamento", "concluido": "Concluído", "bloqueado": "Bloqueado"}
 _lock = threading.Lock()
@@ -309,10 +311,21 @@ def md_para_html(md: str) -> dict:
     return {"html": "\n".join(out), "toc": toc}
 
 
-def como_utilizar() -> dict:
-    """A aba 'Como utilizar' é o próprio Roteiro de Testes: lido do arquivo a cada pedido, sem duplicar o texto."""
-    if not ROTEIRO.exists():
-        raise LookupError("ROTEIRO_DE_TESTES.md não encontrado")
-    r = md_para_html(ROTEIRO.read_text(encoding="utf-8"))
-    r["atualizado_em"] = datetime.fromtimestamp(ROTEIRO.stat().st_mtime).astimezone().isoformat(timespec="seconds")
+def _documento(arquivo: Path) -> dict:
+    """Lido do arquivo a cada pedido, sem duplicar o texto: editou o .md, a aba muda."""
+    if not arquivo.exists():
+        raise LookupError(f"{arquivo.name} não encontrado")
+    r = md_para_html(arquivo.read_text(encoding="utf-8"))
+    r["atualizado_em"] = datetime.fromtimestamp(arquivo.stat().st_mtime).astimezone().isoformat(timespec="seconds")
+    r["arquivo"] = arquivo.name
     return r
+
+
+def como_utilizar() -> dict:
+    """A aba 'Como utilizar' é o próprio Roteiro de Testes."""
+    return _documento(ROTEIRO)
+
+
+def laboratorio() -> dict:
+    """A aba 'Laboratório' do Guia: o LABORATORIO.md."""
+    return _documento(LABORATORIO)

@@ -14,7 +14,7 @@ const lembrar = (k, padrao) => { try { const v = localStorage.getItem(k); return
 const aviso = msg => { const a = $('aviso'); a.textContent = msg || ''; a.hidden = !msg; };
 const erro = e => aviso(`Não deu certo: ${e.message}`);
 
-const ABAS = ['roadmap', 'glossario', 'como-utilizar'];
+const ABAS = ['roadmap', 'glossario', 'como-utilizar', 'laboratorio'];
 const carregadas = {};
 let rm = null;                                   // último roadmap recebido do servidor
 let soFalta = lembrar('guia.soFalta', false);
@@ -31,7 +31,7 @@ function abrirAba(nome) {
     $('tab-' + a).setAttribute('aria-selected', a === nome);
   });
   if (location.hash !== '#' + nome) history.replaceState(null, '', '#' + nome);
-  if (!carregadas[nome]) { carregadas[nome] = true; ({'roadmap': carregarRoadmap, 'glossario': carregarGlossario, 'como-utilizar': carregarComoUtilizar})[nome]().catch(e => { carregadas[nome] = false; erro(e); }); }
+  if (!carregadas[nome]) { carregadas[nome] = true; ({'roadmap': carregarRoadmap, 'glossario': carregarGlossario, 'como-utilizar': carregarComoUtilizar, 'laboratorio': carregarLaboratorio})[nome]().catch(e => { carregadas[nome] = false; erro(e); }); }
 }
 
 // ------------------------------------------------------------------ GLOSSÁRIO
@@ -59,15 +59,17 @@ function renderGlossario() {
   $('termos').innerHTML = blocos || '<p class="nota">Nenhum termo encontrado.</p>';
 }
 
-// ------------------------------------------------------------------ COMO UTILIZAR (o Roteiro de Testes)
-async function carregarComoUtilizar() {
-  const r = await api('/api/guia/como-utilizar');
-  $('painel-como-utilizar').innerHTML = `<div class="doc-layout"><nav class="toc"><b>Nesta página</b>${r.toc.map(t => `<a href="#${esc(t.id)}">${esc(t.titulo)}</a>`).join('')}</nav>
-    <article class="doc">${r.html}<p class="nota">Texto do arquivo ROTEIRO_DE_TESTES.md, atualizado em ${data(r.atualizado_em)}. Para mudar, edite o arquivo.</p></article></div>`;
-  $('painel-como-utilizar').querySelectorAll('.toc a').forEach(a => a.onclick = ev => {
-    ev.preventDefault(); const alvo = document.getElementById(a.getAttribute('href').slice(1)); if (alvo) alvo.scrollIntoView({behavior: 'smooth', block: 'start'});
+// ------------------------------------------------------------------ DOCUMENTOS (Roteiro de Testes e Laboratório, lidos dos .md)
+async function carregarDoc(url, painel) {
+  const r = await api(url);
+  $(painel).innerHTML = `<div class="doc-layout"><nav class="toc"><b>Nesta página</b>${r.toc.map(t => `<a href="#${esc(t.id)}">${esc(t.titulo)}</a>`).join('')}</nav>
+    <article class="doc">${r.html}<p class="nota">Texto do arquivo ${esc(r.arquivo)}, atualizado em ${data(r.atualizado_em)}. Para mudar, edite o arquivo.</p></article></div>`;
+  $(painel).querySelectorAll('.toc a').forEach(a => a.onclick = ev => {
+    ev.preventDefault(); const alvo = $(painel).querySelector(`[id="${a.getAttribute('href').slice(1)}"]`); if (alvo) alvo.scrollIntoView({behavior: 'smooth', block: 'start'});
   });
 }
+const carregarComoUtilizar = () => carregarDoc('/api/guia/como-utilizar', 'painel-como-utilizar');
+const carregarLaboratorio = () => carregarDoc('/api/guia/laboratorio', 'painel-laboratorio');
 
 // ------------------------------------------------------------------ ROADMAP
 const ROTULO = {nao_iniciado: 'Não iniciado', em_andamento: 'Em andamento', concluido: 'Concluído', bloqueado: 'Bloqueado'};

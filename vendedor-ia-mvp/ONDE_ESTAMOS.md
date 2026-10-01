@@ -138,7 +138,7 @@ topbar verde com a marca, abas, tokens de cor dos temas claro/escuro (com a chav
 ### 3.9 Guia dentro da ferramenta — `/guia`
 
 Terceira tela, com **Roadmap** (plano completo com status, notas e itens próprios, para acompanhar onde estamos e o que
-falta), **Glossário** (110 termos, com busca) e **Como utilizar** (o `ROTEIRO_DE_TESTES.md`). O avanço fica em
+falta), **Glossário** (110 termos, com busca) e **Como utilizar** (o `ROTEIRO_DE_TESTES.md`) e **Laboratório** (o `LABORATORIO.md`: uso e diagnóstico de falhas por camada). O avanço fica em
 `guia/roadmap_progresso.json`, fora do Git; o plano em `guia/roadmap.json`. Se mudar o roadmap do memorando, espelhe em
 `guia/roadmap.json`.
 
@@ -162,6 +162,9 @@ ninguém digitando. É o executor em lote que faltava para as ~190 conversas por
   queda do servidor; estimativa de custo e tempo antes de iniciar; exportação CSV.
 - **Tipos prontos:** rodada completa (192 conversas, ~US$ 12 e ~2 h com 2 em paralelo), críticos 5× (30), conversas
   longas de 24 turnos (12, ~US$ 2) e red team (20). A primeira rodada real calibra essas estimativas.
+- **Ponto de atenção para as conversas longas:** a Fernanda recebe só as últimas 16 mensagens (+ as últimas consultas).
+  Numa conversa de 24 turnos, o começo sai da memória dela. Se o J02 mostrar esquecimento, a correção é na memória da
+  conversa (resumo do que já foi dito), não no prompt. Guia completo de diagnóstico: `LABORATORIO.md` §6.
 
 ### 3.11 Como rodar
 

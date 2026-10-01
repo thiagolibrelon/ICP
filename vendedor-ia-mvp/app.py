@@ -339,6 +339,11 @@ def guia_como_utilizar():
     return _tratar(guia.como_utilizar)
 
 
+@app.get("/api/guia/laboratorio")
+def guia_laboratorio():
+    return _tratar(guia.laboratorio)
+
+
 @app.get("/api/roadmap")
 def roadmap():
     return guia.roadmap()

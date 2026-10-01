@@ -77,6 +77,8 @@ Tela ligada pelas abas do topo. Três abas:
   próprios. O topo mostra o percentual, "onde estou agora" e o que ainda falta; há filtro "só o que falta".
 - **Glossário** — todos os termos do projeto (negócio, simulador, treino, medição, governança e ICP), com busca.
 - **Como utilizar** — o `ROTEIRO_DE_TESTES.md`, lido do arquivo (sem cópia: editou o arquivo, a aba muda).
+- **Laboratório** — o `LABORATORIO.md`: como usar a aba Laboratório, como ler o relatório e o que fazer quando der errado
+  (em qual camada está o problema: prompt, ferramenta, validador, dados, memória ou modelo).
 
 Onde ficam os dados: `guia/roadmap.json` (itens e fases, versionados no Git; edite para mudar o plano), `guia/glossario.json`
 (termos) e `guia/roadmap_progresso.json` (**o seu avanço**: status, notas e itens próprios; criado sozinho, fica fora do Git).
