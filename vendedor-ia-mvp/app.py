@@ -10,7 +10,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from database import db, seed
-from services import catalog, conversations as conv, evaluation, llm_client, training
+from services import catalog, conversations as conv, evaluation, guia, llm_client, training
 
 BASE = Path(__file__).resolve().parent
 
@@ -58,6 +58,20 @@ class Condicao(BaseModel):
 
 class Mensagem(BaseModel):
     conteudo: str = Field(min_length=1, max_length=2000)
+
+
+class StatusItem(BaseModel):
+    status: str
+
+
+class NotaItem(BaseModel):
+    texto: str = Field(min_length=1, max_length=1000)
+
+
+class NovoItem(BaseModel):
+    fase_id: str
+    titulo: str = Field(min_length=1, max_length=200)
+    descricao: str = Field("", max_length=1000)
 
 
 def _tratar(fn, *a):
@@ -239,6 +253,47 @@ def treino_encerrar(tid: str):
     return _tratar(training.encerrar, tid)
 
 
+# ------------------------------------------------------------------ GUIA (glossário, roadmap com progresso, como utilizar)
+@app.get("/api/guia/glossario")
+def guia_glossario():
+    return guia.glossario()
+
+
+@app.get("/api/guia/como-utilizar")
+def guia_como_utilizar():
+    return _tratar(guia.como_utilizar)
+
+
+@app.get("/api/roadmap")
+def roadmap():
+    return guia.roadmap()
+
+
+@app.post("/api/roadmap/itens", status_code=201)
+def roadmap_novo_item(body: NovoItem):
+    return _tratar(guia.adicionar_item, body.fase_id, body.titulo, body.descricao)
+
+
+@app.delete("/api/roadmap/itens/{item_id}")
+def roadmap_remover_item(item_id: str):
+    return _tratar(guia.remover_item, item_id)
+
+
+@app.post("/api/roadmap/{item_id}/status")
+def roadmap_status(item_id: str, body: StatusItem):
+    return _tratar(guia.definir_status, item_id, body.status)
+
+
+@app.post("/api/roadmap/{item_id}/notas", status_code=201)
+def roadmap_nota(item_id: str, body: NotaItem):
+    return _tratar(guia.anotar, item_id, body.texto)
+
+
+@app.delete("/api/roadmap/{item_id}/notas/{nota_id}")
+def roadmap_remover_nota(item_id: str, nota_id: str):
+    return _tratar(guia.remover_nota, item_id, nota_id)
+
+
 app.mount("/static", StaticFiles(directory=BASE / "frontend"), name="static")
 
 
@@ -250,3 +305,8 @@ def index():
 @app.get("/treino")
 def pagina_treino():
     return FileResponse(BASE / "frontend" / "treino.html")
+
+
+@app.get("/guia")
+def pagina_guia():
+    return FileResponse(BASE / "frontend" / "guia.html")

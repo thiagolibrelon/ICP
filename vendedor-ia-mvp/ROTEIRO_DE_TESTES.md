@@ -36,6 +36,8 @@ telefone, e-mail).
 | **Modo A** | Versão "de controle": a IA recebe a tabela inteira e decide sozinha. Serve para **comparação**; espera-se que erre mais |
 | **Auditoria** | Coluna da direita: mostra o que a IA consultou e se a resposta passou na checagem |
 
+Faltou algum termo? O **Guia** (`http://127.0.0.1:8000/guia`) tem o glossário completo, o roadmap e este roteiro.
+
 ### 0.3 Preparação (uma vez por dia de teste)
 
 1. Abra o terminal na pasta `vendedor-ia-mvp` e rode: `python iniciar.py`

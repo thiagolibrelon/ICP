@@ -54,6 +54,21 @@ usando a calculadora da alçada. **Modo treino** (coach com dicas) ou **modo pro
 por dimensão da régua C12, com justificativa, trecho da própria fala, como melhorar e exemplo. Disciplina de margem e
 informações descobertas são calculadas pelo sistema. Evolução por vendedor em ordem alfabética (sem ranking).
 
+## Guia da ferramenta — http://127.0.0.1:8000/guia
+
+Terceira tela, ligada por um link no topo das outras duas. Três abas:
+
+- **Roadmap** — o plano completo (o que já foi construído, os 6 sprints do Q4, pedidos, gates, integração com o Aletheia e
+  evoluções). Cada item tem status (não iniciado, em andamento, concluído, bloqueado), notas com data e, se quiser, itens
+  próprios. O topo mostra o percentual, "onde estou agora" e o que ainda falta; há filtro "só o que falta".
+- **Glossário** — todos os termos do projeto (negócio, simulador, treino, medição, governança, ICP e Aletheia), com busca.
+- **Como utilizar** — o `ROTEIRO_DE_TESTES.md`, lido do arquivo (sem cópia: editou o arquivo, a aba muda).
+
+Onde ficam os dados: `guia/roadmap.json` (itens e fases, versionados no Git; edite para mudar o plano), `guia/glossario.json`
+(termos) e `guia/roadmap_progresso.json` (**o seu avanço**: status, notas e itens próprios; criado sozinho, fica fora do Git).
+Atualizar o `roadmap.json` nunca apaga o progresso já marcado. O caminho do progresso pode ser trocado com
+`MVP_ROADMAP_PROGRESS`. Para guardar uma cópia, basta copiar esse arquivo.
+
 ## Chave do llm-gate
 
 Mesmo padrão do `classificar_ligacoes_diario.py`: variável `API_KEY` ou janela; a chave fica só na memória do processo.
@@ -70,4 +85,4 @@ protocolo JSON equivalente (`LLM_TOOLS`). Custo real lido de `cost.token.total`.
 ## Estrutura
 
 `app.py` (API) · `iniciar.py` · `frontend/` · `services/` (`catalog` = ferramentas determinísticas, `agent` = modos A/B,
-`validator`, `conversations`, `evaluation`, `llm_client`) · `prompts/` (base, regras B, regras A) · `database/` · `tests/`.
+`validator`, `conversations`, `evaluation`, `guia`, `llm_client`) · `prompts/` (base, regras B, regras A) · `guia/` (glossário e roadmap) · `database/` · `tests/`.

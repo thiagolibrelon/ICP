@@ -18,6 +18,7 @@ def banco(tmp_path, monkeypatch):
     for var in ("API_KEY", "LLM_API_KEY", "LLM_BASE_URL", "LLM_AUTH_HEADER", "LLM_TOOLS"):
         monkeypatch.delenv(var, raising=False)
     monkeypatch.setattr(conversations, "LOG_FILE", tmp_path / "conversations.jsonl")
+    monkeypatch.setenv("MVP_ROADMAP_PROGRESS", str(tmp_path / "roadmap_progresso.json"))  # nunca toca o progresso real
     monkeypatch.setitem(agent._modo_ferramentas, "atual", "auto")
     path = tmp_path / "test.db"
     db.set_db_path(path)

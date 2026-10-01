@@ -3,3 +3,4 @@
 logs/*.jsonl
 __pycache__/
 .pytest_cache/
+guia/roadmap_progresso*.json
