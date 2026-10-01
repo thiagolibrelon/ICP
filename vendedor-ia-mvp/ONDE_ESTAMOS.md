@@ -117,7 +117,14 @@ Os papéis se invertem: **o GPT faz o cliente e o vendedor humano vende**. No fi
 - **Piloto sugerido:** 3 a 5 vendedores e 1 gestor. Antes de a nota "valer", 2–3 gestores avaliam as mesmas ~20
   conversas para calibrar o avaliador.
 
-### 3.7 Governança e medição
+### 3.7 Identidade visual
+
+As duas telas usam a mesma linguagem do **Simulador Estratégico de Frota (V3)** (`thiagolibrelon/Simulador_Final`):
+topbar verde com a marca, abas, tokens de cor dos temas claro/escuro (com a chave na topbar), Inter + Playfair Display,
+ícones SVG e o "hero" de resultado (nota do treino). Arquivos: `frontend/marca.css`, `frontend/marca.js` e
+`frontend/assets/localiza-logo.png`.
+
+### 3.8 Governança e medição
 
 - **Validador**: todo R$ e % dito ao cliente precisa ter vindo de uma ferramenta; detecta margem revelada, proposta/
   protocolo afirmados sem registro e vazamento de instruções.
@@ -128,7 +135,7 @@ Os papéis se invertem: **o GPT faz o cliente e o vendedor humano vende**. No fi
 - **Chave**: variável `API_KEY` ou janela; fica só na memória (nunca em HTML, log ou arquivo versionado).
 - **Testes automáticos**: 66 (preço, alçada, gerente, estoque, comparações, agente A/B, validador, API, cliente do LLM).
 
-### 3.8 Como rodar
+### 3.9 Como rodar
 
 ```bash
 cd vendedor-ia-mvp

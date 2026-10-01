@@ -70,7 +70,9 @@ def test_401_nao_repete_e_nao_vaza_chave(ligado, monkeypatch):
 def test_chave_nao_esta_no_frontend():
     from pathlib import Path
     base = Path(__file__).resolve().parent.parent
-    for f in (base / "frontend").iterdir():
+    for f in (base / "frontend").rglob("*"):
+        if f.suffix not in (".html", ".js", ".css"):
+            continue
         t = f.read_text(encoding="utf-8")
         assert "API_KEY" not in t and "api_key" not in t
     assert ".env" in (base / ".gitignore").read_text().splitlines()

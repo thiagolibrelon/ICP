@@ -8,13 +8,14 @@ const api = async (url, opts) => {
 const post = (url, body) => api(url, {method: 'POST', body: JSON.stringify(body || {})});
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
 const brl = v => v == null ? '—' : Number(v).toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
-const cor = n => n == null ? 'var(--muted)' : n >= 8 ? 'var(--ok)' : n >= 5 ? 'var(--warn)' : 'var(--bad)';
+const cor = n => n == null ? 'var(--muted)' : n >= 8 ? 'var(--win)' : n >= 5 ? 'var(--amber)' : 'var(--red)';
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 try { $('vendedor').value = localStorage.getItem('vendedor') || ''; } catch (e) {}
 
 async function init() {
   const h = await api('/api/health');
-  $('llm').innerHTML = h.llm_configurado ? '<span class="ok">GPT configurado</span>' : '<span class="bad">GPT não configurado</span>';
+  $('llm').className = 'tb-status' + (h.llm_configurado ? '' : ' off');
+  $('llm').innerHTML = `<span class="dot"></span>${h.llm_configurado ? 'GPT conectado' : 'GPT não configurado'}`;
   const ps = await api('/api/treino/personas');
   $('cliente').innerHTML = ps.map(p => `<option value="${p.cliente_id}">${esc(p.razao_social)} — ${esc(p.contato)} (${p.icp})</option>`).join('');
 }
@@ -26,11 +27,11 @@ function render() {
     <dt>Uso atual</dt><dd>${esc(c.situacao)}</dd><dt>Treino</dt><dd>${tr.modo === 'PROVA' ? 'Prova' : 'Treino'} · ${esc(tr.dificuldade)}</dd></dl>`;
   $('progresso').innerHTML = `Informações-chave descobertas: <b>${pr.segredos_descobertos} de ${pr.segredos_total}</b> · cliente: <b>${esc(pr.estado_cliente)}</b>`;
   $('chat').innerHTML = tr.mensagens.map(m => m.role === 'coach'
-      ? `<div class="m coach">💡 <b>Coach:</b> ${esc(m.conteudo)}</div>`
-      : `<div class="m ${m.role === 'vendedor' ? 'cliente' : 'vendedor'}"><div class="who">${m.role === 'vendedor' ? 'Você (vendedor)' : esc(tr.contato.nome) + ' · cliente'}</div>${m.meta && m.meta.audio ? '🎤 ' : ''}${esc(m.conteudo)}</div>`).join('');
+      ? `<div class="m coach">${icon('bulb')} <b>Coach:</b> ${esc(m.conteudo)}</div>`
+      : `<div class="m ${m.role === 'vendedor' ? 'cliente' : 'vendedor'}"><div class="who">${m.role === 'vendedor' ? 'Você (vendedor)' : esc(tr.contato.nome) + ' · cliente'}</div>${m.meta && m.meta.audio ? icon('mic') + ' ' : ''}${esc(m.conteudo)}</div>`).join('');
   $('chat').scrollTop = 1e9;
   const dicas = tr.mensagens.filter(m => m.role === 'coach');
-  $('coach').innerHTML = tr.modo === 'PROVA' ? 'Modo prova: sem dicas. Boa sorte!' : dicas.length ? `💡 ${esc(dicas[dicas.length - 1].conteudo)}` : 'A primeira dica aparece depois da sua primeira resposta.';
+  $('coach').innerHTML = tr.modo === 'PROVA' ? 'Modo prova: sem dicas. Boa sorte!' : dicas.length ? `${icon('bulb')} ${esc(dicas[dicas.length - 1].conteudo)}` : 'A primeira dica aparece depois da sua primeira resposta.';
   const ativo = tr.status === 'ATIVO';
   ['msg', 'btn-enviar', 'btn-encerrar'].forEach(id => $(id).disabled = !ativo);
   $('btn-mic').disabled = !ativo || micIndisponivel;
@@ -42,7 +43,7 @@ $('btn-iniciar').onclick = async () => {
   if (!v) { alert('Informe seu nome.'); return; }
   try { localStorage.setItem('vendedor', v); } catch (e) {}
   tr = await post('/api/treino', {vendedor: v, cliente_id: $('cliente').value, modo: $('modo').value, dificuldade: $('dificuldade').value});
-  $('resultado').textContent = 'A nota aparece quando você encerra.'; $('calc-res').textContent = 'Calculadora pronta.';
+  $('resultado').innerHTML = '<div class="badge">A nota aparece quando você encerra.</div>'; $('calc-res').textContent = 'Calculadora pronta.';
   render(); $('msg').focus();
 };
 
@@ -86,13 +87,13 @@ $('btn-registrar').onclick = async () => { if (tr) mostrarCalc(await post(`/api/
 
 $('btn-encerrar').onclick = async () => {
   if (!tr || !confirm('Encerrar a conversa e ver sua nota?')) return;
-  $('btn-encerrar').disabled = true; $('resultado').textContent = 'Avaliando sua conversa…';
+  $('btn-encerrar').disabled = true; $('resultado').innerHTML = '<div class="badge">Avaliando sua conversa…</div>';
   try { tr = await post(`/api/treino/${tr.treino_id}/encerrar`); render(); mostrarResultado(tr.resultado, true); }
   catch (err) { alert(err.message); $('btn-encerrar').disabled = false; }
 };
 
 function mostrarResultado(r, abrir) {
-  $('resultado').innerHTML = `<div class="nota-geral" style="color:${cor(r.nota_geral)}">${r.nota_geral}<small>/10</small></div><button id="btn-ver">Ver justificativa completa</button>`;
+  $('resultado').innerHTML = `<div class="eyebrow">Sua nota</div><div class="nota-geral" style="color:${cor(r.nota_geral)}">${r.nota_geral}<small>/10</small></div><button id="btn-ver" class="primary" style="margin-top:10px">Ver justificativa completa</button>`;
   $('btn-ver').onclick = () => abrirResultado(r);
   if (abrir) abrirResultado(r);
 }
@@ -126,7 +127,7 @@ $('btn-historico').onclick = async () => {
   const h = await api('/api/treino/historico');
   $('modal-titulo').textContent = 'Evolução nos treinos';
   $('modal-conteudo').innerHTML = `<div class="badge">Ordem alfabética — é ferramenta de desenvolvimento, não ranking.</div>
-    ${h.vendedores.map(x => `<div class="dim" style="${x.vendedor === v ? 'border-color:var(--brand)' : ''}"><div class="dim-top"><span>${esc(x.vendedor)}</span><span>média ${x.media_geral} · última ${x.ultima_nota}</span></div>
+    ${h.vendedores.map(x => `<div class="dim" style="${x.vendedor === v ? 'border-color:var(--green-l)' : ''}"><div class="dim-top"><span>${esc(x.vendedor)}</span><span>média ${x.media_geral} · última ${x.ultima_nota}</span></div>
       <div class="rotulo">${x.treinos} treinos · evolução: ${x.evolucao.join(' → ')} · ponto a desenvolver: <b>${esc(x.ponto_mais_fraco || '—')}</b></div>
       <table>${Object.entries(x.media_por_dimensao).map(([k, n]) => `<tr><td>${esc(k)}</td><td style="color:${cor(n)}">${n}</td></tr>`).join('')}</table></div>`).join('') || 'Nenhum treino avaliado ainda.'}`;
   $('modal').hidden = false;
@@ -141,7 +142,7 @@ $('btn-mic').onclick = async () => {
     gravador = new MediaRecorder(stream); pedacos = []; t0 = Date.now();
     gravador.ondataavailable = e => pedacos.push(e.data);
     gravador.onstop = async () => {
-      stream.getTracks().forEach(t => t.stop()); $('btn-mic').classList.remove('gravando'); $('btn-mic').textContent = '🎤';
+      stream.getTracks().forEach(t => t.stop()); $('btn-mic').classList.remove('gravando'); $('btn-mic').innerHTML = icon('mic');
       const blob = new Blob(pedacos, {type: gravador.mimeType || 'audio/webm'}), dur = (Date.now() - t0) / 1000;
       const b64 = await new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsDataURL(blob); });
       await enviar(async () => {
@@ -150,9 +151,9 @@ $('btn-mic').onclick = async () => {
         if (r.status === 503) { micIndisponivel = true; throw new Error((await r.json()).detail); }
         if (!r.ok) throw new Error((await r.json().catch(() => ({}))).detail || r.statusText);
         return r.json();
-      }, '🎤 áudio… <span class="transc">transcrevendo</span>');
+      }, icon('mic') + ' áudio… <span class="transc">transcrevendo</span>');
     };
-    gravador.start(); $('btn-mic').classList.add('gravando'); $('btn-mic').textContent = '⏹';
+    gravador.start(); $('btn-mic').classList.add('gravando'); $('btn-mic').innerHTML = icon('stop');
   } catch (err) { alert('Não consegui acessar o microfone: ' + err.message); }
 };
 init();
