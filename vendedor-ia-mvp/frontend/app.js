@@ -11,8 +11,8 @@ const CIDADE = {'SAO PAULO': 'São Paulo', 'CURITIBA': 'Curitiba', 'BELO HORIZON
 
 async function init() {
   const h = await api('/api/health');
-  $('llm').innerHTML = h.llm_configurado ? `<span class="ok">GPT configurado</span> · modo ${h.llm_mode}`
-    : `<span class="bad">GPT não configurado</span> — o vendedor responde com mensagem de contingência`;
+  $('llm').className = 'tb-status' + (h.llm_configurado ? '' : ' off');
+  $('llm').innerHTML = `<span class="dot"></span>${h.llm_configurado ? 'GPT conectado · modo ' + h.llm_mode : 'GPT não configurado (contingência)'}`;
   [clientes, roteiros] = await Promise.all([api('/api/clientes'), api('/api/roteiros')]);
   $('cliente').innerHTML = clientes.map(c => `<option value="${c.cliente_id}">${esc(c.razao_social)} (${c.icp})</option>`).join('');
   $('cliente').onchange = preencherRoteiros; preencherRoteiros();
@@ -60,12 +60,12 @@ const tempoDigitando = t => Math.min(3500, Math.max(700, t.length * 28));
 function htmlMensagem(m, ate) {
   if (m.role === 'cliente') {
     const au = m.auditoria && m.auditoria.audio;
-    if (au) return `<div class="m cliente"><div class="who">Cliente</div>🎤 Áudio (${fmtDur(au.duracao_s)})<div class="transc">transcrição: "${esc(m.conteudo)}"</div></div>`;
+    if (au) return `<div class="m cliente"><div class="who">Cliente</div>${icon('mic')} Áudio (${fmtDur(au.duracao_s)})<div class="transc">transcrição: "${esc(m.conteudo)}"</div></div>`;
     return `<div class="m cliente"><div class="who">Cliente</div>${esc(m.conteudo)}</div>`;
   }
   const a = m.auditoria || {}, bs = baloes(m.conteudo).slice(0, ate ?? 99);
   const flag = (a.violacoes || []).length
-    ? `<div class="flag ${conv.modo === 'A' ? 'bad' : 'warn'}">${conv.modo === 'A' ? '⚑ marcado' : '⚑ corrigido pelo sistema'}: ${esc(a.violacoes.join(', '))}</div>` : '';
+    ? `<div class="flag ${conv.modo === 'A' ? 'bad' : 'warn'}">${icon('flag')} ${conv.modo === 'A' ? 'marcado' : 'corrigido pelo sistema'}: ${esc(a.violacoes.join(', '))}</div>` : '';
   return bs.map((b, i) => `<div class="m vendedor" data-id="${m.message_id}">${i === 0 ? '<div class="who">Fernanda · Vendedor IA</div>' : ''}${esc(b)}${i === bs.length - 1 ? flag : ''}</div>`).join('');
 }
 
@@ -200,10 +200,10 @@ $('btn-mic').onclick = async () => {
     gravador.ondataavailable = e => pedacos.push(e.data);
     gravador.onstop = async () => {
       stream.getTracks().forEach(t => t.stop());
-      $('btn-mic').classList.remove('gravando'); $('btn-mic').textContent = '🎤';
+      $('btn-mic').classList.remove('gravando'); $('btn-mic').innerHTML = icon('mic');
       const dur = (Date.now() - inicioGravacao) / 1000, blob = new Blob(pedacos, {type: gravador.mimeType || 'audio/webm'});
       const b64 = await new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsDataURL(blob); });
-      await enviar(`<div class="m cliente"><div class="who">Cliente</div>🎤 Áudio (${fmtDur(dur)}) <span class="transc">transcrevendo…</span></div>`,
+      await enviar(`<div class="m cliente"><div class="who">Cliente</div>${icon('mic')} Áudio (${fmtDur(dur)}) <span class="transc">transcrevendo…</span></div>`,
         async () => {
           const r = await fetch(`/api/conversations/${conv.conversation_id}/audio`, {method: 'POST', headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({audio_base64: b64, mime: blob.type, duracao_s: dur})});
@@ -212,7 +212,7 @@ $('btn-mic').onclick = async () => {
           return r.json();
         });
     };
-    gravador.start(); $('btn-mic').classList.add('gravando'); $('btn-mic').textContent = '⏹';
+    gravador.start(); $('btn-mic').classList.add('gravando'); $('btn-mic').innerHTML = icon('stop');
   } catch (err) { alert('Não consegui acessar o microfone: ' + err.message); }
 };
 
@@ -245,10 +245,10 @@ async function abaHandoffs() {
       <dt>Últimas mensagens</dt><dd>${(b.ultimas_mensagens || []).map(esc).join('<br>')}</dd></dl></div>`; }).join('') || 'Nenhum handoff ainda.';
 }
 const abas = {concessoes: abaConcessoes, handoffs: abaHandoffs};
-document.querySelectorAll('.tab').forEach(b => b.onclick = () => {
-  document.querySelectorAll('.tab').forEach(x => x.classList.toggle('ativo', x === b)); abas[b.dataset.tab]();
+document.querySelectorAll('.tab-btn').forEach(b => b.onclick = () => {
+  document.querySelectorAll('.tab-btn').forEach(x => x.classList.toggle('ativo', x === b)); abas[b.dataset.tab]();
 });
-$('btn-gerente').onclick = () => { $('modal').hidden = false; document.querySelector('.tab[data-tab="concessoes"]').click(); };
+$('btn-gerente').onclick = () => { $('modal').hidden = false; document.querySelector('.tab-btn[data-tab="concessoes"]').click(); };
 $('btn-fechar-modal').onclick = () => { $('modal').hidden = true; };
 
 init();

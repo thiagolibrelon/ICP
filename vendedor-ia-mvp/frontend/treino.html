@@ -1,25 +1,45 @@
 <!doctype html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-theme="light">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Vendedor IA — Treino</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/marca.css">
 <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
-<header>
-  <h1>Treino de vendas <small>você é o vendedor · o GPT é o cliente · nota pela régua C12</small> <a class="link-treino" href="/">← Simulador da Fernanda</a><a class="link-treino" href="/guia">📖 Guia (glossário, roadmap, como utilizar)</a></h1>
-  <div class="controls">
+<header class="topbar">
+  <div class="tb-left">
+    <img class="tb-logo-img" src="/static/assets/localiza-logo.png" alt="Localiza">
+    <span class="tb-sep"></span>
+    <span class="tb-title">Treino de vendas<small>ambiente simulado · dados fictícios</small></span>
+  </div>
+  <div class="tb-right">
+    <span id="llm" class="tb-status"></span>
+    
+    <button class="theme-btn" id="theme-btn" title="Tema claro/escuro"><span class="tt-k"></span></button>
+  </div>
+</header>
+<nav class="tabs-bar">
+  <a class="tab" href="/" data-ic="car">Simulador da Fernanda</a>
+  <a class="tab active" href="/treino" data-ic="target">Treino de vendas</a>
+  <a class="tab" href="/guia" data-ic="book">Guia</a>
+</nav>
+<div class="toolbar">
+  <div class="linha">
+    <span class="tb-label">Treino</span>
     <input id="vendedor" placeholder="Seu nome" size="16">
     <select id="cliente"></select>
     <select id="dificuldade"><option value="facil">Fácil</option><option value="medio" selected>Médio</option><option value="dificil">Difícil</option></select>
     <select id="modo"><option value="TREINO">Modo treino (com dicas do coach)</option><option value="PROVA">Modo prova (sem dicas)</option></select>
     <button id="btn-iniciar" class="primary">Iniciar</button>
-    <button id="btn-encerrar" disabled>Encerrar e ver nota</button>
-    <button id="btn-historico">Minha evolução / gestor</button>
-    <span id="llm" class="badge"></span>
+    <button id="btn-encerrar" disabled data-ic="flag">Encerrar e ver nota</button>
+    <button id="btn-historico" data-ic="chart">Minha evolução / gestor</button>
   </div>
-</header>
+</div>
 <main>
   <aside>
     <h2>Cadastro do cliente (CRM)</h2><div id="info">—</div>
@@ -34,21 +54,22 @@
       <label>Dias (diária)<input name="dias" type="number" min="1" placeholder="—"></label>
       <label>Desconto %<input name="desconto_pct" type="number" min="0" step="0.5" value="0"></label>
       <label>Pacotes +1.000 km<input name="pacotes_km_extra" type="number" min="0" value="0"></label>
-      <label class="full"><span><input type="checkbox" name="PROTECAO_TOTAL"> Proteção total <input type="checkbox" name="TELEMETRIA"> Telemetria</span></label>
+      <div class="full"><span><label><input type="checkbox" name="PROTECAO_TOTAL">Proteção total</label><label><input type="checkbox" name="TELEMETRIA">Telemetria</label></span></div>
       <button type="button" id="btn-avaliar">Avaliar condição</button><button type="button" id="btn-registrar">Registrar proposta</button>
     </form>
     <div id="calc-res" class="tool">Use a calculadora antes de falar preço ou desconto: é assim que um vendedor faz no dia a dia.</div>
   </aside>
   <section id="col-chat">
     <div id="chat"><div class="nota">Informe seu nome, escolha o cliente, a dificuldade e o modo, e clique em <b>Iniciar</b>. O cliente vai te chamar no WhatsApp.</div></div>
-    <form id="form"><button type="button" id="btn-mic" disabled title="Responder por áudio">🎤</button><input id="msg" autocomplete="off" placeholder="Responda como vendedor..." disabled><button id="btn-enviar" disabled>Enviar</button></form>
+    <form id="form"><button type="button" id="btn-mic" disabled title="Responder por áudio" data-ic="mic"></button><input id="msg" autocomplete="off" placeholder="Responda como vendedor..." disabled><button id="btn-enviar" class="primary" disabled data-ic="send">Enviar</button></form>
   </section>
   <aside id="lado">
     <h2>Coach</h2><div id="coach" class="badge">No modo treino, as dicas aparecem aqui e no chat.</div>
-    <h2>Resultado</h2><div id="resultado">A nota aparece quando você encerra.</div>
+    <h2>Resultado</h2><div id="resultado" class="result-hero"><div class="badge">A nota aparece quando você encerra.</div></div>
   </aside>
 </main>
 <div id="modal" hidden><div class="modal-box"><div class="modal-top"><h2 id="modal-titulo">Resultado</h2><button id="btn-fechar-modal">Fechar</button></div><div id="modal-conteudo"></div></div></div>
+<script src="/static/marca.js"></script>
 <script src="/static/treino.js"></script>
 </body>
 </html>

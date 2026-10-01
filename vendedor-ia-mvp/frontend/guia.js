@@ -89,7 +89,7 @@ function renderRoadmap() {
       <div class="kpi"><b class="${r.bloqueado ? 'bad' : ''}">${r.bloqueado}</b><span>bloqueados</span></div>
       <div class="kpi"><b>${r.falta}</b><span>ainda faltam</span></div>
     </div>
-    <div class="barra grande"><i style="width:${r.pct}%;background:var(--ok)"></i></div>
+    <div class="barra grande"><i style="width:${r.pct}%;background:var(--win)"></i></div>
     <div class="agora"><h2>Onde estou agora</h2>${agora.length ? agora.map(i => `<div class="agora-item"><span class="st ${i.status}">${ROTULO[i.status]}</span> <a href="#" data-ir="${esc(i.id)}">${esc(i.titulo)}</a> <small>${esc(i.fase)}</small></div>`).join('')
       : '<p class="nota">Nenhum item em andamento. Mude o status de um item para marcá-lo aqui.</p>'}</div>
     <div class="controles"><label><input type="checkbox" id="so-falta" ${soFalta ? 'checked' : ''}> Mostrar só o que falta</label>
@@ -105,7 +105,7 @@ function renderFase(f) {
   return `<details class="fase" data-fase="${f.id}" ${aberta ? 'open' : ''}>
     <summary><span class="fase-titulo">${esc(f.titulo)}</span> <span class="periodo">${esc(f.periodo)}</span>
       <span class="fase-res">${r.concluido}/${r.total}${r.bloqueado ? ` · <span class="bad">${r.bloqueado} bloqueado(s)</span>` : ''}</span>
-      <span class="barra"><i style="width:${r.pct}%;background:var(--ok)"></i></span></summary>
+      <span class="barra"><i style="width:${r.pct}%;background:var(--win)"></i></span></summary>
     ${f.descricao ? `<p class="fase-desc">${esc(f.descricao)}</p>` : ''}
     ${itens.length ? itens.map(renderItem).join('') : '<p class="nota">Tudo concluído nesta fase.</p>'}
     <div class="novo">${formsAbertos.has(f.id) ? `<form data-novo="${f.id}"><input name="titulo" placeholder="Título do novo item" maxlength="200" required>

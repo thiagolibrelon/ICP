@@ -1,0 +1,96 @@
+/* Identidade visual compartilhada com o Simulador Estratégico de Frota (V3 — Parecer 13, Julia Rennó).
+   Tokens, topbar, abas, pílulas e campos copiados de Simulador_Final/Simulador V3 Consorcio/css (base.css, layout.css). */
+[data-theme="dark"]{
+  --green:#5FB825; --green-l:#7FD348; --green-d:#BCEFA6; --green-tx:#8FD95F;
+  --green-bg:rgba(95,184,37,.14); --green-bd:rgba(95,184,37,.34);
+  --win:#7FD348; --win-bg:rgba(127,211,72,.13); --win-bd:rgba(127,211,72,.40);
+  --bg:#12140F; --s1:#1B1E16; --s2:#23261D; --s3:#2B2F24;
+  --bd:rgba(236,239,226,.12); --bd2:rgba(236,239,226,.22);
+  --text:#ECEFE2; --text2:#C2C7B4; --muted:#9AA28E; --muted2:#727866;
+  --red:#E7605A; --red-bg:rgba(231,96,90,.12); --red-bd:rgba(231,96,90,.30);
+  --amber:#E0A94A; --amber-bg:rgba(224,169,74,.12); --amber-bd:rgba(224,169,74,.30);
+  --input-bg:#20241B; --bolha-cliente:#2F6B1A; --bolha-cliente-tx:#F2F7EC;
+  --shadow:0 4px 6px -1px rgb(0 0 0/.4),0 2px 4px -2px rgb(0 0 0/.4);
+  --shadow-lg:0 12px 22px -6px rgb(0 0 0/.55),0 4px 8px -4px rgb(0 0 0/.5);
+}
+[data-theme="light"]{
+  --green:#78DE1F; --green-l:#00843D; --green-d:#003418; --green-tx:#00622D;
+  --green-bg:rgba(0,132,61,.07); --green-bd:rgba(0,132,61,.20);
+  --win:#00843D; --win-bg:rgba(0,132,61,.08); --win-bd:rgba(0,132,61,.28);
+  --bg:#F1F0EC; --s1:#FFFFFF; --s2:#ECEBE5; --s3:#E3E2DB;
+  --bd:#E2E0D8; --bd2:#CFCDC3;
+  --text:#26281F; --text2:#54564C; --muted:#5B5D53; --muted2:#8A8C81;
+  --red:#B4322C; --red-bg:rgba(180,50,44,.06); --red-bd:rgba(180,50,44,.18);
+  --amber:#8A5A00; --amber-bg:rgba(138,90,0,.06); --amber-bd:rgba(138,90,0,.18);
+  --input-bg:#FFFFFF; --bolha-cliente:#00843D; --bolha-cliente-tx:#FFFFFF;
+  --shadow:0 4px 6px -1px rgb(0 0 0/.08),0 2px 4px -2px rgb(0 0 0/.08);
+  --shadow-lg:0 12px 22px -6px rgb(0 0 0/.14),0 4px 8px -4px rgb(0 0 0/.1);
+}
+:root{--radius:.5rem;--serif:"Playfair Display",Georgia,serif}
+
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:13px;line-height:1.55;
+  transition:background .3s,color .3s;min-height:100vh}
+button,select,input{font-family:Inter,system-ui,sans-serif}
+:focus-visible{outline:2px solid var(--green-l);outline-offset:2px;border-radius:3px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+.ic{width:1em;height:1em;display:inline-block;vertical-align:-0.14em;flex-shrink:0;stroke:currentColor;stroke-width:1.9;fill:none;
+  stroke-linecap:round;stroke-linejoin:round}
+
+/* ── Topbar ── */
+.topbar{background:#05662B;border-bottom:1px solid rgba(0,200,83,.14);height:54px;padding:0 18px;display:flex;align-items:center;
+  justify-content:space-between;gap:12px;position:sticky;top:0;z-index:200}
+.tb-left{display:flex;align-items:center;gap:14px;min-width:0}
+.tb-logo-img{height:30px;width:auto;display:block}
+.tb-sep{width:1px;height:22px;background:rgba(255,255,255,.18)}
+.tb-title{color:#fff;font-weight:700;font-size:14px;white-space:nowrap}
+.tb-title small{display:block;font-weight:500;font-size:11px;color:rgba(255,255,255,.65)}
+.tb-right{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.tb-status{font-size:11px;font-weight:600;color:rgba(255,255,255,.85);padding:0 8px;display:flex;align-items:center;gap:5px}
+.tb-status .dot{width:8px;height:8px;border-radius:50%;background:#78DE1F}
+.tb-status.off .dot{background:#E7605A}
+.tb-btn{height:29px;padding:0 11px;border:1px solid rgba(255,255,255,.14);border-radius:15px;background:rgba(255,255,255,.08);
+  color:rgba(255,255,255,.85);font-size:11px;font-weight:600;display:flex;align-items:center;gap:5px;cursor:pointer;
+  text-decoration:none;white-space:nowrap;transition:.2s}
+.tb-btn:hover{background:rgba(255,255,255,.16)}
+.tb-btn.green{background:#78DE1F;border-color:#78DE1F;color:#003418}
+.theme-btn{width:46px;height:24px;border-radius:12px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.14);cursor:pointer;
+  display:flex;align-items:center;padding:0 3px}
+.tt-k{width:18px;height:18px;border-radius:50%;background:#fff;color:#003418;display:flex;align-items:center;justify-content:center;
+  transition:transform .25s cubic-bezier(.4,0,.2,1);box-shadow:0 1px 3px rgba(0,0,0,.35)}
+.tt-k .ic{width:11px;height:11px;stroke-width:2}
+[data-theme="light"] .tt-k{transform:translateX(22px)}
+
+/* ── Abas ── */
+.tabs-bar{display:flex;gap:2px;padding:10px 18px 0;border-bottom:1px solid var(--bd);background:var(--s1);position:sticky;top:54px;z-index:100}
+.tab{padding:7px 15px;border:1px solid transparent;border-bottom:none;border-radius:7px 7px 0 0;font-size:12px;font-weight:600;
+  color:var(--muted);text-decoration:none;display:flex;align-items:center;gap:6px;transition:.2s}
+.tab:hover{color:var(--text);background:var(--s2)}
+.tab.active{color:var(--green-tx);background:var(--green-bg);border-color:var(--green-bd)}
+
+/* ── Barra de controles (estilo client-panel) ── */
+.toolbar{background:var(--s2);border-bottom:1px solid var(--bd);padding:10px 18px;display:flex;flex-direction:column;gap:8px}
+.toolbar .linha{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.toolbar button{height:31px;padding:0 10px}
+.toolbar select{padding:6px 9px}
+.tb-label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px}
+
+/* ── Campos e botões ── */
+select,input{background:var(--input-bg);border:1px solid var(--bd2);border-radius:8px;padding:7px 11px;color:var(--text);font-size:13px;
+  outline:none;transition:border-color .15s,box-shadow .15s}
+select:focus,input:focus{border-color:var(--green-l);box-shadow:0 0 0 3px var(--green-bg)}
+select option{background:var(--s1);color:var(--text)}
+button{height:33px;padding:0 13px;background:var(--s1);border:1px solid var(--bd2);border-radius:8px;color:var(--text2);font-size:12px;
+  font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:.2s}
+button:hover:not(:disabled){border-color:var(--green-bd);color:var(--green-tx)}
+button:disabled{opacity:.5;cursor:default}
+button.primary{background:var(--green-l);border-color:var(--green-l);color:#fff}
+[data-theme="dark"] button.primary{color:#0B1A06}
+button.primary:hover:not(:disabled){opacity:.9;color:#fff}
+[data-theme="dark"] button.primary:hover:not(:disabled){color:#0B1A06}
+
+/* ── Rótulos e títulos ── */
+.eyebrow,h2{font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--green-tx);margin:16px 0 8px}
+h2:first-child{margin-top:0}
+h2 small{color:var(--muted);font-weight:500;letter-spacing:0;text-transform:none}
+.serif{font-family:var(--serif)}

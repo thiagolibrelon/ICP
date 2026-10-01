@@ -1,26 +1,42 @@
 <!doctype html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-theme="light">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Vendedor IA — Guia</title>
 <link rel="icon" href="data:,">
-<link rel="stylesheet" href="/static/styles.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/marca.css">
+<link rel="stylesheet" href="/static/guia.css">
 </head>
 <body class="guia">
-<header>
-  <h1>Guia da ferramenta <small>glossário · roadmap · como utilizar</small>
-    <a class="link-treino" href="/">← Simulador da Fernanda</a><a class="link-treino" href="/treino">→ Modo treino</a></h1>
-  <div class="tabs" role="tablist">
-    <button class="tab" role="tab" data-tab="roadmap" id="tab-roadmap">Roadmap</button>
-    <button class="tab" role="tab" data-tab="glossario" id="tab-glossario">Glossário</button>
-    <button class="tab" role="tab" data-tab="como-utilizar" id="tab-como-utilizar">Como utilizar</button>
+<header class="topbar">
+  <div class="tb-left">
+    <img class="tb-logo-img" src="/static/assets/localiza-logo.png" alt="Localiza">
+    <span class="tb-sep"></span>
+    <span class="tb-title">Guia da ferramenta<small>glossário · roadmap · como utilizar</small></span>
+  </div>
+  <div class="tb-right">
+    <button class="theme-btn" id="theme-btn" title="Tema claro/escuro"><span class="tt-k"></span></button>
   </div>
 </header>
+<nav class="tabs-bar">
+  <a class="tab" href="/" data-ic="car">Simulador da Fernanda</a>
+  <a class="tab" href="/treino" data-ic="target">Treino de vendas</a>
+  <a class="tab active" href="/guia" data-ic="book">Guia</a>
+</nav>
+<div class="subtabs" role="tablist">
+  <button class="subtab" role="tab" data-tab="roadmap" id="tab-roadmap">Roadmap</button>
+  <button class="subtab" role="tab" data-tab="glossario" id="tab-glossario">Glossário</button>
+  <button class="subtab" role="tab" data-tab="como-utilizar" id="tab-como-utilizar">Como utilizar</button>
+</div>
 <div id="aviso" class="erro-barra" hidden></div>
 <section class="painel" id="painel-roadmap" role="tabpanel" hidden></section>
 <section class="painel" id="painel-glossario" role="tabpanel" hidden></section>
 <section class="painel" id="painel-como-utilizar" role="tabpanel" hidden></section>
+<script src="/static/marca.js"></script>
 <script src="/static/guia.js"></script>
 </body>
 </html>
