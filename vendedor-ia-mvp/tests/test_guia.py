@@ -47,7 +47,9 @@ def test_roadmap_inicial():
     con = next(f for f in r["fases"] if f["id"] == "CON")
     assert con["resumo"]["pct"] == 100          # o que já foi construído nasce concluído
     s1 = next(f for f in r["fases"] if f["id"] == "S1")
-    assert s1["resumo"]["concluido"] == 0 and all(i["status"] == "nao_iniciado" for i in s1["itens"])
+    # S1-01 (executor em lote = Laboratório) já foi entregue; o restante do sprint nasce não iniciado
+    assert s1["resumo"]["concluido"] == 1 and _item(r, "S1-01")["status"] == "concluido"
+    assert all(i["status"] == "nao_iniciado" for i in s1["itens"] if i["id"] != "S1-01")
     assert r["resumo"]["falta"] == r["resumo"]["total"] - r["resumo"]["concluido"]
 
 
