@@ -29,7 +29,7 @@
       "periodo": "01–17/out/2026",
       "descricao": "Preparar o terreno: ferramenta de lote, régua congelada e metas assinadas.",
       "itens": [
-        {"id": "S1-01", "titulo": "Executor em lote", "trilha": "Vendedor IA", "prazo": "17/out", "descricao": "O GPT-cliente do Treino conversa sozinho com a Fernanda. Sem ele, as ~190 conversas por rodada não cabem no trimestre.", "fonte": "Memorando §6 e §7"},
+        {"id": "S1-01", "titulo": "Executor em lote", "trilha": "Vendedor IA", "prazo": "17/out", "descricao": "O GPT-cliente do Treino conversa sozinho com a Fernanda. Sem ele, as ~190 conversas por rodada não cabem no trimestre. Pronto: aba Laboratório (rodada completa, críticos 5×, conversas longas de 24 turnos e red team; 2 conversas em paralelo).", "fonte": "Memorando §6 e §7", "status_inicial": "concluido"},
         {"titulo": "Suíte v1 congelada", "id": "S1-02", "trilha": "Vendedor IA", "prazo": "17/out", "descricao": "Congelar a régua: salvar o comparativo e a nota C12 como linha de base. Toda mudança futura é comparada com ela.", "fonte": "Memorando §7; ONDE_ESTAMOS §5"},
         {"id": "S1-03", "titulo": "Referência humana (C12 + CRM)", "trilha": "Vendedor IA", "prazo": "17/out", "descricao": "Linha de base do time real: C12 das ligações e indicadores do CRM (conversão, ticket, desconto médio, tempo de resposta). Pré-requisito do Gate 1.", "fonte": "Memorando §7 e §8 (pedido 2)"},
         {"id": "S1-04", "titulo": "Seleção do piloto e dos gestores do Treino", "trilha": "Treino", "prazo": "17/out", "descricao": "3 a 5 vendedores e 1 gestor para o piloto, mais 2 a 3 gestores para a calibração.", "fonte": "Memorando §7"},

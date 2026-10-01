@@ -16,7 +16,7 @@ def get_db_path() -> Path:
 
 
 def connect() -> sqlite3.Connection:
-    conn = sqlite3.connect(_db_path)
+    conn = sqlite3.connect(_db_path, timeout=30)  # Laboratório grava de 2 threads
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
     return conn

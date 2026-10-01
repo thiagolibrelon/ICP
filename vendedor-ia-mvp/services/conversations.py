@@ -88,7 +88,7 @@ def processar_audio(conv_id: str, audio: bytes, mime: str, duracao_s: float | No
     return processar(conv_id, t["texto"], {"audio": {"duracao_s": duracao_s, "modelo": t["modelo"], "custo_gate": t["custo_gate"]}})
 
 
-def processar(conv_id: str, texto: str, meta_cliente: dict | None = None) -> dict:
+def processar(conv_id: str, texto: str, meta_cliente: dict | None = None, simular_falha: bool = False) -> dict:
     row = db.fetch_one("SELECT * FROM conversas WHERE conversation_id=?", (conv_id,))
     if not row:
         raise LookupError("Conversa inexistente")
@@ -101,6 +101,8 @@ def processar(conv_id: str, texto: str, meta_cliente: dict | None = None) -> dic
            "historico": historico + [{"role": "cliente", "conteudo": texto}]}
     entrada = f"[ÁUDIO TRANSCRITO] {texto}" if meta_cliente and meta_cliente.get("audio") else texto
     try:
+        if simular_falha:  # usado pelo Laboratório para testar a contingência ("GPT fora do ar")
+            raise llm_client.LLMUnavailable("Falha simulada pelo Laboratório")
         r = (agent.turno_a if row["modo"] == "A" else agent.turno_b)(ctx, historico, entrada)
     except llm_client.LLMUnavailable as e:
         r = {"texto": agent.CONTINGENCIA, "chamadas": [], "violacoes": [], "resultado_validacao": "contingencia",

@@ -49,3 +49,14 @@ CREATE TABLE IF NOT EXISTS treinos (
 CREATE TABLE IF NOT EXISTS treino_mensagens (
   id INTEGER PRIMARY KEY AUTOINCREMENT, treino_id TEXT, timestamp TEXT, role TEXT, conteudo TEXT, meta_json TEXT
 );
+
+-- LABORATÓRIO: rodadas de testes em lote (IA-cliente x Fernanda)
+CREATE TABLE IF NOT EXISTS lab_rodadas (
+  rodada_id TEXT PRIMARY KEY, nome TEXT, criado_em TEXT, inicio TEXT, fim TEXT, status TEXT, config_json TEXT
+);
+CREATE TABLE IF NOT EXISTS lab_execucoes (
+  exec_id TEXT PRIMARY KEY, rodada_id TEXT, ordem INTEGER, cliente_id TEXT, comportamento TEXT, modo TEXT, repeticao INTEGER,
+  max_turnos INTEGER, status TEXT, conversation_id TEXT, turnos INTEGER DEFAULT 0, fim_motivo TEXT, aprovado INTEGER,
+  checks_json TEXT, avaliacao_json TEXT, nota_geral REAL, tokens_cliente INTEGER DEFAULT 0, custo_cliente REAL DEFAULT 0,
+  erro TEXT, inicio TEXT, fim TEXT
+);

@@ -79,3 +79,43 @@ ul{padding-left:18px;margin:6px 0}
 .progresso{font-size:13px;margin:8px 0;padding:8px 10px;background:var(--s2);border-radius:8px}
 
 @media(max-width:1100px){body{overflow:auto;height:auto}main{grid-template-columns:1fr}#chat{min-height:420px}}
+
+/* Laboratório */
+main.lab{grid-template-columns:340px 1fr 430px}
+#col-rodada{padding:16px}
+.lab-h1{font-family:var(--serif);font-size:22px;margin:0}
+.lab-form{display:flex;flex-direction:column;gap:8px}
+.lab-form label{font-size:11px;font-weight:600;color:var(--muted);display:flex;flex-direction:column;gap:3px}
+.lab-form input:not([type=checkbox]),.lab-form select{padding:6px 8px;width:100%;min-width:0}
+.lab-form .duas{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.lab-form .linha-check,.checks label{flex-direction:row;align-items:center;gap:6px;font-size:12px;color:var(--text2);font-weight:500}
+.lab-form input[type=checkbox]{width:auto;margin:0;accent-color:var(--green-l)}
+.checks{display:flex;flex-direction:column;gap:3px;max-height:180px;overflow:auto;padding:6px;border:1px solid var(--bd);border-radius:8px;background:var(--s2)}
+.lab-form .rotulo{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-top:4px}
+.lab-form .rotulo a{color:var(--green-tx);text-transform:none;letter-spacing:0;font-weight:600}
+.lab-form button{justify-content:center}
+.rod{border:1px solid var(--bd);border-radius:10px;padding:8px 10px;margin:6px 0;cursor:pointer;background:var(--s1)}
+.rod.sel{border-color:var(--green-l);background:var(--green-bg)}
+.rod .barra{height:5px;margin:5px 0 0}
+.barra.grossa{height:10px;margin:10px 0}
+.st{font-size:10.5px;font-weight:700;padding:1px 7px;border-radius:10px;background:var(--s2);border:1px solid var(--bd2);white-space:nowrap}
+.st-EM_ANDAMENTO{background:var(--green-bg);color:var(--green-tx);border-color:var(--green-bd)}
+.st-CONCLUIDA{color:var(--win)}
+.st-ERRO,.st-CANCELADA{color:var(--red)}
+.st-INTERROMPIDA{background:var(--amber-bg);color:var(--amber);border-color:var(--amber-bd)}
+.acoes{display:flex;gap:8px;margin:4px 0}
+.acoes a{text-decoration:none}
+tr.clicavel{cursor:pointer}tr.clicavel:hover td{background:var(--s2)}tr.sel td{background:var(--green-bg)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:12px;padding:3px 10px;border-radius:12px;background:var(--s2);border:1px solid var(--bd)}
+.checklist{list-style:none;padding:0;font-size:12.5px}.checklist li{margin:3px 0}
+.lab-chat{display:flex;flex-direction:column;gap:8px;background:var(--bg);border-radius:10px;padding:10px}
+.lab-chat .m{max-width:88%;font-size:13px}
+.lab-chat .m.vendedor{cursor:default}
+.lab-top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.lab-top>span:first-child{font-weight:700}
+.rod .lab-top>span:first-child{font-size:12.5px}
+.execs th,.execs td,.falhas th,.falhas td{text-align:left}
+.execs td:nth-child(5),.execs td:nth-child(8),.execs th:nth-child(5),.execs th:nth-child(8){text-align:right}
+.lab-form .checks .badge{font-size:11px}
+@media(max-width:1100px){main.lab{grid-template-columns:1fr}.tabs-bar{overflow-x:auto}.tabs-bar .tab{white-space:nowrap}}

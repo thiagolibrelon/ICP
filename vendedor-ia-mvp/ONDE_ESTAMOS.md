@@ -142,7 +142,28 @@ falta), **Glossário** (110 termos, com busca) e **Como utilizar** (o `ROTEIRO_D
 `guia/roadmap_progresso.json`, fora do Git; o plano em `guia/roadmap.json`. Se mudar o roadmap do memorando, espelhe em
 `guia/roadmap.json`.
 
-### 3.10 Como rodar
+### 3.10 Laboratório — `/laboratorio`
+
+A IA-cliente (personas do Treino + um comportamento por teste) conversa sozinha com a Fernanda, nos modos A e B, sem
+ninguém digitando. É o executor em lote que faltava para as ~190 conversas por rodada caberem no trimestre.
+
+- **Comportamentos:** colaborativo, resistente, pede desconto acima da alçada, induz informação falsa, muda de assunto,
+  pede humano, assunto de suporte, GPT fora do ar (a resposta do 2º turno simula a queda), conversa longa e 5 ataques
+  de red team (amigo do diretor, arrancar a margem, injeção de instruções, preço falso, dado pessoal).
+- **Fim da conversa:** cliente decide (aceitou, recusou, vai pensar), proposta registrada, transferência, loop (3
+  mensagens iguais) ou limite de turnos — **12 por padrão e 24 nas conversas longas**, para ver como a Fernanda se
+  comporta numa conversa muito comprida.
+- **Avaliação em 3 camadas:** regras (nada errado entregue; proposta dentro da regra; margem não revelada; Tier A;
+  briefing), cenário (honestidade em Épsilon e Teta; Tier A transferido) e comportamento (transferiu quando pediram
+  humano; suporte sem venda; contingência quando o GPT caiu; não repetiu dado pessoal). Mais a nota C12 do avaliador do
+  Treino, que pode ser desligada para economizar.
+- **Operação:** 2 conversas em paralelo (decisão do responsável: prefere mais tempo a problemas de paralelismo); cada
+  conversa devolve o estoque reservado, para todas começarem do mesmo estoque; cancelar, retomar e recuperação depois de
+  queda do servidor; estimativa de custo e tempo antes de iniciar; exportação CSV.
+- **Tipos prontos:** rodada completa (192 conversas, ~US$ 12 e ~2 h com 2 em paralelo), críticos 5× (30), conversas
+  longas de 24 turnos (12, ~US$ 2) e red team (20). A primeira rodada real calibra essas estimativas.
+
+### 3.11 Como rodar
 
 ```bash
 cd vendedor-ia-mvp
@@ -171,7 +192,7 @@ python -m pytest                 # testes
 
 | # | Passo | Para quê |
 |---|---|---|
-| 1 | **Rodada oficial A × B**: os 12 roteiros + 5 genéricos nos dois modos, reiniciando o estoque a cada par | Provar (ou não) que a trava determinística é necessária |
+| 1 | **Rodada oficial A × B no Laboratório**: rodada completa (192) + conversas longas (24 turnos) + red team | Provar (ou não) que a trava determinística é necessária |
 | 2 | **Congelar a régua**: salvar o comparativo e a nota C12 dessa rodada como linha de base | Toda mudança futura é comparada com ela |
 | 3 | **Calibrar os prompts** com o que a rodada mostrar (tom, diagnóstico, fechamento) | Ajuste fino só é possível vendo o GPT real |
 | 4 | **Rodar o classificador C12** nas conversas exportadas (baixar `TAMANHO_MINIMO` para ~200) | Comparar o vendedor IA com os vendedores humanos na mesma régua |

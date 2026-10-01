@@ -54,9 +54,23 @@ usando a calculadora da alçada. **Modo treino** (coach com dicas) ou **modo pro
 por dimensão da régua C12, com justificativa, trecho da própria fala, como melhorar e exemplo. Disciplina de margem e
 informações descobertas são calculadas pelo sistema. Evolução por vendedor em ordem alfabética (sem ranking).
 
+## Laboratório (IA-cliente × Fernanda, em lote) — http://127.0.0.1:8000/laboratorio
+
+A IA-cliente (as mesmas personas do Treino, com um **comportamento** por teste) conversa sozinha com a Fernanda nos modos
+A e B. Cada conversa termina quando o cliente decide, quando a Fernanda registra proposta ou transfere, quando entra em
+loop ou no limite de turnos (12; **24 nas conversas longas**). Ao final, o sistema confere regras, cenário e
+comportamento (✅/❌) e o avaliador do Treino dá a nota C12 (opcional). Cada conversa devolve o estoque que reservou.
+
+- **Tipos prontos:** rodada completa (12 clientes × 8 comportamentos × A e B = 192), críticos 5× (30), conversas longas
+  de 24 turnos (12) e red team (20). Ou personalizada.
+- **2 conversas em paralelo** por padrão (dá para usar 1). Rodadas podem ser canceladas e retomadas; se o servidor cair,
+  a rodada fica "Interrompida" e é retomada do ponto em que parou.
+- Antes de iniciar, a tela mostra custo e tempo estimados. Relatório: A × B, por comportamento, conversas longas,
+  checagens reprovadas, tokens e custo; exportação CSV.
+
 ## Guia da ferramenta — http://127.0.0.1:8000/guia
 
-Terceira tela, ligada por um link no topo das outras duas. Três abas:
+Tela ligada pelas abas do topo. Três abas:
 
 - **Roadmap** — o plano completo (o que já foi construído, os 6 sprints do Q4, pedidos, gates e
   evoluções). Cada item tem status (não iniciado, em andamento, concluído, bloqueado), notas com data e, se quiser, itens
@@ -85,4 +99,4 @@ protocolo JSON equivalente (`LLM_TOOLS`). Custo real lido de `cost.token.total`.
 ## Estrutura
 
 `app.py` (API) · `iniciar.py` · `frontend/` · `services/` (`catalog` = ferramentas determinísticas, `agent` = modos A/B,
-`validator`, `conversations`, `evaluation`, `guia`, `llm_client`) · `prompts/` (base, regras B, regras A) · `guia/` (glossário e roadmap) · `database/` · `tests/`.
+`validator`, `conversations`, `evaluation`, `training`, `laboratorio`, `guia`, `llm_client`) · `prompts/` (base, regras B, regras A) · `guia/` (glossário e roadmap) · `database/` · `tests/`.

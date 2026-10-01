@@ -231,8 +231,16 @@ def encerrar(tid: str) -> dict:
     if r["status"] == "AVALIADO":
         return obter(tid)
     estado = json.loads(r["estado_json"])
-    p = PERSONAS[r["cliente_id"]]
-    hist = _transcricao(tid)
+    resultado = avaliar_conversa(r["cliente_id"], _transcricao(tid), estado)
+    db.execute("UPDATE treinos SET status='AVALIADO', fim=?, resultado_json=?, nota_geral=? WHERE treino_id=?",
+               (_now(), json.dumps(resultado, ensure_ascii=False, default=str), resultado["nota_geral"], tid))
+    return obter(tid)
+
+
+def avaliar_conversa(cliente_id: str, hist: list[dict], estado: dict) -> dict:
+    """Nota pela régua C12 para as falas do VENDEDOR de uma conversa (humano no Treino, Fernanda no Laboratório).
+    hist: [{"role": "vendedor"|"cliente", "conteudo"}]; estado: revelados, objecoes, calculos, propostas, estado_cliente."""
+    p = PERSONAS[cliente_id]
     falas = [m["conteudo"] for m in hist if m["role"] == "vendedor"]
     diag_det = round(10 * len(estado["revelados"]) / max(1, len(p["segredos"])), 1)
     disc = disciplina_margem(estado, falas)
@@ -259,9 +267,7 @@ def encerrar(tid: str) -> dict:
                      descobertas={"segredos_descobertos": len(estado["revelados"]), "segredos_total": len(p["segredos"]),
                                   "o_que_faltou_descobrir": [s["info"] for s in p["segredos"] if s["id"] not in estado["revelados"]]},
                      desafio_do_cenario=p["desafio_challenger"], estado_final_do_cliente=estado["estado_cliente"])
-    db.execute("UPDATE treinos SET status='AVALIADO', fim=?, resultado_json=?, nota_geral=? WHERE treino_id=?",
-               (_now(), json.dumps(resultado, ensure_ascii=False, default=str), resultado["nota_geral"], tid))
-    return obter(tid)
+    return resultado
 
 
 def _montar(dims: dict, diag_det: float, disc: dict, falas: list[str], p: dict, estado: dict) -> dict:

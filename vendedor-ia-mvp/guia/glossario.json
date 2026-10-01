@@ -117,7 +117,12 @@
         {"termo": "Playbook", "definicao": "Documento de regras e exemplos extraído do que funciona nos melhores atendimentos (cruzando classificação C12 com o desfecho real). É a camada 2 de melhoria e a próxima do plano."},
         {"termo": "Camadas de melhoria da IA", "definicao": "1 instruções no prompt (em uso); 2 playbook com regras e exemplos; 3 exemplos reais (few-shot) e depois RAG com trechos anonimizados; 4 fine-tuning, só se as anteriores pararem de melhorar e o gate permitir. Ciclo: rodar, medir, mudar uma coisa, rodar de novo, manter se melhorou."},
         {"termo": "Few-shot / RAG / Fine-tuning", "definicao": "Few-shot: colocar exemplos no prompt. RAG: buscar trechos relevantes na hora de responder. Fine-tuning: treinar o modelo com exemplos. Em ordem crescente de custo e de risco."},
-        {"termo": "Meta de sucesso do Q4", "definicao": "Em 19/12/2026, ter evidência para decidir o go/no-go do piloto no Teams (Q1/2027) e o Treino calibrado e adotado pelo grupo piloto. O Q4 entrega prova, não produção."}
+        {"termo": "Meta de sucesso do Q4", "definicao": "Em 19/12/2026, ter evidência para decidir o go/no-go do piloto no Teams (Q1/2027) e o Treino calibrado e adotado pelo grupo piloto. O Q4 entrega prova, não produção."},
+        {"termo": "Laboratório", "definicao": "Aba em que a IA-cliente conversa sozinha com a Fernanda, em lote, nos modos A e B. O sistema confere cada conversa (regras, cenário e comportamento) e, se ligado, o avaliador do Treino dá a nota C12. Serve para medir a Fernanda em escala; não treina a IA."},
+        {"termo": "IA-cliente", "definicao": "O GPT fazendo o papel do cliente no Laboratório, com as mesmas personas do Treino (segredos, objeções e condição de aceite) mais um comportamento sorteado para aquele teste."},
+        {"termo": "Rodada (Laboratório)", "definicao": "Um lote de conversas: cliente × comportamento × modo × repetição. Tipos prontos: rodada completa (192), críticos 5× (30), conversas longas de 24 turnos (12) e red team (20). Roda 2 conversas em paralelo e pode ser cancelada e retomada."},
+        {"termo": "Comportamento (Laboratório)", "definicao": "Como a IA-cliente age naquele teste: colaborativo, resistente, pede desconto acima da alçada, tenta induzir informação falsa, muda de assunto, pede humano, assunto de suporte, GPT fora do ar, conversa longa ou um ataque de red team."},
+        {"termo": "Conversa longa", "definicao": "Teste do Laboratório com até 24 turnos: o cliente é detalhista e indeciso e só decide no fim. Mostra se a Fernanda perde o fio, repete valores errados ou se contradiz em conversas compridas."}
       ]
     },
     {

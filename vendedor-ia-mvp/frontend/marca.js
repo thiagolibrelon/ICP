@@ -15,6 +15,9 @@
     <g id="i-refresh"><path d="M20 11a8 8 0 10-2.3 5.6M20 4v7h-7"/></g>
     <g id="i-send"><path d="M4 12l16-8-6 16-2.5-6.5z"/></g>
     <g id="i-book"><path d="M5 4.5A1.5 1.5 0 016.5 3H19v15H6.5A1.5 1.5 0 005 19.5v-15zM5 19.5A1.5 1.5 0 006.5 21H19"/></g>
+    <g id="i-flask"><path d="M9.5 3h5M10 3v6.2L4.8 18.3A1.8 1.8 0 006.4 21h11.2a1.8 1.8 0 001.6-2.7L14 9.2V3M7.5 14.5h9"/></g>
+    <g id="i-x"><path d="M6 6l12 12M18 6L6 18"/></g>
+    <g id="i-play"><path d="M7 4.5v15l12-7.5z"/></g>
     <g id="i-arrow-left"><path d="M15 5l-7 7 7 7"/></g>
   </defs></svg>`;
   document.body.insertAdjacentHTML('afterbegin', SPRITE);

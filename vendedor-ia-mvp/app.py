@@ -10,7 +10,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from database import db, seed
-from services import catalog, conversations as conv, evaluation, guia, llm_client, training
+from services import catalog, conversations as conv, evaluation, guia, laboratorio, llm_client, training
 
 BASE = Path(__file__).resolve().parent
 
@@ -18,6 +18,7 @@ BASE = Path(__file__).resolve().parent
 @asynccontextmanager
 async def _lifespan(_app):
     seed.ensure()
+    laboratorio.recuperar_interrompidas()
     yield
 
 
@@ -66,6 +67,19 @@ class StatusItem(BaseModel):
 
 class NotaItem(BaseModel):
     texto: str = Field(min_length=1, max_length=1000)
+
+
+class NovaRodada(BaseModel):
+    preset: str | None = None
+    personas: list[str] = []
+    comportamentos: list[str] = []
+    modos: list[str] = []
+    repeticoes: int = Field(1, ge=1, le=10)
+    max_turnos: int = Field(12, ge=2, le=40)
+    dificuldade: str = Field("medio", pattern="^(facil|medio|dificil)$")
+    avaliar_ia: bool = True
+    nome: str | None = Field(None, max_length=120)
+    workers: int = Field(2, ge=1, le=4)
 
 
 class NovoItem(BaseModel):
@@ -253,6 +267,67 @@ def treino_encerrar(tid: str):
     return _tratar(training.encerrar, tid)
 
 
+# ------------------------------------------------------------------ LABORATÓRIO (IA-cliente x Fernanda, testes em lote)
+@app.get("/api/lab/catalogo")
+def lab_catalogo():
+    return laboratorio.catalogo()
+
+
+@app.post("/api/lab/estimar")
+def lab_estimar(body: NovaRodada):
+    def calc():
+        if body.preset:
+            if body.preset not in laboratorio.PRESETS:
+                raise ValueError("Preset inexistente")
+            itens = laboratorio.PRESETS[body.preset][1]()
+        else:
+            itens = laboratorio._itens([p for p in body.personas if p in laboratorio.PERSONAS],
+                                       [c for c in body.comportamentos if c in laboratorio.COMPORTAMENTOS],
+                                       [m for m in body.modos if m in ("A", "B")], body.repeticoes, body.max_turnos)
+        return laboratorio.estimar(itens, body.workers, body.avaliar_ia)
+    return _tratar(calc)
+
+
+@app.post("/api/lab/rodadas", status_code=201)
+def lab_criar(body: NovaRodada):
+    return _tratar(lambda: laboratorio.criar_rodada(**body.model_dump()))
+
+
+@app.get("/api/lab/rodadas")
+def lab_listar():
+    return laboratorio.listar_rodadas()
+
+
+@app.get("/api/lab/rodadas/{rid}")
+def lab_obter(rid: str):
+    return _tratar(laboratorio.obter_rodada, rid)
+
+
+@app.post("/api/lab/rodadas/{rid}/cancelar")
+def lab_cancelar(rid: str):
+    return _tratar(laboratorio.cancelar, rid)
+
+
+@app.post("/api/lab/rodadas/{rid}/retomar")
+def lab_retomar(rid: str):
+    def ret():
+        laboratorio.obter_rodada(rid)
+        laboratorio.executar_rodada(rid)
+        return laboratorio.obter_rodada(rid)
+    return _tratar(ret)
+
+
+@app.get("/api/lab/rodadas/{rid}/export.csv")
+def lab_csv(rid: str):
+    dados = _tratar(laboratorio.exportar_csv, rid)
+    return Response(dados, media_type="text/csv", headers={"Content-Disposition": f'attachment; filename="laboratorio_{rid}.csv"'})
+
+
+@app.get("/api/lab/execucoes/{exec_id}")
+def lab_execucao(exec_id: str):
+    return _tratar(laboratorio.obter_execucao, exec_id)
+
+
 # ------------------------------------------------------------------ GUIA (glossário, roadmap com progresso, como utilizar)
 @app.get("/api/guia/glossario")
 def guia_glossario():
@@ -310,3 +385,8 @@ def pagina_treino():
 @app.get("/guia")
 def pagina_guia():
     return FileResponse(BASE / "frontend" / "guia.html")
+
+
+@app.get("/laboratorio")
+def pagina_laboratorio():
+    return FileResponse(BASE / "frontend" / "laboratorio.html")

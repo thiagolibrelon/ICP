@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vendedor IA — Laboratório</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/marca.css">
+<link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="tb-left">
+    <img class="tb-logo-img" src="/static/assets/localiza-logo.png" alt="Localiza">
+    <span class="tb-sep"></span>
+    <span class="tb-title">Laboratório<small>IA-cliente × Fernanda · testes em lote · dados fictícios</small></span>
+  </div>
+  <div class="tb-right">
+    <span id="llm" class="tb-status"></span>
+    <button class="theme-btn" id="theme-btn" title="Tema claro/escuro"><span class="tt-k"></span></button>
+  </div>
+</header>
+<nav class="tabs-bar">
+  <a class="tab" href="/" data-ic="car">Simulador da Fernanda</a>
+  <a class="tab" href="/treino" data-ic="target">Treino de vendas</a>
+  <a class="tab active" href="/laboratorio" data-ic="flask">Laboratório</a>
+  <a class="tab" href="/guia" data-ic="book">Guia</a>
+</nav>
+<main class="lab">
+  <aside>
+    <h2>Nova rodada</h2>
+    <div class="lab-form">
+      <label>Tipo de rodada<select id="preset"></select></label>
+      <div id="custom" hidden>
+        <div class="rotulo">Clientes <a href="#" data-todos="cli">todos</a> · <a href="#" data-nenhum="cli">nenhum</a></div>
+        <div id="cli" class="checks"></div>
+        <div class="rotulo">Comportamentos <a href="#" data-todos="comp">todos</a> · <a href="#" data-nenhum="comp">nenhum</a></div>
+        <div id="comp" class="checks"></div>
+        <div class="rotulo">Modos</div>
+        <div class="checks"><label><input type="checkbox" name="modo" value="A" checked>A · LLM pura (controle)</label><label><input type="checkbox" name="modo" value="B" checked>B · com ferramentas</label></div>
+        <div class="duas">
+          <label>Repetições<input id="repeticoes" type="number" min="1" max="10" value="1"></label>
+          <label>Máx. turnos<input id="max_turnos" type="number" min="2" max="40" value="12"></label>
+        </div>
+      </div>
+      <div class="duas">
+        <label>Dificuldade do cliente<select id="dificuldade"><option value="facil">Fácil</option><option value="medio" selected>Médio</option><option value="dificil">Difícil</option></select></label>
+        <label>Em paralelo<select id="workers"><option>1</option><option selected>2</option></select></label>
+      </div>
+      <label class="linha-check"><input type="checkbox" id="avaliar_ia" checked>Dar nota C12 em cada conversa (avaliador do Treino)</label>
+      <label>Nome (opcional)<input id="nome" maxlength="120" placeholder="ex.: Rodada 1 — linha de base"></label>
+      <div id="estimativa" class="tool"></div>
+      <button id="btn-criar" class="primary" data-ic="flask">Iniciar rodada</button>
+    </div>
+    <h2 style="margin-top:16px">Rodadas</h2>
+    <div id="rodadas" class="badge">Nenhuma rodada ainda.</div>
+  </aside>
+  <section id="col-rodada">
+    <div id="rodada"><div class="nota">Monte uma rodada à esquerda. A IA-cliente (as mesmas personas do Treino) conversa sozinha com a Fernanda, nos modos A e B, e o sistema confere cada conversa.</div></div>
+  </section>
+  <aside id="col-conversa">
+    <h2>Conversa</h2>
+    <div id="conversa" class="badge">Clique numa execução para ver a conversa, as checagens e a nota.</div>
+  </aside>
+</main>
+<script src="/static/marca.js"></script>
+<script src="/static/laboratorio.js"></script>
+</body>
+</html>
