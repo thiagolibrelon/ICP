@@ -173,31 +173,6 @@ Fernanda automaticamente. Sem ele, as ~190 conversas por rodada não cabem no tr
 
 Considera ~11 semanas úteis, com congelamento após 19/12.
 
-### 7.1 Entregável de médio prazo: integração com o Aletheia
-
-> **Status: proposto, sem data e sem responsável.** A priorizar depois da decisão go/no-go de 19/12. Nada abaixo
-> compete com as metas do Q4.
-
-O **Aletheia** é a análise de ligações comerciais reais em 15 prompts (conversão, Challenger, objeções, abertura e
-fechamento, promessas, oportunidades perdidas, entre outros). A base consolidada já cobre 6.623 ligações, e a régua C12
-usada no Treino nasceu desse projeto. Hoje a ligação é de uma via: o Aletheia fornece a régua e o Vendedor IA a
-consome. O entregável fecha o ciclo.
-
-| Fase | O que entrega | Quando |
-|---|---|---|
-| **Já no plano do Q4** | O consolidado do Aletheia serve de **referência humana** (S1, pedido 2 da seção 8) e de fonte do **playbook** (S3). Só derivados e anonimizados | S1 e S3 |
-| **1. Medir com a mesma régua** | As conversas da Fernanda e do Treino passam pelos mesmos prompts do Aletheia (P1, P5, P8, P9, P10) e são comparadas com o time humano | Q1/2027, após o Gate 1 |
-| **2. Realimentar o Treino** | Personas, objeções e "janelas de adicional" passam a refletir a frequência real das ligações, em vez de cenários inventados | Q1/2027 |
-| **3. Follow-up de propostas** | Os tipos de promessa (P10) orientam o follow-up da Fernanda (D+1, D+3, "vence amanhã") | Q1/2027 |
-| **4. Retorno ao ICP** | Cruzar o desfecho das ligações com o ICP e o score por código de cliente (98% de correspondência na checagem inicial) para validar se a segmentação prevê conversão | A definir |
-
-**Condições e cuidados**
-- **Dado real.** Só derivados anonimizados entram no simulador; depende do processo de LGPD já pedido (item 4 da seção 8).
-- **Circularidade.** Reservar um conjunto de ligações que só **mede** e nunca ensina a IA, senão a nota perde valor.
-- **Cobertura desigual.** P1, P2, P5 e P6 cobrem quase toda a base; P9 e P10 estão parciais; P3, P4, P7, P8, P11 e P13–P15 só
-  têm amostras exploratórias. Cada prompt só entra após conferir a cobertura.
-- **Dicionário.** Usar o dicionário que bate com a pipeline real, não o `DICIONARIO_TECNICO.md`, que está dessincronizado.
-
 ---
 
 ## 8. Dependências e pedidos

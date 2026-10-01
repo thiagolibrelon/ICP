@@ -101,7 +101,7 @@
       "descricao": "Como saber se a ferramenta é boa e como melhorá-la sem se enganar.",
       "termos": [
         {"termo": "Régua C12", "definicao": "A régua de qualidade do time, usada tanto nas ligações reais quanto no Treino e na Fernanda: tipo de venda, Challenger (com dado concreto) e problemas. É a configuração 'foco' do classificar_ligacoes_diario.py, ao lado da C7 (11 prompts)."},
-        {"termo": "Classificador de ligações", "definicao": "Script classificar_ligacoes_diario.py (do projeto Aletheia). Classifica transcrições com GPT. Conversas com menos de 600 caracteres viram sem_conteudo (TAMANHO_MINIMO); para as conversas da Fernanda, reduza para ~200."},
+        {"termo": "Classificador de ligações", "definicao": "Script classificar_ligacoes_diario.py. Classifica transcrições com GPT. Conversas com menos de 600 caracteres viram sem_conteudo (TAMANHO_MINIMO); para as conversas da Fernanda, reduza para ~200."},
         {"termo": "Linha de base humana", "definicao": "Números do time real (C12 e CRM: conversão, ticket, desconto médio, tempo de resposta) usados como meta para a IA. Pré-requisito do Gate 1."},
         {"termo": "Rodada", "definicao": "Execução completa da matriz de testes. O Q4 prevê 3: a primeira mede, a segunda confirma depois dos ajustes e a terceira é a regressão final."},
         {"termo": "Matriz de cenários", "definicao": "12 clientes × 8 comportamentos × modos A e B (~190 conversas por rodada). Os comportamentos incluem pedir desconto, estoque faltando, elétrico, Tier A, ameaça de concorrente etc."},
@@ -140,18 +140,13 @@
     },
     {
       "id": "projetos",
-      "titulo": "Projetos relacionados (ICP e Aletheia)",
-      "descricao": "Os outros projetos que alimentam este e que ele pode alimentar.",
+      "titulo": "Projeto relacionado (ICP)",
+      "descricao": "O projeto de segmentação que deu origem aos perfis de cliente do simulador.",
       "termos": [
         {"termo": "ICP (Ideal Customer Profile)", "definicao": "Perfil de cliente ideal: o tipo de empresa que mais vale a pena atender e como. No repositório, a base de ~86 mil clientes foi dividida em perfis por setor, uso de produto, duração de contrato e estrutura de grupo. Serve para decidir para quem ligar primeiro e com qual abordagem."},
         {"termo": "ICP1 a ICP5", "definicao": "ICP1 operação móvel recorrente (construção, energia, telecom, facilities) — validado. ICP2 mobilidade comercial e executiva (consultorias, seguros) — validado. ICP3 frota própria substituível (contratos longos) — hipótese, nicho de alto valor. ICP4 demanda sazonal ou por projeto — rejeitado pelos dados. ICP5 multiproduto ou grupo econômico — hipótese parcial. Os 12 clientes do simulador usam esses perfis."},
         {"termo": "Score ICP e Tier (no ICP)", "definicao": "Pontuação por cliente (valor, potencial, recompra, risco) que gera o score ICP e o Tier. Atenção: o Tier do projeto de ICP é derivado de score; o Tier do simulador é uma regra de roteamento (A vai para humano)."},
-        {"termo": "MASTER_CLASSIFICADA", "definicao": "Tabela final do projeto de ICP: cada cliente com ICP principal, tags secundárias, tier, próxima melhor ação e canal recomendado."},
-        {"termo": "Aletheia", "definicao": "Projeto irmão que transforma ligações comerciais reais em inteligência de negócio, analisando cada ligação com 15 prompts. Já consolidou 6.623 ligações. É a origem da régua C12 e o principal candidato a alimentar o playbook. A integração está no roadmap como entregável de médio prazo."},
-        {"termo": "Os 15 prompts do Aletheia", "definicao": "P1 conversão; P2 tipo de ligação; P3 problemas recorrentes; P4 health score do cliente; P5 comportamentos Challenger; P6 oportunidades perdidas; P7 cross-sell e upsell; P8 objeções; P9 abertura e fechamento; P10 promessas; P11 inteligência competitiva; P12 talk/listen ratio; P13 surpresas e padrões emergentes; P14 diferenças entre os melhores vendedores; P15 eventos raros de alto impacto."},
-        {"termo": "B1–B10 (Aletheia)", "definicao": "Comportamentos do vendedor medidos no P1: B1 diagnóstico antes de ofertar; B2 âncora de preço; B3 usou histórico do cliente; B4 avisou risco ao cliente; B5 upsell conectado à dor; B6 urgência com fato verificável; B7 vai batalhar internamente; B8 ligou proativamente; B9 conhecimento pessoal do cliente; B10 sondou concorrência. O score comercial vai de 0 a 18."},
-        {"termo": "CONSOLIDADO_LIGACOES", "definicao": "Tabela do Aletheia com uma linha por ligação (6.623) e um bloco de colunas por prompt. O código do cliente casa com o do projeto de ICP em ~98% dos clientes, o que permite cruzar desfecho de ligação com ICP."},
-        {"termo": "Integração Aletheia", "definicao": "Entregável de médio prazo: medir a Fernanda e o Treino com os mesmos prompts, realimentar as personas com a frequência real de objeções e dores, usar as promessas (P10) no follow-up e devolver o desfecho das ligações ao ICP. Veja o item no Roadmap."}
+        {"termo": "MASTER_CLASSIFICADA", "definicao": "Tabela final do projeto de ICP: cada cliente com ICP principal, tags secundárias, tier, próxima melhor ação e canal recomendado."}
       ]
     }
   ]

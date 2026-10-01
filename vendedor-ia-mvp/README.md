@@ -58,10 +58,10 @@ informações descobertas são calculadas pelo sistema. Evolução por vendedor 
 
 Terceira tela, ligada por um link no topo das outras duas. Três abas:
 
-- **Roadmap** — o plano completo (o que já foi construído, os 6 sprints do Q4, pedidos, gates, integração com o Aletheia e
+- **Roadmap** — o plano completo (o que já foi construído, os 6 sprints do Q4, pedidos, gates e
   evoluções). Cada item tem status (não iniciado, em andamento, concluído, bloqueado), notas com data e, se quiser, itens
   próprios. O topo mostra o percentual, "onde estou agora" e o que ainda falta; há filtro "só o que falta".
-- **Glossário** — todos os termos do projeto (negócio, simulador, treino, medição, governança, ICP e Aletheia), com busca.
+- **Glossário** — todos os termos do projeto (negócio, simulador, treino, medição, governança e ICP), com busca.
 - **Como utilizar** — o `ROTEIRO_DE_TESTES.md`, lido do arquivo (sem cópia: editou o arquivo, a aba muda).
 
 Onde ficam os dados: `guia/roadmap.json` (itens e fases, versionados no Git; edite para mudar o plano), `guia/glossario.json`

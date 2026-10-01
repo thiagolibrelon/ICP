@@ -187,20 +187,6 @@ python -m pytest                 # testes
 
 Ciclo de melhoria: **rodar os roteiros → medir → mudar uma coisa → rodar os mesmos roteiros → manter se melhorou.**
 
-### Entregável futuro: integração com o Aletheia
-
-O Aletheia (análise de ligações reais em 15 prompts, 6.623 ligações consolidadas) é a fonte da régua C12 e o melhor
-candidato a alimentar as camadas 2 e 3 acima. Fica no roadmap como entregável de médio prazo, **sem data**, a priorizar
-depois do go/no-go de 19/12. Detalhe na seção 7.1 do `MEMORANDO_Q4_2026.md`. Resumo:
-
-1. Medir a Fernanda e o Treino com os mesmos prompts (P1, P5, P8, P9, P10) e comparar com o time humano.
-2. Realimentar personas, objeções e adicionais com a frequência real das ligações.
-3. Usar as promessas (P10) no follow-up de propostas.
-4. Devolver ao projeto de ICP o desfecho das ligações, para validar a segmentação.
-
-Cuidados: só derivados anonimizados (LGPD), um conjunto de ligações reservado só para medir e conferir a cobertura de
-cada prompt antes de usá-lo.
-
 ### Evoluções do simulador (a decidir)
 
 - **Modo copiloto** (sugestão do diretor): a Fernanda escreve, o vendedor humano revisa/edita e envia — risco baixo,

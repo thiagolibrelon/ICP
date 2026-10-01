@@ -21,7 +21,7 @@ def test_glossario_sem_termos_repetidos_nem_vazios():
 
 def test_glossario_cobre_os_termos_que_o_responsavel_mais_pergunta():
     texto = json.dumps(guia.glossario(), ensure_ascii=False)
-    for termo in ("ICP", "Aletheia", "Alçada", "Contrapartida", "Handoff", "Tier A", "Modo A", "Modo B", "Régua C12",
+    for termo in ("ICP", "Alçada", "Contrapartida", "Handoff", "Tier A", "Modo A", "Modo B", "Régua C12",
                   "Gate 1", "Challenger", "Red team", "Playbook", "Executor em lote"):
         assert termo in texto, termo
 
@@ -29,7 +29,7 @@ def test_glossario_cobre_os_termos_que_o_responsavel_mais_pergunta():
 def test_roadmap_definicao_integra():
     d = json.loads((guia.GUIA_DIR / "roadmap.json").read_text(encoding="utf-8"))
     ids = [i["id"] for f in d["fases"] for i in f["itens"]]
-    assert len(ids) == len(set(ids)) and len(ids) >= 60
+    assert len(ids) == len(set(ids)) and len(ids) >= 55
     assert len({f["id"] for f in d["fases"]}) == len(d["fases"])
     for f in d["fases"]:
         assert f["itens"], f["id"]
@@ -91,21 +91,21 @@ def test_notas_com_data_e_remocao():
 
 
 def test_itens_proprios_so_os_proprios_podem_ser_removidos():
-    r = guia.adicionar_item("ALE", " Conversar com o responsável do Aletheia ", "marcar reunião")
-    novo = next(i for i in next(f for f in r["fases"] if f["id"] == "ALE")["itens"] if i["custom"])
-    assert novo["id"] == "ALE-U1" and novo["titulo"] == "Conversar com o responsável do Aletheia" and novo["status"] == "nao_iniciado"
-    assert guia.adicionar_item("ALE", "Outro")["resumo"]["total"] == r["resumo"]["total"] + 1
-    guia.definir_status("ALE-U1", "em_andamento")
-    guia.anotar("ALE-U1", "ligar amanhã")
-    r = guia.remover_item("ALE-U1")
-    assert not any(i["id"] == "ALE-U1" for f in r["fases"] for i in f["itens"])
+    r = guia.adicionar_item("EVO", " Conversar com o time do llm-gate ", "marcar reunião")
+    novo = next(i for i in next(f for f in r["fases"] if f["id"] == "EVO")["itens"] if i["custom"])
+    assert novo["id"] == "EVO-U1" and novo["titulo"] == "Conversar com o time do llm-gate" and novo["status"] == "nao_iniciado"
+    assert guia.adicionar_item("EVO", "Outro")["resumo"]["total"] == r["resumo"]["total"] + 1
+    guia.definir_status("EVO-U1", "em_andamento")
+    guia.anotar("EVO-U1", "ligar amanhã")
+    r = guia.remover_item("EVO-U1")
+    assert not any(i["id"] == "EVO-U1" for f in r["fases"] for i in f["itens"])
     with pytest.raises(ValueError):                       # item da definição não se remove
         guia.remover_item("S1-01")
     with pytest.raises(LookupError):
         guia.adicionar_item("ZZ", "x")
     with pytest.raises(ValueError):
-        guia.adicionar_item("ALE", "  ")
-    assert guia.adicionar_item("ALE", "De novo")["fases"]  # id liberado é reaproveitado sem colidir
+        guia.adicionar_item("EVO", "  ")
+    assert guia.adicionar_item("EVO", "De novo")["fases"]  # id liberado é reaproveitado sem colidir
     ids = [i["id"] for f in guia.roadmap()["fases"] for i in f["itens"]]
     assert len(ids) == len(set(ids))
 
@@ -178,7 +178,7 @@ def test_api_guia_e_roadmap():
         assert c.get("/guia").status_code == 200 and "Guia da ferramenta" in c.get("/guia").text
         assert c.get("/api/guia/glossario").json()["total_termos"] >= 80
         assert "toc" in c.get("/api/guia/como-utilizar").json()
-        assert c.get("/api/roadmap").json()["resumo"]["total"] >= 60
+        assert c.get("/api/roadmap").json()["resumo"]["total"] >= 55
         r = c.post("/api/roadmap/S1-01/status", json={"status": "em_andamento"}).json()
         assert r["resumo"]["em_andamento"] == 1
         assert c.post("/api/roadmap/S1-01/status", json={"status": "xx"}).status_code == 400

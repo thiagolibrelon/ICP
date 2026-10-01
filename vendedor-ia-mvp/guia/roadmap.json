@@ -31,7 +31,7 @@
       "itens": [
         {"id": "S1-01", "titulo": "Executor em lote", "trilha": "Vendedor IA", "prazo": "17/out", "descricao": "O GPT-cliente do Treino conversa sozinho com a Fernanda. Sem ele, as ~190 conversas por rodada não cabem no trimestre.", "fonte": "Memorando §6 e §7"},
         {"titulo": "Suíte v1 congelada", "id": "S1-02", "trilha": "Vendedor IA", "prazo": "17/out", "descricao": "Congelar a régua: salvar o comparativo e a nota C12 como linha de base. Toda mudança futura é comparada com ela.", "fonte": "Memorando §7; ONDE_ESTAMOS §5"},
-        {"id": "S1-03", "titulo": "Referência humana (C12 + CRM)", "trilha": "Vendedor IA", "prazo": "17/out", "descricao": "Linha de base do time real: C12 das ligações e indicadores do CRM (conversão, ticket, desconto médio, tempo de resposta). Pré-requisito do Gate 1. O consolidado do Aletheia pode ser a fonte (ver ALE-01).", "fonte": "Memorando §7 e §8 (pedido 2)"},
+        {"id": "S1-03", "titulo": "Referência humana (C12 + CRM)", "trilha": "Vendedor IA", "prazo": "17/out", "descricao": "Linha de base do time real: C12 das ligações e indicadores do CRM (conversão, ticket, desconto médio, tempo de resposta). Pré-requisito do Gate 1.", "fonte": "Memorando §7 e §8 (pedido 2)"},
         {"id": "S1-04", "titulo": "Seleção do piloto e dos gestores do Treino", "trilha": "Treino", "prazo": "17/out", "descricao": "3 a 5 vendedores e 1 gestor para o piloto, mais 2 a 3 gestores para a calibração.", "fonte": "Memorando §7"},
         {"id": "S1-05", "titulo": "Treinamento de uso do Treino", "trilha": "Treino", "prazo": "17/out", "descricao": "Explicar o uso aos vendedores do piloto. Treinos curtos de 10 minutos, com agenda fixa semanal.", "fonte": "Memorando §7 e §9"},
         {"id": "S1-06", "titulo": "Marco: metas assinadas", "trilha": "Marco", "prazo": "17/out", "marco": true, "descricao": "Metas da seção 5 do memorando validadas e assinadas pelo gestor.", "fonte": "Memorando §7"}
@@ -55,7 +55,7 @@
       "periodo": "03–14/nov/2026",
       "descricao": "Playbook com exemplos reais anonimizados e coleta para calibração.",
       "itens": [
-        {"id": "S3-01", "titulo": "Playbook v1 com trechos dos melhores vendedores (anonimizados)", "trilha": "Vendedor IA", "prazo": "14/nov", "marco": true, "descricao": "Camada 2 de melhoria: cruzar classificação C12 com desfecho real e transformar o que funciona em regras e exemplos. Pode começar com trechos escritos pelos gestores se a LGPD atrasar. Fonte candidata: Aletheia (P5, P8, P9, P14).", "fonte": "Memorando §7 e §9; ONDE_ESTAMOS §5"},
+        {"id": "S3-01", "titulo": "Playbook v1 com trechos dos melhores vendedores (anonimizados)", "trilha": "Vendedor IA", "prazo": "14/nov", "marco": true, "descricao": "Camada 2 de melhoria: cruzar classificação C12 com desfecho real e transformar o que funciona em regras e exemplos. Pode começar com trechos escritos pelos gestores se a LGPD atrasar.", "fonte": "Memorando §7 e §9; ONDE_ESTAMOS §5"},
         {"id": "S3-02", "titulo": "Validação do áudio", "trilha": "Vendedor IA", "prazo": "14/nov", "descricao": "Conferir a transcrição pelo llm-gate (Bloco C do roteiro) e o comportamento da Fernanda quando o áudio é confuso.", "fonte": "Memorando §7"},
         {"id": "S3-03", "titulo": "Coleta de ~20 conversas de treino para calibração", "trilha": "Treino", "prazo": "14/nov", "descricao": "As mesmas conversas serão avaliadas pelos gestores na sprint seguinte.", "fonte": "Memorando §7"}
       ]
@@ -127,27 +127,13 @@
       ]
     },
     {
-      "id": "ALE",
-      "titulo": "Integração com o Aletheia",
-      "periodo": "Médio prazo (a priorizar após o go/no-go de 19/12)",
-      "descricao": "Fechar o ciclo entre o Vendedor IA e a análise de ligações reais. Sem data e sem responsável definidos.",
-      "itens": [
-        {"id": "ALE-01", "titulo": "Medir a Fernanda e o Treino com os mesmos prompts do Aletheia", "trilha": "Vendedor IA", "prazo": "Q1/2027", "descricao": "Passar as conversas por P1, P5, P8, P9 e P10 e comparar com o time humano. Antes, conferir a cobertura de cada prompt (P3, P4, P7, P8, P11 e P13–P15 só têm amostras).", "fonte": "Memorando §7.1"},
-        {"id": "ALE-02", "titulo": "Realimentar personas, objeções e janelas de adicional", "trilha": "Treino", "prazo": "Q1/2027", "descricao": "Usar a frequência real das ligações em vez de cenários inventados.", "fonte": "Memorando §7.1"},
-        {"id": "ALE-03", "titulo": "Follow-up de propostas usando promessas (P10)", "trilha": "Vendedor IA", "prazo": "Q1/2027", "descricao": "D+1, D+3 e 'vence amanhã', orientados pelos tipos de promessa.", "fonte": "Memorando §7.1"},
-        {"id": "ALE-04", "titulo": "Retorno ao ICP: cruzar desfecho das ligações com ICP e score", "trilha": "ICP", "descricao": "Por código de cliente (98% de correspondência na checagem inicial). Verificar se a segmentação prevê conversão em ligação real.", "fonte": "Memorando §7.1"},
-        {"id": "ALE-05", "titulo": "Reservar um conjunto de ligações só para medir", "trilha": "Vendedor IA", "descricao": "Evita circularidade: a IA não pode aprender com a mesma régua que a avalia.", "fonte": "Memorando §7.1"},
-        {"id": "ALE-06", "titulo": "Garantir LGPD: só derivados anonimizados no simulador", "trilha": "Privacidade / RH", "descricao": "Depende do processo PED-04.", "fonte": "Memorando §7.1"}
-      ]
-    },
-    {
       "id": "EVO",
       "titulo": "Evoluções a decidir",
       "periodo": "Sem data",
       "descricao": "Ideias registradas no ONDE_ESTAMOS que ainda não viraram compromisso.",
       "itens": [
         {"id": "EVO-01", "titulo": "Modo copiloto", "trilha": "Vendedor IA", "descricao": "A Fernanda escreve, o vendedor humano revisa, edita e envia. Risco baixo, valor imediato, e cada edição vira dado de treino. Sugestão do diretor.", "fonte": "ONDE_ESTAMOS §5"},
-        {"id": "EVO-02", "titulo": "Follow-up de propostas", "trilha": "Vendedor IA", "descricao": "D+1, D+3 e 'vence amanhã'. Ver também ALE-03.", "fonte": "ONDE_ESTAMOS §5"},
+        {"id": "EVO-02", "titulo": "Follow-up de propostas", "trilha": "Vendedor IA", "descricao": "D+1, D+3 e 'vence amanhã'.", "fonte": "ONDE_ESTAMOS §5"},
         {"id": "EVO-03", "titulo": "Assumir conversa", "trilha": "Vendedor IA", "descricao": "O humano entra na conversa em andamento.", "fonte": "ONDE_ESTAMOS §5"},
         {"id": "EVO-04", "titulo": "Revisão amostral semanal", "trilha": "Vendedor IA", "descricao": "", "fonte": "ONDE_ESTAMOS §5"},
         {"id": "EVO-05", "titulo": "Camada 3: exemplos reais (few-shot) e RAG", "trilha": "Vendedor IA", "descricao": "Trechos anonimizados dos melhores vendedores. Vem depois do playbook (S3-01).", "fonte": "ONDE_ESTAMOS §5"},
