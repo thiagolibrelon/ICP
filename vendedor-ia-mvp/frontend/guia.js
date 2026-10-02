@@ -14,7 +14,7 @@ const lembrar = (k, padrao) => { try { const v = localStorage.getItem(k); return
 const aviso = msg => { const a = $('aviso'); a.textContent = msg || ''; a.hidden = !msg; };
 const erro = e => aviso(`Não deu certo: ${e.message}`);
 
-const ABAS = ['roadmap', 'glossario', 'como-utilizar', 'laboratorio'];
+const ABAS = ['roadmap', 'como-funciona', 'glossario', 'como-utilizar', 'laboratorio'];
 const carregadas = {};
 let rm = null;                                   // último roadmap recebido do servidor
 let soFalta = lembrar('guia.soFalta', false);
@@ -31,7 +31,7 @@ function abrirAba(nome) {
     $('tab-' + a).setAttribute('aria-selected', a === nome);
   });
   if (location.hash !== '#' + nome) history.replaceState(null, '', '#' + nome);
-  if (!carregadas[nome]) { carregadas[nome] = true; ({'roadmap': carregarRoadmap, 'glossario': carregarGlossario, 'como-utilizar': carregarComoUtilizar, 'laboratorio': carregarLaboratorio})[nome]().catch(e => { carregadas[nome] = false; erro(e); }); }
+  if (!carregadas[nome]) { carregadas[nome] = true; ({'roadmap': carregarRoadmap, 'glossario': carregarGlossario, 'como-funciona': carregarComoFunciona, 'como-utilizar': carregarComoUtilizar, 'laboratorio': carregarLaboratorio})[nome]().catch(e => { carregadas[nome] = false; erro(e); }); }
 }
 
 // ------------------------------------------------------------------ GLOSSÁRIO
@@ -57,6 +57,20 @@ function renderGlossario() {
       termos.map(t => `<div class="termo"><b>${esc(t.termo)}</b><p>${esc(t.definicao)}</p></div>`).join('');
   }).join('');
   $('termos').innerHTML = blocos || '<p class="nota">Nenhum termo encontrado.</p>';
+}
+
+// ------------------------------------------------------------------ COMO FUNCIONA (as 3 imagens de docs/como_funciona)
+const IMAGENS = [
+  ['1_chat_x_fernanda.png', 'De um chat com IA para uma vendedora que consulta o sistema', 'Por que mudou: a IA conversa, o sistema decide preço, desconto, estoque e aprovação.'],
+  ['2_uma_mensagem_por_dentro.png', 'Uma mensagem por dentro', 'O caminho de cada mensagem: entrada, contexto, decisão do GPT, ferramentas e bases, trava e saída.'],
+  ['3_ferramentas_e_bases.png', 'Quando e por que ela consulta cada base', 'As 9 ferramentas (consultar, calcular, registrar) e as bases que cada uma lê ou grava.'],
+];
+async function carregarComoFunciona() {
+  $('painel-como-funciona').innerHTML = `<p class="nota">Como a Fernanda funciona, em 3 imagens prontas para slide (1920×1080). Clique para abrir em tamanho real.
+    Arquivo editável: <code>docs/como_funciona/arquitetura.html</code>.</p>` + IMAGENS.map(([arq, titulo, txt], i) => `
+    <figure class="figura"><figcaption><b>${i + 1}. ${esc(titulo)}</b><span>${esc(txt)}</span>
+      <a href="/como-funciona/${arq}" download><button>${icon('download')} Baixar</button></a></figcaption>
+      <a href="/como-funciona/${arq}" target="_blank" rel="noopener"><img src="/como-funciona/${arq}" alt="${esc(titulo)}" loading="lazy"></a></figure>`).join('');
 }
 
 // ------------------------------------------------------------------ DOCUMENTOS (Roteiro de Testes e Laboratório, lidos dos .md)

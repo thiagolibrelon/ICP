@@ -375,6 +375,7 @@ def roadmap_remover_nota(item_id: str, nota_id: str):
 
 
 app.mount("/static", StaticFiles(directory=BASE / "frontend"), name="static")
+app.mount("/como-funciona", StaticFiles(directory=BASE / "docs" / "como_funciona"), name="como_funciona")
 
 
 @app.get("/")

@@ -186,6 +186,15 @@ def test_aba_laboratorio_do_guia():
         assert 'id="tab-laboratorio"' in c.get("/guia").text
 
 
+def test_aba_como_funciona_serve_as_imagens():
+    with TestClient(A.app) as c:
+        assert 'id="tab-como-funciona"' in c.get("/guia").text
+        for arq in ("1_chat_x_fernanda.png", "2_uma_mensagem_por_dentro.png", "3_ferramentas_e_bases.png"):
+            r = c.get(f"/como-funciona/{arq}")
+            assert r.status_code == 200 and r.headers["content-type"] == "image/png"
+            assert arq in c.get("/static/guia.js").text
+
+
 # ------------------------------------------------------------------ HTTP
 def test_api_guia_e_roadmap():
     with TestClient(A.app) as c:
