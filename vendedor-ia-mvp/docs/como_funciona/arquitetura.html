@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Como a Fernanda funciona</title>
+<link rel="stylesheet" href="fontes.css">
+<style>
+:root{
+  --verde:#00843D; --verde-esc:#003418; --verde-tx:#00622D; --lima:#78DE1F; --verde-bg:#E8F3EC;
+  --ia:#5B45B0; --ia-bg:#EFEBFA; --ia-bd:#CFC5EE;
+  --py:#00622D; --py-bg:#E6F2EA; --py-bd:#B9DCC6;
+  --base:#2E3A46; --base-bg:#E9EDF1; --base-bd:#C7D0D9;
+  --trava:#8A5A00; --trava-bg:#FBF3E2; --trava-bd:#EAD3A4;
+  --ruim:#B4322C; --ruim-bg:#FBECEB;
+  --fundo:#F1F0EC; --card:#FFFFFF; --bd:#E2E0D8; --tx:#26281F; --tx2:#54564C; --mut:#6E7066;
+}
+*{box-sizing:border-box;margin:0}
+body{background:#888;font-family:Inter,sans-serif;color:var(--tx)}
+.slide{width:1920px;height:1080px;background:var(--fundo);position:relative;overflow:hidden;margin:0 auto 40px;padding:56px 72px}
+.topo{display:flex;justify-content:space-between;align-items:flex-start}
+.eyebrow{font-size:17px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--verde)}
+h1{font-family:"Playfair Display",serif;font-size:54px;font-weight:800;line-height:1.1;margin-top:8px;color:var(--verde-esc)}
+.sub{font-size:22px;color:var(--tx2);margin-top:12px;max-width:1300px;line-height:1.45}
+.marca{display:flex;align-items:center;gap:14px;background:var(--verde);padding:12px 20px;border-radius:12px}
+.marca img{height:30px}
+.marca span{color:#fff;font-weight:600;font-size:15px;border-left:1px solid rgba(255,255,255,.4);padding-left:14px}
+.rodape{position:absolute;left:72px;right:72px;bottom:30px;display:flex;justify-content:space-between;font-size:14px;color:var(--mut)}
+.legenda{display:flex;gap:22px;align-items:center}
+.legenda i{display:inline-block;width:16px;height:16px;border-radius:4px;margin-right:7px;vertical-align:-3px;border:2px solid}
+.l-ia{background:var(--ia-bg);border-color:var(--ia)!important}.l-py{background:var(--py-bg);border-color:var(--py)!important}
+.l-base{background:var(--base-bg);border-color:var(--base)!important}.l-trava{background:var(--trava-bg);border-color:var(--trava)!important}
+
+/* ---------- slide 1 ---------- */
+.duas{display:grid;grid-template-columns:1fr 1.25fr;gap:40px;margin-top:40px}
+.painel{background:var(--card);border:1px solid var(--bd);border-radius:20px;padding:30px 34px;box-shadow:0 6px 18px rgba(0,0,0,.06)}
+.painel h2{font-size:27px;font-weight:800;display:flex;align-items:center;gap:12px}
+.tag{font-size:14px;font-weight:700;padding:4px 12px;border-radius:20px;letter-spacing:.3px}
+.tag.ruim{background:var(--ruim-bg);color:var(--ruim)}.tag.bom{background:var(--verde-bg);color:var(--verde-tx)}
+.fluxo{display:flex;align-items:center;gap:14px;margin:28px 0 24px}
+.no{border:2px solid;border-radius:14px;padding:14px 16px;text-align:center;font-weight:700;font-size:19px;line-height:1.25}
+.no small{display:block;white-space:nowrap;font-weight:500;font-size:14px;margin-top:4px;opacity:.85}
+.no.cli{border-color:#9AA28E;background:#F7F7F3;color:var(--tx)}
+.no.ia{border-color:var(--ia);background:var(--ia-bg);color:var(--ia)}
+.no.py{border-color:var(--py);background:var(--py-bg);color:var(--py)}
+.no.base{border-color:var(--base);background:var(--base-bg);color:var(--base)}
+.no.trava{border-color:var(--trava);background:var(--trava-bg);color:var(--trava)}
+.seta{font-size:30px;color:#9AA28E;font-weight:300}
+.seta.dupla{color:var(--ia)}
+ul.pontos{list-style:none;padding:0;display:flex;flex-direction:column;gap:13px}
+ul.pontos li{font-size:19px;line-height:1.4;padding-left:34px;position:relative;color:var(--tx2)}
+ul.pontos li b{color:var(--tx)}
+ul.pontos li::before{position:absolute;left:0;top:0;font-size:20px}
+ul.x li::before{content:"✕";color:var(--ruim);font-weight:800}
+ul.v li::before{content:"✓";color:var(--verde);font-weight:800}
+.principio{margin-top:36px;background:var(--verde-esc);color:#fff;border-radius:18px;padding:26px 36px;display:flex;align-items:center;gap:28px}
+.principio b{font-family:"Playfair Display",serif;font-size:34px;line-height:1.2}
+.principio b em{font-style:normal;color:var(--lima)}
+.principio span b{font-family:Inter,sans-serif;font-size:inherit;color:var(--lima)}
+.principio span{font-size:18px;opacity:.85;line-height:1.45;border-left:1px solid rgba(255,255,255,.3);padding-left:28px}
+.nota-a{font-size:16px;color:var(--mut);margin-top:18px;line-height:1.45}
+
+/* ---------- slide 2 ---------- */
+.canvas{position:absolute;left:72px;top:228px;width:1776px;height:790px}
+.canvas svg{position:absolute;inset:0}
+.bloco{position:absolute;background:var(--card);border:2px solid;border-radius:18px;padding:18px 20px;box-shadow:0 6px 16px rgba(0,0,0,.06)}
+.bloco .n{position:absolute;top:-18px;left:18px;width:36px;height:36px;border-radius:50%;color:#fff;font-weight:800;font-size:18px;
+  display:flex;align-items:center;justify-content:center}
+.bloco h3{font-size:21px;font-weight:800;margin-top:6px}
+.bloco .quem{font-size:13px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;margin-top:2px}
+.bloco ul{padding-left:18px;margin-top:10px}
+.bloco li{font-size:15.5px;line-height:1.4;color:var(--tx2);margin:4px 0}
+.bloco li b{color:var(--tx)}
+.bloco p{font-size:15.5px;line-height:1.42;color:var(--tx2);margin-top:8px}
+.b-cli{border-color:#9AA28E}.b-cli .n{background:#6E7066}.b-cli .quem{color:#6E7066}
+.b-py{border-color:var(--py)}.b-py .n{background:var(--py)}.b-py .quem{color:var(--py)}
+.b-ia{border-color:var(--ia);background:var(--ia-bg)}.b-ia .n{background:var(--ia)}.b-ia .quem{color:var(--ia)}
+.b-trava{border-color:var(--trava);background:var(--trava-bg)}.b-trava .n{background:var(--trava)}.b-trava .quem{color:var(--trava)}
+.b-base{border-color:var(--base);background:var(--base-bg)}.b-base .quem{color:var(--base)}
+.rot{position:absolute;font-size:14px;font-weight:700;color:var(--tx2);background:var(--fundo);padding:2px 8px;border-radius:6px;white-space:nowrap}
+.saidas{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.saida{font-size:15px;line-height:1.35;padding:8px 10px;border-radius:10px;background:#fff;border:1px solid var(--trava-bd)}
+.saida b{display:block;font-size:14px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.chip{font-size:13.5px;font-weight:600;padding:4px 10px;border-radius:14px;background:#fff;border:1px solid var(--base-bd);color:var(--base)}
+.excecoes{position:absolute;display:flex;gap:16px}
+.exc{background:var(--card);border:1px dashed #B9B7AD;border-radius:14px;padding:12px 16px;font-size:15px;line-height:1.4;color:var(--tx2);width:420px}
+.exc b{color:var(--tx)}
+
+/* ---------- slide 3 ---------- */
+table.ferr{width:100%;border-collapse:separate;border-spacing:0;margin-top:30px;background:var(--card);border-radius:18px;overflow:hidden;
+  box-shadow:0 6px 18px rgba(0,0,0,.06);border:1px solid var(--bd)}
+.ferr th{background:var(--verde-esc);color:#fff;text-align:left;font-size:14px;letter-spacing:1.2px;text-transform:uppercase;padding:13px 18px}
+.ferr td{padding:10px 18px;font-size:16.5px;line-height:1.35;border-bottom:1px solid var(--bd);vertical-align:middle;color:var(--tx2)}
+.ferr tr:last-child td{border-bottom:none}
+.ferr td:first-child{font-weight:700;color:var(--tx);width:330px}
+.ferr td:first-child code{display:block;font-family:"DejaVu Sans Mono",monospace;font-size:12.5px;font-weight:500;color:var(--mut);margin-top:2px}
+.ferr .grupo td{background:#F7F7F3;font-size:13px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;padding:7px 18px}
+.g-consulta td{color:var(--base)!important}.g-calcula td{color:var(--py)!important}.g-registra td{color:var(--trava)!important}
+.pill{display:inline-block;font-size:13.5px;font-weight:700;padding:3px 10px;border-radius:12px;margin:2px 4px 2px 0;
+  background:var(--base-bg);color:var(--base);border:1px solid var(--base-bd);white-space:nowrap}
+.pill.grava{background:var(--trava-bg);color:var(--trava);border-color:var(--trava-bd)}
+.bases{display:grid;grid-template-columns:repeat(7,1fr);gap:12px;margin-top:22px}
+.base{background:var(--card);border:2px solid var(--base-bd);border-top:6px solid var(--base);border-radius:14px;padding:12px 14px}
+.base b{display:block;font-size:16px;color:var(--base)}
+.base span{font-size:13.5px;color:var(--tx2);line-height:1.35;display:block;margin-top:4px}
+.base.grava{border-top-color:var(--trava);border-color:var(--trava-bd)}.base.grava b{color:var(--trava)}
+</style>
+</head>
+<body>
+
+<!-- ===================================================== SLIDE 1 -->
+<section class="slide" id="s1">
+  <div class="topo">
+    <div>
+      <div class="eyebrow">Vendedor IA · como funciona · 1 de 3</div>
+      <h1>De um chat com IA para uma vendedora<br>que consulta o sistema</h1>
+    </div>
+    <div class="marca"><img src="localiza-logo.png" alt=""><span>Fernanda · MVP</span></div>
+  </div>
+
+  <div class="duas">
+    <div class="painel">
+      <h2>Antes: chat simples <span class="tag ruim">a IA sabe tudo de cabeça</span></h2>
+      <div class="fluxo">
+        <div class="no cli">Cliente<small>mensagem</small></div><div class="seta">→</div>
+        <div class="no ia">GPT<small>só o que está no texto<br>de instrução</small></div><div class="seta">→</div>
+        <div class="no cli">Resposta<small>direto ao cliente</small></div>
+      </div>
+      <ul class="pontos x">
+        <li><b>Inventa ou arredonda preço</b> quando a conta fica difícil</li>
+        <li><b>Promete estoque</b> sem saber se existe</li>
+        <li><b>Pode dar desconto acima da alçada</b> ou contar a margem</li>
+        <li><b>Nada fica registrado</b>: proposta e transferência são só texto</li>
+        <li><b>Ninguém confere</b> a resposta antes de ela sair</li>
+      </ul>
+      <p class="nota-a">No MVP isto é o <b>modo A</b>: existe só como grupo de controle, para medir quanto o modo B ganha.</p>
+    </div>
+
+    <div class="painel">
+      <h2>Agora: Fernanda <span class="tag bom">a IA conversa, o sistema decide</span></h2>
+      <div class="fluxo">
+        <div class="no cli">Cliente<small>texto<br>ou áudio</small></div><div class="seta">→</div>
+        <div class="no ia">GPT<small>entende<br>e conversa</small></div><div class="seta dupla">⇄</div>
+        <div class="no py">Ferramentas<small>Python calcula<br>e decide</small></div><div class="seta">⇄</div>
+        <div class="no base">Bases<small>cadastro, preço,<br>estoque…</small></div><div class="seta">→</div>
+        <div class="no trava">Trava<small>confere<br>R$ e %</small></div><div class="seta">→</div>
+        <div class="no cli">Cliente</div>
+      </div>
+      <ul class="pontos v">
+        <li><b>Todo preço vem do sistema</b>: a IA pede o cálculo, não faz a conta</li>
+        <li><b>Desconto decidido por regra</b>: alçada do vendedor, gerente (só com contrapartida) ou negado</li>
+        <li><b>Estoque real</b> por modelo e cidade; proposta aceita <b>reserva</b> o carro</li>
+        <li><b>Tudo registrado</b>: proposta, quem decide, transferência com resumo</li>
+        <li><b>Trava antes de enviar</b> e auditoria de cada resposta (o que consultou, o que conferiu, custo)</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="principio">
+    <b>A IA <em>conversa</em>.<br>O sistema <em>decide</em> os números.</b>
+    <span>Preço, desconto, estoque e aprovação nunca dependem da “memória” do GPT. Ele só escolhe <b>quando</b> perguntar ao
+      sistema e <b>como</b> explicar a resposta ao cliente, no tom de uma vendedora de verdade.</span>
+  </div>
+  <div class="rodape"><span>Tudo fictício: clientes, preços, estoque e conversas.</span>
+    <span class="legenda"><span><i class="l-ia"></i>IA (GPT, via llm-gate)</span><span><i class="l-py"></i>Python (regras)</span><span><i class="l-base"></i>Bases</span><span><i class="l-trava"></i>Trava</span></span></div>
+</section>
+
+<!-- ===================================================== SLIDE 2 -->
+<section class="slide" id="s2">
+  <div class="topo">
+    <div>
+      <div class="eyebrow">Vendedor IA · como funciona · 2 de 3</div>
+      <h1>Uma mensagem por dentro</h1>
+      <p class="sub">O caminho de cada mensagem do cliente até a resposta da Fernanda: o que entra, quem decide em cada etapa e o que sai.</p>
+    </div>
+    <div class="marca"><img src="localiza-logo.png" alt=""><span>Fernanda · MVP</span></div>
+  </div>
+
+  <div class="canvas">
+    <svg width="1776" height="790" viewBox="0 0 1776 790">
+      <defs>
+        <marker id="m" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#7B7D72"/></marker>
+        <marker id="mi" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#5B45B0"/></marker>
+        <marker id="mp" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#00622D"/></marker>
+        <marker id="mt" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#8A5A00"/></marker>
+      </defs>
+      <!-- 1 -> 2 -->
+      <path d="M262 150 H312" stroke="#7B7D72" stroke-width="3" fill="none" marker-end="url(#m)"/>
+      <!-- 2 -> 3 -->
+      <path d="M612 150 H662" stroke="#7B7D72" stroke-width="3" fill="none" marker-end="url(#m)"/>
+      <!-- 3 <-> 4 (pede / devolve) -->
+      <path d="M840 320 V393" stroke="#5B45B0" stroke-width="3" fill="none" marker-end="url(#mi)"/>
+      <path d="M940 393 V320" stroke="#00622D" stroke-width="3" fill="none" marker-end="url(#mp)"/>
+      <!-- 4 <-> bases -->
+      <path d="M1022 500 H1072" stroke="#00622D" stroke-width="3" fill="none" marker-end="url(#mp)"/>
+      <path d="M1072 530 H1022" stroke="#2E3A46" stroke-width="3" fill="none" marker-end="url(#m)"/>
+      <!-- 3 -> 5 -->
+      <path d="M1022 120 H1290" stroke="#7B7D72" stroke-width="3" fill="none" marker-end="url(#m)"/>
+      <!-- 5 -> volta pro GPT (reescrever) -->
+      <path d="M1290 230 H1026" stroke="#8A5A00" stroke-width="3" fill="none" stroke-dasharray="8 6" marker-end="url(#mt)"/>
+      <!-- 5 -> 6 -->
+      <path d="M1640 360 V393" stroke="#7B7D72" stroke-width="3" fill="none" marker-end="url(#m)"/>
+    </svg>
+
+    <div class="rot" style="left:700px;top:344px">pede um dado</div>
+    <div class="rot" style="left:952px;top:344px">resultado real</div>
+    <div class="rot" style="left:1060px;top:90px">texto da resposta</div>
+    <div class="rot" style="left:1060px;top:240px;color:#8A5A00">reprovou: reescreva (1 vez)</div>
+
+    <!-- 1 Entrada -->
+    <div class="bloco b-cli" style="left:0;top:40px;width:262px;height:320px">
+      <div class="n">1</div><h3>Mensagem do cliente</h3><div class="quem">entrada</div>
+      <ul><li><b>Texto</b> do WhatsApp</li><li><b>Áudio</b> → vira texto (transcrição no llm-gate) e fica visível</li><li>Cliente já cadastrado: o atendimento é <b>receptivo</b></li></ul>
+    </div>
+
+    <!-- 2 Contexto -->
+    <div class="bloco b-py" style="left:312px;top:40px;width:300px;height:320px">
+      <div class="n">2</div><h3>Montar o contexto</h3><div class="quem">Python</div>
+      <ul><li><b>Instruções da Fernanda</b>: tom, regras, Challenger</li><li><b>Quem é o cliente</b> (pelo WhatsApp cadastrado)</li>
+        <li><b>Últimas 16 mensagens</b> da conversa</li><li><b>Consultas já feitas</b> e seus resultados reais</li><li>Cliente estratégico? → só transferir</li></ul>
+    </div>
+
+    <!-- 3 GPT -->
+    <div class="bloco b-ia" style="left:662px;top:40px;width:360px;height:280px">
+      <div class="n">3</div><h3>O GPT decide o próximo passo</h3><div class="quem">IA · llm-gate</div>
+      <p>Com o contexto, ele escolhe:</p>
+      <ul><li><b>Responder</b> ao cliente agora, ou</li><li><b>Pedir uma ferramenta</b> porque precisa de um dado (preço, estoque, cadastro, aprovação…)</li></ul>
+      <p style="margin-top:6px"><b>Até 8 consultas</b> por mensagem; a cada resultado, decide de novo.</p>
+    </div>
+
+    <!-- 4 Ferramentas -->
+    <div class="bloco b-py" style="left:662px;top:393px;width:360px;height:290px">
+      <div class="n">4</div><h3>A ferramenta calcula</h3><div class="quem">Python · regras de negócio</div>
+      <ul><li><b>9 ferramentas</b>: consultar, calcular, registrar</li><li>Faz a conta (tabela, volume, adicionais, prazo)</li>
+        <li>Decide o desconto: <b>vendedor</b>, <b>gerente</b> (só com contrapartida) ou <b>negado</b> + contraproposta</li><li>A IA nunca vê a tabela de margens</li></ul>
+    </div>
+
+    <!-- Bases -->
+    <div class="bloco b-base" style="left:1072px;top:393px;width:400px;height:290px">
+      <h3>Bases (SQLite, fictícias)</h3><div class="quem">lê e grava</div>
+      <div class="chips"><span class="chip">Clientes</span><span class="chip">Veículos e preços</span><span class="chip">Margens (2 níveis)</span>
+        <span class="chip">Adicionais</span><span class="chip">Estoque por cidade</span><span class="chip">Propostas</span><span class="chip">Transferências</span><span class="chip">Mensagens + auditoria</span></div>
+      <p>Proposta aceita <b>reserva</b> o estoque na hora; a próxima conversa já vê o estoque menor.</p>
+    </div>
+
+    <!-- 5 Trava -->
+    <div class="bloco b-trava" style="left:1290px;top:40px;width:486px;height:320px">
+      <div class="n">5</div><h3>A trava confere antes de enviar</h3><div class="quem">Python · validador</div>
+      <ul><li>Cada <b>R$</b> e cada <b>%</b> saiu de uma ferramenta?</li><li>Falou de <b>margem</b> ou de limite interno?</li>
+        <li>Disse “proposta registrada” ou “vou transferir” <b>sem ter registrado</b>?</li><li>Mostrou as instruções internas?</li></ul>
+      <p><b>Passou</b> → envia. <b>Reprovou</b> → o GPT reescreve uma vez. <b>Reprovou de novo</b> → vai uma mensagem segura (“deixa eu confirmar no sistema…”).</p>
+    </div>
+
+    <!-- 6 Saída -->
+    <div class="bloco b-cli" style="left:1500px;top:393px;width:276px;height:290px">
+      <div class="n">6</div><h3>Resposta + registro</h3><div class="quem">saída</div>
+      <ul><li><b>1 a 3 balões</b> curtos, estilo WhatsApp</li><li><b>Auditoria</b> gravada: consultas, checagens, tokens e custo</li><li>Clique na resposta no Simulador para ver tudo</li></ul>
+    </div>
+
+    <div class="excecoes" style="left:0;top:712px">
+      <div class="exc"><b>Gate fora do ar?</b> Mensagem de contingência: “meu sistema travou, te retorno em até 1 dia útil”.</div>
+      <div class="exc"><b>Pediu humano, suporte, reclamação ou cliente estratégico?</b> Transferência com resumo para o time.</div>
+      <div class="exc" style="width:520px"><b>Fim da conversa:</b> proposta registrada, transferência ou sem acordo. No Laboratório, outra IA faz o papel do cliente.</div>
+    </div>
+  </div>
+
+  <div class="rodape"><span>Este é o modo B (oficial). O modo A recebe os dados no texto e responde direto, sem ferramentas; a trava só marca o erro, não impede (serve para comparação).</span>
+    <span class="legenda"><span><i class="l-ia"></i>IA</span><span><i class="l-py"></i>Python</span><span><i class="l-base"></i>Bases</span><span><i class="l-trava"></i>Trava</span></span></div>
+</section>
+
+<!-- ===================================================== SLIDE 3 -->
+<section class="slide" id="s3">
+  <div class="topo">
+    <div>
+      <div class="eyebrow">Vendedor IA · como funciona · 3 de 3</div>
+      <h1>Quando e por que ela consulta cada base</h1>
+    </div>
+    <div class="marca"><img src="localiza-logo.png" alt=""><span>Fernanda · MVP</span></div>
+  </div>
+
+  <table class="ferr">
+    <tr><th>Ferramenta (o que ela pede)</th><th>Quando usa</th><th>Por quê</th><th>Base</th></tr>
+    <tr class="grupo g-consulta"><td colspan="4">Consultar · só lê</td></tr>
+    <tr><td>Consultar o cliente<code>consultar_cliente</code></td><td>No início, antes de ofertar qualquer coisa</td>
+      <td>Saber o uso atual (diária ou mensal, dias/mês, km), a cidade e se é estratégico</td><td><span class="pill">Clientes</span></td></tr>
+    <tr><td>Identificar o cliente<code>identificar_cliente</code></td><td>Cliente se apresenta por CNPJ ou código</td>
+      <td>Confirmar que é um cliente cadastrado</td><td><span class="pill">Clientes</span></td></tr>
+    <tr><td>Consultar o catálogo<code>consultar_catalogo</code></td><td>Cliente pergunta modelo, preço de tabela ou disponibilidade</td>
+      <td>Preço e estoque reais, por modelo e cidade</td><td><span class="pill">Veículos e preços</span><span class="pill">Estoque</span></td></tr>
+    <tr class="grupo g-calcula"><td colspan="4">Calcular · o Python faz a conta</td></tr>
+    <tr><td>Comparar diária × mensal<code>comparar_diaria_mensal</code></td><td>Cliente usa diária muitos dias por mês</td>
+      <td>Challenger com número: quanto ele economiza no mensal (ou a diária é melhor)</td><td><span class="pill">Veículos e preços</span></td></tr>
+    <tr><td>Comparar elétrico<code>comparar_eletrico</code></td><td>Cliente pergunta do Dolphin</td>
+      <td>Dizer com honestidade se compensa pelo km rodado (aluguel + energia/combustível)</td><td><span class="pill">Veículos e preços</span></td></tr>
+    <tr><td>Avaliar a proposta<code>avaliar_proposta</code></td><td><b>Sempre</b> antes de falar preço final ou desconto</td>
+      <td>Calcula volume e adicionais e decide o desconto (vendedor, gerente com contrapartida ou negado + contraproposta)</td>
+      <td><span class="pill">Veículos e preços</span><span class="pill">Margens</span><span class="pill">Adicionais</span><span class="pill">Estoque</span></td></tr>
+    <tr class="grupo g-registra"><td colspan="4">Registrar · grava no sistema</td></tr>
+    <tr><td>Registrar a qualificação<code>registrar_qualificacao</code></td><td>Assim que descobre quem decide</td>
+      <td>Decisor, outros envolvidos e prazo da decisão vão para o briefing</td><td><span class="pill grava">Conversa</span></td></tr>
+    <tr><td>Registrar a proposta<code>registrar_proposta</code></td><td>Só depois do <b>aceite explícito</b> do cliente</td>
+      <td>Grava a proposta aprovada e reserva os carros no estoque</td><td><span class="pill grava">Propostas</span><span class="pill grava">Estoque</span></td></tr>
+    <tr><td>Transferir para humano<code>criar_handoff</code></td><td>Pediu humano, suporte, reclamação ou cliente estratégico</td>
+      <td>O time recebe um resumo completo e o cliente não repete nada</td><td><span class="pill grava">Transferências</span></td></tr>
+  </table>
+
+  <div class="bases">
+    <div class="base"><b>Clientes</b><span>12 empresas fictícias: uso, cidade, porte, estratégico ou não</span></div>
+    <div class="base"><b>Veículos e preços</b><span>Onix, Polo, Creta e Dolphin: diária e mensal 12/24/36</span></div>
+    <div class="base"><b>Margens</b><span>2 níveis: vendedor e gerente. Só o Python lê</span></div>
+    <div class="base"><b>Adicionais</b><span>Proteção total, telemetria e km extra</span></div>
+    <div class="base"><b>Estoque</b><span>Por modelo e cidade, com prazo de entrega se faltar</span></div>
+    <div class="base grava"><b>Propostas e transferências</b><span>Criadas pelas ferramentas de registro</span></div>
+    <div class="base grava"><b>Mensagens e auditoria</b><span>Toda resposta: o que consultou, conferiu e custou</span></div>
+  </div>
+  <div class="rodape"><span>A IA escolhe <b>quando</b> chamar cada ferramenta; o resultado e a regra são sempre do Python.</span>
+    <span class="legenda"><span><i class="l-base"></i>Lê</span><span><i class="l-trava"></i>Grava</span></span></div>
+</section>
+</body>
+</html>
