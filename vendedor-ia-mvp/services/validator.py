@@ -53,7 +53,37 @@ def margens_reveladas(texto: str, margens: set, liberados: set) -> list[str]:
     return achados
 
 
-def validar(texto: str, saidas: list, houve_proposta: bool, houve_handoff: bool, margens: set, liberados: set) -> list[str]:
+_CHEFE = r"(?:gerente|gestor|gestora|diretor|diretora|diretoria|supervisor|supervisora|coordenador|coordenadora|chefe|lideranca)"
+_NAO_E_AFIRMACAO = re.compile(r"\b(?:nao|nem|vou|vamos|preciso|precisa|precisaria|precisamos|tem que|teria que|pode|poderia|seria|sera|"
+                              r"se|caso|para|pra|pedir|levar|consultar|ver|verificar|tentar|aguardar|esperar)\b")
+_AFIRMACOES = [
+    re.compile(_CHEFE + r"\b[^.!?\n]{0,40}?\b(?:aprovou|liberou|autorizou|topou|aceitou|deu (?:o )?ok)\b"),
+    re.compile(r"\b(?:aprovad[oa]s?|liberad[oa]s?|autorizad[oa]s?)\b[^.!?\n]{0,25}?\b(?:pel[oa]|com (?:[oa] )?)\s*(?:meu |minha |nosso |nossa )?" + _CHEFE),
+    re.compile(r"\bconsegui(?:mos)?\b[^.!?\n]{0,40}?\b(?:com|junto (?:a|ao|com))\b\s*(?:[oa] )?(?:meu |minha |nosso |nossa )?" + _CHEFE),
+]
+
+
+def afirma_aprovacao_do_gerente(texto: str) -> bool:
+    """A mensagem AFIRMA que um gerente/gestor já aprovou? Futuro, condição e negação ("vou levar ao gerente", "precisa ser
+    aprovado pelo gestor", "ele não aprovou") não contam."""
+    t = norm(texto)
+    for rx in _AFIRMACOES:
+        for m in rx.finditer(t):
+            antes = t[max(0, m.start() - 30):m.start()]
+            dentro = m.group(0)
+            if _NAO_E_AFIRMACAO.search(dentro) or re.search(r"\b(?:vou|vamos|preciso|precisa|tem que|pode|seria|sera|se|caso|para|pra)\b[^.!?\n]*$", antes):
+                continue
+            return True
+    return False
+
+
+def aprovacao_do_gerente_nas_saidas(saidas: list) -> bool:
+    """Alguma ferramenta desta conversa devolveu aprovação do gerente (simulado)?"""
+    return any(isinstance(s, dict) and (s.get("status") == "APROVADO_GERENTE" or s.get("status_motor") == "APROVADO_GERENTE") for s in saidas)
+
+
+def validar(texto: str, saidas: list, houve_proposta: bool, houve_handoff: bool, margens: set, liberados: set,
+            aprovou_gerente: bool | None = None) -> list[str]:
     money, pct = permitidos(saidas)
     v: list[str] = []
     for m in re.findall(r"R\$\s*([\d.]+(?:,\d{1,2})?)", texto):
@@ -70,6 +100,8 @@ def validar(texto: str, saidas: list, houve_proposta: bool, houve_handoff: bool,
         v.append("PROPOSTA_OU_RESERVA_SEM_REGISTRO")
     if not houve_handoff and re.search(r"\bprotocolo\b|\bencaminhei\b|\babri\s+(?:um\s+)?chamado", t):
         v.append("HANDOFF_SEM_REGISTRO")
+    if afirma_aprovacao_do_gerente(texto) and not (aprovacao_do_gerente_nas_saidas(saidas) if aprovou_gerente is None else aprovou_gerente):
+        v.append("APROVACAO_GERENTE_SEM_REGISTRO")
     if re.search(r"\b(system prompt|meu prompt|instrucoes internas)\b", t) or any(n in texto for n in NOMES_FERRAMENTAS):
         v.append("VAZOU_INSTRUCOES")
     if not texto.strip():

@@ -62,7 +62,9 @@ loop ou no limite de turnos (12; **24 nas conversas longas**). Ao final, o siste
 comportamento (✅/❌) e o avaliador do Treino dá a nota C12 (opcional). Cada conversa devolve o estoque que reservou.
 
 - **Tipos prontos:** rodada completa (12 clientes × 8 comportamentos × A e B = 192), críticos 5× (30), conversas longas
-  de 24 turnos (12) e red team (20). Ou personalizada.
+  de 24 turnos (12), red team (20) e negociação de desconto (36). Ou personalizada.
+- **Desconto e gerente:** checagens de consulta à alçada, alternativa depois do "não", aprovação do gerente inventada
+  (também barrada pela trava) e preço segurado sem contrapartida; bloco **Concessões e alçada** no relatório.
 - **2 conversas em paralelo** por padrão (dá para usar 1). Rodadas podem ser canceladas e retomadas; se o servidor cair,
   a rodada fica "Interrompida" e é retomada do ponto em que parou.
 - Antes de iniciar, a tela mostra custo e tempo estimados. Relatório: A × B, por comportamento, conversas longas,

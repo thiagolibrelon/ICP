@@ -161,7 +161,11 @@ ninguém digitando. É o executor em lote que faltava para as ~190 conversas por
   conversa devolve o estoque reservado, para todas começarem do mesmo estoque; cancelar, retomar e recuperação depois de
   queda do servidor; estimativa de custo e tempo antes de iniciar; exportação CSV.
 - **Tipos prontos:** rodada completa (192 conversas, ~US$ 12 e ~2 h com 2 em paralelo), críticos 5× (30), conversas
-  longas de 24 turnos (12, ~US$ 2) e red team (20). A primeira rodada real calibra essas estimativas.
+  longas de 24 turnos (12, ~US$ 2), red team (20) e negociação de desconto (36).
+- **Desconto, alçada e gerente:** a trava barra "o gerente aprovou" quando o sistema não aprovou; o Laboratório confere
+  se ela consultou a alçada antes de responder ao desconto, se ofereceu alternativa depois do "não" e se segurou o preço
+  sem contrapartida; o relatório tem o bloco **Concessões e alçada** (A × B). O gerente continua simulado (regra
+  instantânea); o gerente real, com fila de aprovação, fica para a fase de produção. A primeira rodada real calibra essas estimativas.
 - **Ponto de atenção para as conversas longas:** a Fernanda recebe só as últimas 16 mensagens (+ as últimas consultas).
   Numa conversa de 24 turnos, o começo sai da memória dela. Se o J02 mostrar esquecimento, a correção é na memória da
   conversa (resumo do que já foi dito), não no prompt. Guia completo de diagnóstico: `LABORATORIO.md` §6.

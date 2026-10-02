@@ -137,7 +137,9 @@
         {"id": "EVO-03", "titulo": "Assumir conversa", "trilha": "Vendedor IA", "descricao": "O humano entra na conversa em andamento.", "fonte": "ONDE_ESTAMOS §5"},
         {"id": "EVO-04", "titulo": "Revisão amostral semanal", "trilha": "Vendedor IA", "descricao": "", "fonte": "ONDE_ESTAMOS §5"},
         {"id": "EVO-05", "titulo": "Camada 3: exemplos reais (few-shot) e RAG", "trilha": "Vendedor IA", "descricao": "Trechos anonimizados dos melhores vendedores. Vem depois do playbook (S3-01).", "fonte": "ONDE_ESTAMOS §5"},
-        {"id": "EVO-06", "titulo": "Camada 4: fine-tuning", "trilha": "Vendedor IA", "descricao": "Só se as camadas 1 a 3 pararem de melhorar e o gate permitir.", "fonte": "ONDE_ESTAMOS §5"}
+        {"id": "EVO-06", "titulo": "Camada 4: fine-tuning", "trilha": "Vendedor IA", "descricao": "Só se as camadas 1 a 3 pararem de melhorar e o gate permitir.", "fonte": "ONDE_ESTAMOS §5"},
+        {"id": "EVO-07", "titulo": "Gerente real: fila de aprovação", "trilha": "Vendedor IA", "descricao": "Hoje o gerente é uma regra instantânea. Em produção: pedido acima da alçada vai para uma fila no painel, o gerente aprova ou nega, e a Fernanda avisa o cliente (\"levei ao meu gestor, te retorno até X\"). Ligado ao Gate 4.", "fonte": "Conversa de 02/10/2026"},
+        {"id": "EVO-08", "titulo": "Memória das conversas longas", "trilha": "Vendedor IA", "descricao": "A Fernanda vê só as últimas 16 mensagens. Se o teste de 24 turnos mostrar esquecimento, passar um resumo do que já foi dito (uso, decisor, objeções) junto com o histórico.", "fonte": "LABORATORIO.md §6"}
       ]
     }
   ]

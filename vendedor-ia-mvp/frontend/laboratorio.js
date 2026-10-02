@@ -23,7 +23,7 @@ async function init() {
   $('preset').innerHTML = cat.presets.map(p => `<option value="${p.id}">${esc(p.titulo)} — ${p.execucoes} conversas</option>`).join('')
     + '<option value="">Personalizada (escolher clientes e comportamentos)</option>';
   $('cli').innerHTML = cat.personas.map(p => `<label><input type="checkbox" value="${p.cliente_id}">${p.cliente_id} · ${esc(p.razao_social)}</label>`).join('');
-  const grupos = {base: 'Comportamentos', longa: 'Conversa longa', red_team: 'Red team (ataques)'};
+  const grupos = {base: 'Comportamentos', negociacao: 'Negociação', longa: 'Conversa longa', red_team: 'Red team (ataques)'};
   $('comp').innerHTML = cat.comportamentos.map(c => `<label title="${esc(c.instrucao)}"><input type="checkbox" value="${c.id}">${esc(c.titulo)}${c.grupo === 'base' ? '' : `<span class="badge"> · ${grupos[c.grupo]}</span>`}</label>`).join('');
   document.querySelectorAll('.lab-form select, .lab-form input').forEach(el => el.addEventListener('change', estimar));
   document.querySelectorAll('[data-todos],[data-nenhum]').forEach(a => a.onclick = ev => {
@@ -120,6 +120,7 @@ function renderRodada(r) {
       <tr><td>Longas</td><td>${s.longas.n}</td>${bloco(s.longas)}</tr></table>` : ''}
     ${comps.length > 1 ? `<h2>Por comportamento</h2><table><tr><th>Comportamento</th><th>A aprov.</th><th>A nota</th><th>A turnos</th><th>B aprov.</th><th>B nota</th><th>B turnos</th></tr>
       ${comps.map(([c, v]) => `<tr><td>${esc((cat.comportamentos.find(x => x.id === c) || {}).titulo || c)}</td>${bloco(v.A)}${bloco(v.B)}</tr>`).join('')}</table>` : ''}
+    ${concessoes(s.concessoes)}
     ${Object.keys(s.fim).length ? `<h2>Como as conversas terminaram</h2><div class="chips">${Object.entries(s.fim).map(([f, n]) => `<span class="chip">${esc(FIM[f] || f)} <b>${n}</b></span>`).join('')}</div>` : ''}
     ${s.falhas.length ? `<h2>Checagens reprovadas</h2><table class="falhas"><tr><th>Execução</th><th>Modo</th><th>Checagem</th><th>Detalhe</th></tr>
       ${s.falhas.map(f => `<tr class="clicavel" data-exec="${f.exec_id}"><td>${f.cliente_id} · ${esc(f.comportamento)}</td><td>${f.modo}</td><td class="bad">${esc(f.check)}</td><td>${esc(f.detalhe)}</td></tr>`).join('')}</table>` : ''}
@@ -138,6 +139,37 @@ function renderRodada(r) {
     try { await post(`/api/lab/rodadas/${r.rodada_id}/retomar`); } catch (err) { alert(err.message); }
     abrirRodada(r.rodada_id);
   };
+}
+
+function concessoes(c) {
+  if (!c || (!c.A && !c.B)) return '';
+  const linhas = [
+    ['Cliente pediu desconto (conversas)', 'pediram_desconto'],
+    ['Consultas de desconto à alçada', 'consultas_de_desconto', true],
+    ['↳ aprovadas pela vendedora', 'aprovadas_pela_vendedora', true],
+    ['↳ aprovadas pelo gerente (com contrapartida)', 'aprovadas_pelo_gerente', true],
+    ['↳ negadas (com contraproposta)', 'negadas', true],
+    ['Propostas registradas', 'propostas'], ['↳ com desconto', 'propostas_com_desconto'],
+    ['Desconto médio concedido', 'desconto_medio_concedido', false, v => v == null ? '—' : pct(v)],
+    ['Acima da alçada da vendedora, com contrapartida', 'acima_da_alcada_com_contrapartida'],
+    ['Acima da alçada da vendedora, sem contrapartida', 'acima_da_alcada_sem_contrapartida', false, null, 'ruim'],
+    ['Disse que o gerente aprovou sem aprovação', 'aprovacao_inventada', false, null, 'ruim'],
+  ];
+  const cel = (m, [, k, soB, fmt, tipo]) => {
+    if (!c[m]) return '<td>—</td>';
+    const v = c[m][k];
+    if (v == null) return `<td class="badge">${soB ? 'sem ferramentas' : '—'}</td>`;
+    const txt = fmt ? fmt(v) : v;
+    if (tipo === 'ruim' && v > 0) {
+      const nota = k === 'aprovacao_inventada' && m === 'B' ? ' <span class="badge">barradas pela trava</span>' : '';
+      return `<td class="${nota ? 'warn' : 'bad'}">${txt}${nota}</td>`;
+    }
+    return `<td>${txt}</td>`;
+  };
+  return `<h2>Concessões e alçada</h2>
+    <table class="concessoes"><tr><th></th><th>A · LLM pura</th><th>B · com ferramentas</th></tr>
+      ${linhas.map(l => `<tr><td>${l[0]}</td>${cel('A', l)}${cel('B', l)}</tr>`).join('')}</table>
+    <div class="badge">No B, quem decide o desconto é a regra (vendedora, gerente simulado com contrapartida ou negado). No A, o próprio GPT decide.</div>`;
 }
 
 async function abrirExecucao(id, silencioso) {

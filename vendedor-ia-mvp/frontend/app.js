@@ -152,7 +152,8 @@ $('btn-comp').onclick = async () => {
   const r = await api('/api/comparativo'), A = r.A_llm_pura, B = r.B_llm_com_ferramentas;
   const linhas = [['Conversas', 'conversas'], ['Com proposta %', 'com_proposta_pct'], ['Problema entregue ao cliente %', 'com_problema_entregue_ao_cliente_pct'],
     ['Valor não verificado %', 'valor_nao_verificado_pct'], ['Margem revelada %', 'margem_revelada_pct'], ['Proposta fora da regra %', 'proposta_fora_da_regra_pct'],
-    ['Concessão sem contrapartida %', 'concessao_sem_contrapartida_pct'], ['Além do estoque %', 'alem_do_estoque_pct'],
+    ['Concessão sem contrapartida %', 'concessao_sem_contrapartida_pct'], ['Disse que o gerente aprovou sem aprovação %', 'aprovacao_gerente_inventada_pct'],
+    ['Além do estoque %', 'alem_do_estoque_pct'],
     ['Diagnóstico antes do preço %', 'diagnostico_antes_do_preco_pct'], ['Próximo passo %', 'proximo_passo_definido_pct'],
     ['Qualificou decisor %', 'qualificou_pct'], ['Vendeu adicional %', 'vendeu_adicional_pct'], ['Tier A violado %', 'tier_a_violado_pct'],
     ['Com tique de robô %', 'com_tique_de_robo_pct'], ['Turnos médios', 'media_turnos'], ['Tokens/conversa', 'tokens_por_conversa'], ['Custo gate/conversa', 'custo_gate_por_conversa']];

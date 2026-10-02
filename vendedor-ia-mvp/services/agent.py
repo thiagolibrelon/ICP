@@ -351,7 +351,9 @@ def turno_a(ctx: dict, historico: list[dict], texto_cliente: str) -> dict:
         m["ferramenta"] == "registrar_proposta" for m in ctx["memoria"])
     houve_ho = any(m["ferramenta"] == "criar_handoff" for m in ctx["memoria"])
     # % de desconto é decisão do próprio modelo no modo A: a regra é checada na proposta registrada, não no texto
-    marcas += [v for v in validator.validar(texto, extras, houve_prop, houve_ho, margens_gerente(), set())
+    aprovou_gerente = any(m["ferramenta"] == "registrar_proposta" and m["saida"].get("status_motor") == "APROVADO_GERENTE"
+                          for m in ctx["memoria"])
+    marcas += [v for v in validator.validar(texto, extras, houve_prop, houve_ho, margens_gerente(), set(), aprovou_gerente)
                if not v.startswith("PERCENTUAL_NAO_VERIFICADO")]
     return {"texto": texto or conteudo, "chamadas": acoes, "violacoes": marcas, "resultado_validacao": "marcado" if marcas else "ok",
             "modo_ferramentas": "sem_ferramentas", "tiques": validator.tiques_de_robo(texto or conteudo), "tokens_entrada": r["tokens_entrada"] or 0, "tokens_saida": r["tokens_saida"] or 0,
@@ -391,4 +393,4 @@ def _registrar_a(ctx: dict, p: dict) -> tuple[dict, list[str]]:
         calc["preco_unitario_final"] = float(informado)
     out = catalog._gravar(ctx["conversation_id"], ctx["cliente_id"], "A", calc,
                           checagem={"valida": not marcas, "marcas": marcas, "status_motor": correto["status"]})
-    return out, marcas
+    return {**out, "status_motor": correto["status"]}, marcas
