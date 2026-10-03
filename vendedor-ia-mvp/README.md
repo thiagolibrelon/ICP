@@ -79,8 +79,8 @@ Tela ligada pelas abas do topo. Três abas:
 - **Roadmap** — o plano completo (o que já foi construído, os 6 sprints do Q4, pedidos, gates e
   evoluções). Cada item tem status (não iniciado, em andamento, concluído, bloqueado), notas com data e, se quiser, itens
   próprios. O topo mostra o percentual, "onde estou agora" e o que ainda falta; há filtro "só o que falta".
-- **Como funciona** — 3 imagens da arquitetura da Fernanda (chat × agente, uma mensagem por dentro, ferramentas e
-  bases), servidas de `docs/como_funciona/` (editável em `arquitetura.html`).
+- **Como funciona** — 4 imagens da arquitetura da Fernanda (chat × agente, uma mensagem por dentro, ferramentas e
+  bases, proteção contra ataques), servidas de `docs/como_funciona/` (editável em `arquitetura.html`).
 - **Glossário** — todos os termos do projeto (negócio, simulador, treino, medição, governança e ICP), com busca.
 - **Como utilizar** — o `ROTEIRO_DE_TESTES.md`, lido do arquivo (sem cópia: editou o arquivo, a aba muda).
 - **Laboratório** — o `LABORATORIO.md`: como usar a aba Laboratório, como ler o relatório e o que fazer quando der errado

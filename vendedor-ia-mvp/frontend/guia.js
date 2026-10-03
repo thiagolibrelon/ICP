@@ -64,9 +64,10 @@ const IMAGENS = [
   ['1_chat_x_fernanda.png', 'De um chat com IA para uma vendedora que consulta o sistema', 'Por que mudou: a IA conversa, o sistema decide preço, desconto, estoque e aprovação.'],
   ['2_uma_mensagem_por_dentro.png', 'Uma mensagem por dentro', 'O caminho de cada mensagem: entrada, contexto, decisão do GPT, ferramentas e bases, trava e saída.'],
   ['3_ferramentas_e_bases.png', 'Quando e por que ela consulta cada base', 'As 9 ferramentas (consultar, calcular, registrar) e as bases que cada uma lê ou grava.'],
+  ['4_protecao_contra_ataques.png', 'Como ela se protege de ataques', 'Prompt injection: as 4 camadas de defesa, o que já é testado no red team e as brechas conhecidas com o plano.'],
 ];
 async function carregarComoFunciona() {
-  $('painel-como-funciona').innerHTML = `<p class="nota">Como a Fernanda funciona, em 3 imagens prontas para slide (1920×1080). Clique para abrir em tamanho real.
+  $('painel-como-funciona').innerHTML = `<p class="nota">Como a Fernanda funciona, em 4 imagens prontas para slide (1920×1080). Clique para abrir em tamanho real.
     Arquivo editável: <code>docs/como_funciona/arquitetura.html</code>.</p>` + IMAGENS.map(([arq, titulo, txt], i) => `
     <figure class="figura"><figcaption><b>${i + 1}. ${esc(titulo)}</b><span>${esc(txt)}</span>
       <a href="/como-funciona/${arq}" download><button>${icon('download')} Baixar</button></a></figcaption>
