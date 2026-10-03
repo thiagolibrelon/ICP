@@ -116,6 +116,6 @@ tr.clicavel{cursor:pointer}tr.clicavel:hover td{background:var(--s2)}tr.sel td{b
 .lab-top>span:first-child{font-weight:700}
 .rod .lab-top>span:first-child{font-size:12.5px}
 .execs th,.execs td,.falhas th,.falhas td{text-align:left}
-.execs td:nth-child(5),.execs td:nth-child(8),.execs th:nth-child(5),.execs th:nth-child(8){text-align:right}
+.execs td:last-child,.execs th:last-child{text-align:right}
 .lab-form .checks .badge{font-size:11px}
 @media(max-width:1100px){main.lab{grid-template-columns:1fr}.tabs-bar{overflow-x:auto}.tabs-bar .tab{white-space:nowrap}}

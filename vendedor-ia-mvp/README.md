@@ -62,7 +62,9 @@ loop ou no limite de turnos (12; **24 nas conversas longas**). Ao final, o siste
 comportamento (✅/❌) e o avaliador do Treino dá a nota C12 (opcional). Cada conversa devolve o estoque que reservou.
 
 - **Tipos prontos:** rodada completa (12 clientes × 8 comportamentos × A e B = 192), críticos 5× (30), conversas longas
-  de 24 turnos (12), red team (20) e negociação de desconto (36). Ou personalizada.
+  de 24 turnos (12), red team (20), negociação de desconto (36) e teste de abertura (120). Ou personalizada.
+- **Aberturas:** a Fernanda tem duas formas de começar a conversa (1 = atual; 2 = SPIN com o cadastro como hipótese).
+  Seletor no Simulador, opção na rodada personalizada e bloco Abertura 1 × 2 no relatório; padrão em `FERNANDA_ABERTURA`.
 - **Desconto e gerente:** checagens de consulta à alçada, alternativa depois do "não", aprovação do gerente inventada
   (também barrada pela trava) e preço segurado sem contrapartida; bloco **Concessões e alçada** no relatório.
 - **2 conversas em paralelo** por padrão (dá para usar 1). Rodadas podem ser canceladas e retomadas; se o servidor cair,

@@ -17,7 +17,7 @@ from pathlib import Path
 
 from database import db
 from database.personas import PERSONAS
-from services import catalog, conversations, evaluation, llm_client, training, validator
+from services import agent, catalog, conversations, evaluation, llm_client, training, validator
 from services.util import norm, parse_brl
 
 MAX_TURNOS_PADRAO = 12
@@ -54,10 +54,11 @@ PEDEM_DESCONTO = {"DESCONTO_ACIMA", "CONTRAPARTIDA_ACEITA", "CONTRAPARTIDA_RECUS
 TODAS = list(PERSONAS)
 
 
-def _itens(personas, comportamentos, modos, repeticoes=1, max_turnos=MAX_TURNOS_PADRAO):
-    return [{"cliente_id": p, "comportamento": c, "modo": m, "repeticao": r,
+def _itens(personas, comportamentos, modos, repeticoes=1, max_turnos=MAX_TURNOS_PADRAO, aberturas=None):
+    aberturas = aberturas or [agent.abertura_padrao()]
+    return [{"cliente_id": p, "comportamento": c, "modo": m, "repeticao": r, "abertura": a,
              "max_turnos": MAX_TURNOS_LONGA if c == "LONGA" else max_turnos}
-            for p in personas for c in comportamentos for m in modos for r in range(1, repeticoes + 1)]
+            for p in personas for c in comportamentos for m in modos for a in aberturas for r in range(1, repeticoes + 1)]
 
 
 PRESETS = {
@@ -67,6 +68,9 @@ PRESETS = {
                                             ("C07", "RT_MARGEM"), ("C02", "DESCONTO_ACIMA")) for i in _itens([p], [c], ["B"], 5)]),
     "longas_24": ("Conversas longas (24 turnos, A e B)", lambda: _itens(["C01", "C04", "C06", "C07", "C09", "C11"], ["LONGA"], ["A", "B"])),
     "red_team": ("Red team (5 ataques × 4 clientes, modo B)", lambda: _itens(["C01", "C02", "C06", "C07"], RED_TEAM, ["B"])),
+    "teste_abertura": ("Teste de abertura (abertura 1 × 2, 10 clientes, modo B, 3 repetições)",
+                       lambda: _itens([c for c in TODAS if c not in ("C10", "C12")], ["COLABORATIVO", "RESISTENTE"], ["B"], 3,
+                                      aberturas=["1", "2"])),
     "negociacao": ("Negociação de desconto (alçada, gerente e contrapartida, A e B)",
                    lambda: _itens(["C01", "C02", "C03", "C06", "C07", "C11"], NEGOCIACAO, ["A", "B"])),
 }
@@ -85,6 +89,11 @@ def garantir_tabelas() -> None:
     conn = db.connect()
     try:
         conn.executescript(sql[sql.index("-- LABORATÓRIO"):])
+        # bancos criados antes das aberturas: acrescenta as colunas novas sem apagar nada
+        cols = {r[1] for r in conn.execute("PRAGMA table_info(lab_execucoes)")}
+        for col, tipo in (("abertura", "TEXT DEFAULT '1'"), ("revelados", "INTEGER")):
+            if col not in cols:
+                conn.execute(f"ALTER TABLE lab_execucoes ADD COLUMN {col} {tipo}")
         conn.commit()
     finally:
         conn.close()
@@ -96,7 +105,8 @@ def catalogo() -> dict:
             "comportamentos": [{"id": k, "titulo": v[0], "instrucao": v[1], "grupo": "base" if k in BASE else "red_team" if k in RED_TEAM else "negociacao" if k in NEGOCIACAO else "longa"}
                                for k, v in COMPORTAMENTOS.items()],
             "presets": [{"id": k, "titulo": v[0], "execucoes": len(v[1]())} for k, v in PRESETS.items()],
-            "workers": WORKERS_PADRAO, "max_turnos_padrao": MAX_TURNOS_PADRAO, "max_turnos_longa": MAX_TURNOS_LONGA}
+            "workers": WORKERS_PADRAO, "max_turnos_padrao": MAX_TURNOS_PADRAO, "max_turnos_longa": MAX_TURNOS_LONGA,
+            "aberturas": [{"id": k, "titulo": v} for k, v in agent.NOMES_ABERTURA.items()], "abertura_padrao": agent.abertura_padrao()}
 
 
 def estimar(itens: list[dict], workers: int = WORKERS_PADRAO, avaliar_ia: bool = True) -> dict:
@@ -110,7 +120,7 @@ def estimar(itens: list[dict], workers: int = WORKERS_PADRAO, avaliar_ia: bool =
 # ------------------------------------------------------------------ criar / controlar rodadas
 def criar_rodada(preset: str | None = None, personas: list | None = None, comportamentos: list | None = None, modos: list | None = None,
                  repeticoes: int = 1, max_turnos: int = MAX_TURNOS_PADRAO, dificuldade: str = "medio", avaliar_ia: bool = True,
-                 nome: str | None = None, workers: int = WORKERS_PADRAO, iniciar: bool = True) -> dict:
+                 nome: str | None = None, workers: int = WORKERS_PADRAO, iniciar: bool = True, aberturas: list | None = None) -> dict:
     garantir_tabelas()
     if preset:
         if preset not in PRESETS:
@@ -122,7 +132,9 @@ def criar_rodada(preset: str | None = None, personas: list | None = None, compor
         modos = [m for m in (modos or []) if m in ("A", "B")]
         if not (personas and comportamentos and modos):
             raise ValueError("Escolha ao menos 1 cliente, 1 comportamento e 1 modo")
-        itens, nome = _itens(personas, comportamentos, modos, max(1, int(repeticoes)), max(2, min(int(max_turnos), 40))), nome or "Rodada personalizada"
+        aberturas = [a for a in (aberturas or []) if a in agent.ABERTURAS] or None
+        itens, nome = (_itens(personas, comportamentos, modos, max(1, int(repeticoes)), max(2, min(int(max_turnos), 40)), aberturas),
+                       nome or "Rodada personalizada")
     if dificuldade not in ("facil", "medio", "dificil"):
         raise ValueError("Dificuldade inválida")
     workers = max(1, min(int(workers), 4))
@@ -133,9 +145,10 @@ def criar_rodada(preset: str | None = None, personas: list | None = None, compor
     conn = db.connect()
     try:
         with conn:
-            conn.executemany("INSERT INTO lab_execucoes (exec_id, rodada_id, ordem, cliente_id, comportamento, modo, repeticao, max_turnos, status) "
-                             "VALUES (?,?,?,?,?,?,?,?, 'PENDENTE')",
-                             [(f"{rid}-{n:03d}", rid, n, i["cliente_id"], i["comportamento"], i["modo"], i["repeticao"], i["max_turnos"])
+            conn.executemany("INSERT INTO lab_execucoes (exec_id, rodada_id, ordem, cliente_id, comportamento, modo, repeticao, max_turnos, "
+                             "abertura, status) VALUES (?,?,?,?,?,?,?,?,?, 'PENDENTE')",
+                             [(f"{rid}-{n:03d}", rid, n, i["cliente_id"], i["comportamento"], i["modo"], i["repeticao"], i["max_turnos"],
+                               i["abertura"])
                               for n, i in enumerate(itens, 1)])
     finally:
         conn.close()
@@ -221,7 +234,7 @@ def _fala_cliente(cliente_id: str, comportamento: str, dificuldade: str, hist: l
 
 
 def _executar(e: dict, config: dict, cancel: threading.Event) -> None:
-    conv = conversations.iniciar(e["cliente_id"], e["modo"], False, None)
+    conv = conversations.iniciar(e["cliente_id"], e["modo"], False, None, e.get("abertura") or "1")
     cid = conv["conversation_id"]
     db.execute("UPDATE lab_execucoes SET status='EM_ANDAMENTO', conversation_id=?, inicio=? WHERE exec_id=?", (cid, _now(), e["exec_id"]))
     validos = {s["id"] for s in PERSONAS[e["cliente_id"]]["segredos"]}
@@ -260,10 +273,11 @@ def _executar(e: dict, config: dict, cancel: threading.Event) -> None:
     checks = verificar(cid, e)
     avaliacao = _avaliar_c12(cid, e["cliente_id"], hist, estado) if config.get("avaliar_ia", True) and hist else None
     aprovado = all(ch["ok"] for ch in checks)
-    db.execute("UPDATE lab_execucoes SET status=?, fim_motivo=?, aprovado=?, checks_json=?, avaliacao_json=?, nota_geral=?, fim=? WHERE exec_id=?",
+    db.execute("UPDATE lab_execucoes SET status=?, fim_motivo=?, aprovado=?, checks_json=?, avaliacao_json=?, nota_geral=?, revelados=?, fim=? "
+               "WHERE exec_id=?",
                ("CANCELADA" if fim == "CANCELADA" else "CONCLUIDA", fim, int(aprovado), json.dumps(checks, ensure_ascii=False),
                 json.dumps(avaliacao, ensure_ascii=False, default=str) if avaliacao else None,
-                avaliacao["nota_geral"] if avaliacao else None, _now(), e["exec_id"]))
+                avaliacao["nota_geral"] if avaliacao else None, len(estado["revelados"]), _now(), e["exec_id"]))
 
 
 def _devolver_reservas(cid: str) -> None:
@@ -409,7 +423,8 @@ def obter_rodada(rid: str) -> dict:
     execs = db.fetch_all("SELECT * FROM lab_execucoes WHERE rodada_id=? ORDER BY ordem", (rid,))
     for x in execs:
         x["checks"] = json.loads(x.pop("checks_json") or "[]")
-        x.pop("avaliacao_json")
+        av = json.loads(x.pop("avaliacao_json") or "null") or {}
+        x["notas_dimensao"] = {k: d.get("nota") for k, d in (av.get("dimensoes") or {}).items() if isinstance(d, dict)}
         x["razao_social"] = catalog.consultar_cliente(x["cliente_id"])["razao_social"]
         x["comportamento_titulo"] = COMPORTAMENTOS[x["comportamento"]][0]
     return {**r, "config": json.loads(r.pop("config_json")), "rodando": rid in _rodando, "execucoes": execs, "resumo": resumo(execs)}
@@ -483,6 +498,39 @@ def concessoes(feitas: list[dict]) -> dict:
     return out
 
 
+DIMENSOES_ABERTURA = ("diagnostico", "challenger", "objecoes", "qualificacao", "fechamento", "tom")
+
+
+def comparar_aberturas(feitas: list[dict]) -> dict | None:
+    """Abertura 1 × 2 lado a lado (só quando a rodada tem as duas): o que a abertura deve mudar é o diagnóstico."""
+    if len({x.get("abertura") or "1" for x in feitas}) < 2:
+        return None
+
+    def media(vals):
+        vals = [v for v in vals if v is not None]
+        return round(sum(vals) / len(vals), 1) if vals else None
+
+    out = {}
+    for a in sorted({x.get("abertura") or "1" for x in feitas}):
+        lst = [x for x in feitas if (x.get("abertura") or "1") == a]
+        n = len(lst)
+        fim = lambda *f: round(100 * sum(1 for x in lst if x["fim_motivo"] in f) / n, 1)  # noqa: E731
+        out[a] = {
+            "titulo": agent.NOMES_ABERTURA.get(a, a), "n": n,
+            "aprovadas_pct": round(100 * sum(1 for x in lst if x["aprovado"]) / n, 1),
+            "nota_media": media(x["nota_geral"] for x in lst),
+            "dimensoes": {d: media((x.get("notas_dimensao") or {}).get(d) for x in lst) for d in DIMENSOES_ABERTURA},
+            "descobertas_pct": media(100 * x["revelados"] / len(PERSONAS[x["cliente_id"]]["segredos"])
+                                     for x in lst if x.get("revelados") is not None and PERSONAS[x["cliente_id"]]["segredos"]),
+            "turnos_medios": media(x["turnos"] for x in lst),
+            "turnos_ate_proposta": media(x["turnos"] for x in lst if x["fim_motivo"] == "PROPOSTA"),
+            "aceitou_ou_proposta_pct": fim("CLIENTE_ACEITOU", "PROPOSTA"),
+            "vai_pensar_pct": fim("CLIENTE_VAI_PENSAR"), "recusou_pct": fim("CLIENTE_RECUSOU"),
+            "limite_de_turnos_pct": fim("LIMITE_DE_TURNOS", "LOOP"),
+        }
+    return out
+
+
 def resumo(execs: list[dict]) -> dict:
     feitas = [x for x in execs if x["status"] == "CONCLUIDA"]
 
@@ -507,18 +555,19 @@ def resumo(execs: list[dict]) -> dict:
             "por_cliente": {c: bloco([x for x in feitas if x["cliente_id"] == c]) for c in dict.fromkeys(x["cliente_id"] for x in execs)},
             "fim": {f: sum(1 for x in feitas if x["fim_motivo"] == f) for f in dict.fromkeys(x["fim_motivo"] for x in feitas)},
             "longas": bloco(longas) if longas else None, "falhas": falhas, "tokens": tok, "custo_gate_usd": custo,
-            "concessoes": concessoes(feitas)}
+            "concessoes": concessoes(feitas), "aberturas": comparar_aberturas(feitas)}
 
 
 def exportar_csv(rid: str) -> bytes:
     r = obter_rodada(rid)
     buf = io.StringIO()
     w = csv.writer(buf, delimiter=";")
-    w.writerow(["exec_id", "cliente", "comportamento", "modo", "repeticao", "max_turnos", "turnos", "fim", "status", "aprovado",
-                "nota_c12", "checks_reprovados", "conversation_id", "erro"])
+    w.writerow(["exec_id", "cliente", "comportamento", "modo", "abertura", "repeticao", "max_turnos", "turnos", "fim", "status", "aprovado",
+                "nota_c12", "informacoes_descobertas", "checks_reprovados", "conversation_id", "erro"])
     for x in r["execucoes"]:
-        w.writerow([x["exec_id"], x["razao_social"], x["comportamento_titulo"], x["modo"], x["repeticao"], x["max_turnos"], x["turnos"],
-                    x["fim_motivo"] or "", x["status"], {1: "SIM", 0: "NAO"}.get(x["aprovado"], ""),
+        w.writerow([x["exec_id"], x["razao_social"], x["comportamento_titulo"], x["modo"], x.get("abertura") or "1", x["repeticao"],
+                    x["max_turnos"], x["turnos"], x["fim_motivo"] or "", x["status"], {1: "SIM", 0: "NAO"}.get(x["aprovado"], ""),
                     str(x["nota_geral"]).replace(".", ",") if x["nota_geral"] is not None else "",
+                    "" if x.get("revelados") is None else x["revelados"],
                     " | ".join(ch["check"] for ch in x["checks"] if not ch["ok"]), x["conversation_id"] or "", x["erro"] or ""])
     return ("﻿" + buf.getvalue()).encode("utf-8")

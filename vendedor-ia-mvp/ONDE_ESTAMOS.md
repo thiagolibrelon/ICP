@@ -161,7 +161,10 @@ ninguém digitando. É o executor em lote que faltava para as ~190 conversas por
   conversa devolve o estoque reservado, para todas começarem do mesmo estoque; cancelar, retomar e recuperação depois de
   queda do servidor; estimativa de custo e tempo antes de iniciar; exportação CSV.
 - **Tipos prontos:** rodada completa (192 conversas, ~US$ 12 e ~2 h com 2 em paralelo), críticos 5× (30), conversas
-  longas de 24 turnos (12, ~US$ 2), red team (20) e negociação de desconto (36).
+  longas de 24 turnos (12, ~US$ 2), red team (20), negociação de desconto (36) e teste de abertura (120).
+- **Aberturas:** abertura 1 (atual, cadastro como afirmação) × abertura 2 (SPIN, cadastro como hipótese a confirmar,
+  problema e implicação antes do Challenger). Rodar o teste de abertura **antes** da rodada completa oficial; a
+  vencedora vira o padrão (`FERNANDA_ABERTURA`) e a linha de base usa ela.
 - **Desconto, alçada e gerente:** a trava barra "o gerente aprovou" quando o sistema não aprovou; o Laboratório confere
   se ela consultou a alçada antes de responder ao desconto, se ofereceu alternativa depois do "não" e se segurou o preço
   sem contrapartida; o relatório tem o bloco **Concessões e alçada** (A × B). O gerente continua simulado (regra

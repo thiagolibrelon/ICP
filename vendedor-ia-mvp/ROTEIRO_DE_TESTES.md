@@ -408,6 +408,7 @@ acompanhar e revisar as conversas reprovadas.
 | J07 | Servidor caiu | Com uma rodada rodando, feche o servidor e abra de novo | A rodada aparece como **Interrompida**; **Retomar** continua |
 | J08 | Exportar | Clique **Exportar CSV** | Planilha com uma linha por conversa, checagens reprovadas e nota |
 | J09 | Negociação de desconto | Tipo **Negociação de desconto** (36 conversas) | No bloco **Concessões e alçada**, modo B: "acima da alçada, sem contrapartida" = 0 e "disse que o gerente aprovou sem aprovação" = 0 (ou só barradas pela trava). Abra 2 conversas com ❌ em "Ofereceu alternativa" e veja se ela parou no "não" |
+| J10 | Teste de abertura | Tipo **Teste de abertura** (120 conversas, cerca de 1h20). Rode **antes** da rodada completa oficial | No bloco **Abertura 1 × Abertura 2**, compare diagnóstico, informações descobertas e fechamento. Leia 3 conversas de cada abertura e anote qual soa mais natural |
 
 **Para cada ❌:** clique na linha, leia a conversa e decida se é falha real da Fernanda, erro da IA-cliente (fugiu do papel)
 ou checagem errada. Anote na planilha com o ID da execução (ex.: `LAB-1001-1255-FC5F-007`).

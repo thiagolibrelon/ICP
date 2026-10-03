@@ -31,9 +31,13 @@ def listar_roteiros() -> list[dict]:
     return db.fetch_all("SELECT * FROM roteiros ORDER BY generico, roteiro_id")
 
 
-def iniciar(cliente_id: str, modo: str = "B", livre: bool = False, roteiro_id: str | None = None) -> dict:
+def iniciar(cliente_id: str, modo: str = "B", livre: bool = False, roteiro_id: str | None = None,
+            abertura: str | None = None) -> dict:
     if modo not in ("A", "B"):
         raise ValueError("modo deve ser A ou B")
+    abertura = str(abertura or agent.abertura_padrao())
+    if abertura not in agent.ABERTURAS:
+        raise ValueError("abertura deve ser 1 ou 2")
     if not db.fetch_one("SELECT 1 FROM clientes WHERE cliente_id=?", (cliente_id,)):
         raise LookupError("Cliente inexistente")
     if livre:
@@ -41,7 +45,7 @@ def iniciar(cliente_id: str, modo: str = "B", livre: bool = False, roteiro_id: s
     elif not roteiro_id:
         roteiro_id = f"R_{cliente_id}"
     cid = "CV-" + uuid.uuid4().hex[:10].upper()
-    estado = {"memoria": []}
+    estado = {"memoria": [], "abertura": abertura}
     db.execute("INSERT INTO conversas VALUES (?,?,?,?,?,?,?,?,?,?,?)",
                (cid, cliente_id, modo, int(livre), roteiro_id, _now(), None, "ATIVA", "EM_ANDAMENTO",
                 json.dumps(catalog.estoque_atual()), json.dumps(estado)))
@@ -52,7 +56,7 @@ def obter(conv_id: str) -> dict:
     c = db.fetch_one("SELECT * FROM conversas WHERE conversation_id=?", (conv_id,))
     if not c:
         raise LookupError("Conversa inexistente")
-    c.pop("estado_json")
+    c["abertura"] = json.loads(c.pop("estado_json") or "{}").get("abertura", "1")
     c["estoque_inicio"] = json.loads(c.pop("estoque_inicio_json") or "[]")
     msgs = db.fetch_all("SELECT * FROM mensagens WHERE conversation_id=? ORDER BY message_id", (conv_id,))
     for m in msgs:
@@ -98,6 +102,7 @@ def processar(conv_id: str, texto: str, meta_cliente: dict | None = None, simula
     historico = db.fetch_all("SELECT role, conteudo FROM mensagens WHERE conversation_id=? ORDER BY message_id", (conv_id,))
     _log(conv_id, "cliente", texto, meta_cliente)
     ctx = {"conversation_id": conv_id, "cliente_id": row["cliente_id"], "modo": row["modo"], "memoria": estado["memoria"],
+           "abertura": estado.get("abertura", "1"),
            "historico": historico + [{"role": "cliente", "conteudo": texto}]}
     entrada = f"[ÁUDIO TRANSCRITO] {texto}" if meta_cliente and meta_cliente.get("audio") else texto
     try:
@@ -129,12 +134,14 @@ def encerrar(conv_id: str) -> dict:
 
 def reiniciar(conv_id: str) -> dict:
     """Apaga mensagens/propostas/handoffs desta conversa e DEVOLVE ao estoque o que ela tinha reservado."""
-    if not db.fetch_one("SELECT 1 FROM conversas WHERE conversation_id=?", (conv_id,)):
+    row = db.fetch_one("SELECT estado_json FROM conversas WHERE conversation_id=?", (conv_id,))
+    if not row:
         raise LookupError("Conversa inexistente")
+    abertura = json.loads(row["estado_json"] or "{}").get("abertura", "1")
     for p in db.fetch_all("SELECT modelo, cidade, unidades_reservadas FROM propostas WHERE conversation_id=?", (conv_id,)):
         db.execute("UPDATE estoque SET unidades = unidades + ? WHERE modelo=? AND cidade=?", (p["unidades_reservadas"], p["modelo"], p["cidade"]))
     for t in ("mensagens", "propostas", "handoffs"):
         db.execute(f"DELETE FROM {t} WHERE conversation_id=?", (conv_id,))
     db.execute("UPDATE conversas SET status='ATIVA', fim=NULL, desfecho='EM_ANDAMENTO', estado_json=?, estoque_inicio_json=? "
-               "WHERE conversation_id=?", (json.dumps({"memoria": []}), json.dumps(catalog.estoque_atual()), conv_id))
+               "WHERE conversation_id=?", (json.dumps({"memoria": [], "abertura": abertura}), json.dumps(catalog.estoque_atual()), conv_id))
     return obter(conv_id)

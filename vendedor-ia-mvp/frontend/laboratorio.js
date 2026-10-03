@@ -23,6 +23,7 @@ async function init() {
   $('preset').innerHTML = cat.presets.map(p => `<option value="${p.id}">${esc(p.titulo)} — ${p.execucoes} conversas</option>`).join('')
     + '<option value="">Personalizada (escolher clientes e comportamentos)</option>';
   $('cli').innerHTML = cat.personas.map(p => `<label><input type="checkbox" value="${p.cliente_id}">${p.cliente_id} · ${esc(p.razao_social)}</label>`).join('');
+  $('aberturas').innerHTML = cat.aberturas.map(a => `<label><input type="checkbox" name="abertura" value="${a.id}" ${a.id === cat.abertura_padrao ? 'checked' : ''}>${esc(a.titulo)}</label>`).join('');
   const grupos = {base: 'Comportamentos', negociacao: 'Negociação', longa: 'Conversa longa', red_team: 'Red team (ataques)'};
   $('comp').innerHTML = cat.comportamentos.map(c => `<label title="${esc(c.instrucao)}"><input type="checkbox" value="${c.id}">${esc(c.titulo)}${c.grupo === 'base' ? '' : `<span class="badge"> · ${grupos[c.grupo]}</span>`}</label>`).join('');
   document.querySelectorAll('.lab-form select, .lab-form input').forEach(el => el.addEventListener('change', estimar));
@@ -43,6 +44,7 @@ function corpo() {
   const marcados = id => [...$(id).querySelectorAll('input:checked')].map(i => i.value);
   return {preset, personas: marcados('cli'), comportamentos: marcados('comp'),
     modos: [...document.querySelectorAll('input[name=modo]:checked')].map(i => i.value),
+    aberturas: [...document.querySelectorAll('input[name=abertura]:checked')].map(i => i.value),
     repeticoes: +$('repeticoes').value || 1, max_turnos: +$('max_turnos').value || 12, dificuldade: $('dificuldade').value,
     avaliar_ia: $('avaliar_ia').checked, workers: +$('workers').value, nome: $('nome').value.trim() || null};
 }
@@ -120,14 +122,15 @@ function renderRodada(r) {
       <tr><td>Longas</td><td>${s.longas.n}</td>${bloco(s.longas)}</tr></table>` : ''}
     ${comps.length > 1 ? `<h2>Por comportamento</h2><table><tr><th>Comportamento</th><th>A aprov.</th><th>A nota</th><th>A turnos</th><th>B aprov.</th><th>B nota</th><th>B turnos</th></tr>
       ${comps.map(([c, v]) => `<tr><td>${esc((cat.comportamentos.find(x => x.id === c) || {}).titulo || c)}</td>${bloco(v.A)}${bloco(v.B)}</tr>`).join('')}</table>` : ''}
+    ${aberturas(s.aberturas)}
     ${concessoes(s.concessoes)}
     ${Object.keys(s.fim).length ? `<h2>Como as conversas terminaram</h2><div class="chips">${Object.entries(s.fim).map(([f, n]) => `<span class="chip">${esc(FIM[f] || f)} <b>${n}</b></span>`).join('')}</div>` : ''}
     ${s.falhas.length ? `<h2>Checagens reprovadas</h2><table class="falhas"><tr><th>Execução</th><th>Modo</th><th>Checagem</th><th>Detalhe</th></tr>
       ${s.falhas.map(f => `<tr class="clicavel" data-exec="${f.exec_id}"><td>${f.cliente_id} · ${esc(f.comportamento)}</td><td>${f.modo}</td><td class="bad">${esc(f.check)}</td><td>${esc(f.detalhe)}</td></tr>`).join('')}</table>` : ''}
     <h2>Execuções</h2>
-    <table class="execs"><tr><th>#</th><th>Cliente</th><th>Comportamento</th><th>Modo</th><th>Turnos</th><th>Fim</th><th>Checagens</th><th>Nota</th></tr>
+    <table class="execs"><tr><th>#</th><th>Cliente</th><th>Comportamento</th><th>Modo</th>${s.aberturas ? '<th>Abert.</th>' : ''}<th>Turnos</th><th>Fim</th><th>Checagens</th><th>Nota</th></tr>
       ${r.execucoes.map(x => `<tr class="clicavel ${x.exec_id === execId ? 'sel' : ''}" data-exec="${x.exec_id}">
-        <td>${x.ordem}</td><td>${x.cliente_id} · ${esc(x.razao_social)}</td><td>${esc(x.comportamento_titulo)}${x.repeticao > 1 ? ` (${x.repeticao}ª)` : ''}</td><td>${x.modo}</td>
+        <td>${x.ordem}</td><td>${x.cliente_id} · ${esc(x.razao_social)}</td><td>${esc(x.comportamento_titulo)}${x.repeticao > 1 ? ` (${x.repeticao}ª)` : ''}</td><td>${x.modo}</td>${s.aberturas ? `<td>${esc(x.abertura || '1')}</td>` : ''}
         <td>${x.turnos || 0}/${x.max_turnos}</td>
         <td>${x.status === 'CONCLUIDA' ? esc(FIM[x.fim_motivo] || x.fim_motivo) : `<span class="st st-${x.status}">${STATUS[x.status]}</span>`}</td>
         <td>${x.status !== 'CONCLUIDA' ? (x.erro ? `<span class="bad" title="${esc(x.erro)}">erro</span>` : '') : x.aprovado ? '<span class="ok">✅ ok</span>' : `<span class="bad">❌ ${x.checks.filter(c => !c.ok).length}</span>`}</td>
@@ -139,6 +142,23 @@ function renderRodada(r) {
     try { await post(`/api/lab/rodadas/${r.rodada_id}/retomar`); } catch (err) { alert(err.message); }
     abrirRodada(r.rodada_id);
   };
+}
+
+function aberturas(ab) {
+  if (!ab) return '';
+  const ids = Object.keys(ab), DIM = {diagnostico: 'Diagnóstico', challenger: 'Challenger com dado', objecoes: 'Objeções',
+    qualificacao: 'Qualificação', fechamento: 'Fechamento', tom: 'Tom'};
+  const linhas = [
+    ['Conversas', a => a.n], ['Aprovadas nas checagens', a => pct(a.aprovadas_pct)], ['Nota C12 média', a => num(a.nota_media), a => a.nota_media],
+    ...Object.entries(DIM).map(([k, n]) => [`↳ ${n}`, a => num(a.dimensoes[k]), a => a.dimensoes[k]]),
+    ['Informações-chave descobertas', a => pct(a.descobertas_pct)], ['Turnos médios', a => num(a.turnos_medios)],
+    ['Turnos até a proposta', a => num(a.turnos_ate_proposta)], ['Aceitou ou fechou proposta', a => pct(a.aceitou_ou_proposta_pct)],
+    ['Vai pensar', a => pct(a.vai_pensar_pct)], ['Recusou', a => pct(a.recusou_pct)], ['Chegou ao limite de turnos', a => pct(a.limite_de_turnos_pct)],
+  ];
+  return `<h2>Abertura 1 × Abertura 2</h2>
+    <table class="aberturas"><tr><th></th>${ids.map(i => `<th>${esc(ab[i].titulo)}</th>`).join('')}</tr>
+      ${linhas.map(([n, f, c]) => `<tr><td>${n}</td>${ids.map(i => `<td${c ? ` style="color:${cor(c(ab[i]))};font-weight:700"` : ''}>${f(ab[i])}</td>`).join('')}</tr>`).join('')}</table>
+    <div class="badge">O que a abertura deve mudar é o diagnóstico: mais informações descobertas e nota de diagnóstico maior, sem perder o fechamento. Leia também 3 ou 4 conversas de cada lado.</div>`;
 }
 
 function concessoes(c) {
@@ -182,7 +202,7 @@ async function abrirExecucao(id, silencioso) {
   const rolarFim = !silencioso || $('conversa').scrollTop + $('conversa').clientHeight >= $('conversa').scrollHeight - 30;
   $('conversa').className = '';
   $('conversa').innerHTML = `
-    <div class="lab-top"><span>${x.cliente_id} · ${esc(c ? c.cliente.razao_social : '')}</span><span class="tier">Modo ${x.modo}</span></div>
+    <div class="lab-top"><span>${x.cliente_id} · ${esc(c ? c.cliente.razao_social : '')}</span><span class="tier">Modo ${x.modo} · Abertura ${esc(x.abertura || '1')}</span></div>
     <div class="badge">${esc(x.comportamento_titulo)} · ${x.turnos || 0}/${x.max_turnos} turnos · ${x.status === 'CONCLUIDA' ? esc(FIM[x.fim_motivo] || x.fim_motivo) : STATUS[x.status]}</div>
     ${x.erro ? `<div class="bad">${esc(x.erro)}</div>` : ''}
     ${x.checks.length ? `<h2>Checagens do sistema</h2><ul class="checklist">${x.checks.map(ch => `<li>${ch.ok ? '✅' : '❌'} ${esc(ch.check)}${ch.detalhe ? ` <span class="badge">— ${esc(ch.detalhe)}</span>` : ''}</li>`).join('')}</ul>` : ''}

@@ -16,6 +16,21 @@ from services.catalog import ErroFerramenta
 
 PROMPTS = Path(__file__).resolve().parent.parent / "prompts"
 BASE = (PROMPTS / "vendedor_base.md").read_text(encoding="utf-8")
+# Aberturas (como ela conduz o início da conversa). 1 = atual (usa o cadastro como afirmação); 2 = SPIN com o cadastro
+# como hipótese a confirmar. Só a regra 1 das instruções muda; o resto é idêntico. Padrão: FERNANDA_ABERTURA (1).
+_REGRA_ABERTURA_1 = BASE[BASE.index("1. Diagnostique antes de ofertar"):BASE.index("\n2. ") + 1]
+ABERTURAS = {"1": BASE,
+             "2": BASE.replace(_REGRA_ABERTURA_1, (PROMPTS / "abertura_2.md").read_text(encoding="utf-8"))}
+NOMES_ABERTURA = {"1": "Abertura 1 (atual)", "2": "Abertura 2 (nova: SPIN, cadastro como hipótese)"}
+
+
+def abertura_padrao() -> str:
+    a = os.getenv("FERNANDA_ABERTURA", "1").strip()
+    return a if a in ABERTURAS else "1"
+
+
+def instrucoes_base(abertura: str | None) -> str:
+    return ABERTURAS.get(str(abertura or abertura_padrao()), BASE)
 REGRAS_B = (PROMPTS / "vendedor_b.md").read_text(encoding="utf-8")
 REGRAS_A = (PROMPTS / "vendedor_a.md").read_text(encoding="utf-8")
 MAX_PASSOS = 8
@@ -170,7 +185,7 @@ def _contexto(ctx: dict) -> str:
 def turno_b(ctx: dict, historico: list[dict], texto_cliente: str) -> dict:
     uso = {"tokens_entrada": 0, "tokens_saida": 0, "custo_gate": 0.0}
     chamadas, violacoes_brutas = [], []
-    sistema = BASE + "\n" + REGRAS_B + _contexto(ctx)
+    sistema = instrucoes_base(ctx.get("abertura")) + "\n" + REGRAS_B + _contexto(ctx)
     msgs = [{"role": "user" if m["role"] == "cliente" else "assistant", "content": m["conteudo"]} for m in historico[-16:]]
     msgs.append({"role": "user", "content": texto_cliente})
     corrigiu, texto, final = False, "", "ok"
@@ -309,7 +324,7 @@ def _valores_calculaveis(chave_veiculos: str) -> frozenset:
 
 def turno_a(ctx: dict, historico: list[dict], texto_cliente: str) -> dict:
     internos = dados_internos(ctx["cliente_id"])
-    sistema = (BASE + "\n" + REGRAS_A + "\n\nDADOS INTERNOS:\n" + json.dumps(internos, ensure_ascii=False, default=str)
+    sistema = (instrucoes_base(ctx.get("abertura")) + "\n" + REGRAS_A + "\n\nDADOS INTERNOS:\n" + json.dumps(internos, ensure_ascii=False, default=str)
                + f"\n\nATENDIMENTO ATUAL: WhatsApp cadastrado de {internos['cliente']['razao_social']}.")
     msgs = [{"role": "system", "content": sistema}]
     msgs += [{"role": "user" if m["role"] == "cliente" else "assistant", "content": m["conteudo"]} for m in historico[-16:]]

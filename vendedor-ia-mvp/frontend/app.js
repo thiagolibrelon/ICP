@@ -46,7 +46,7 @@ function renderCliente() {
   $('info-cliente').innerHTML = `<dl><dt>Empresa</dt><dd>${esc(c.razao_social)}</dd><dt>CNPJ</dt><dd>${esc(c.cnpj)}</dd>
     <dt>Perfil</dt><dd>${esc(c.icp)} · ${esc(c.cidade)} · <span class="tier ${c.tier}">Tier ${esc(c.tier)}</span></dd>
     ${c.tier === 'A' ? '<dt>Atendimento</dt><dd class="warn">Executivo dedicado (IA acolhe e transfere)</dd>' : ''}<dt>Uso atual</dt><dd>${esc(uso)}</dd><dt>km/mês</dt><dd>${c.km_mes}</dd>
-    <dt>Preço</dt><dd>${esc(c.perfil_preco)}</dd><dt>Conversa</dt><dd>modo <b>${conv.modo}</b>${conv.livre ? ' · livre' : ''} · ${esc(conv.desfecho)}</dd></dl>`;
+    <dt>Preço</dt><dd>${esc(c.perfil_preco)}</dd><dt>Conversa</dt><dd>modo <b>${conv.modo}</b> · abertura ${esc(conv.abertura)}${conv.livre ? ' · livre' : ''} · ${esc(conv.desfecho)}</dd></dl>`;
   $('box-roteiro').hidden = !conv.roteiro;
   if (conv.roteiro) $('roteiro-texto').textContent = conv.roteiro.texto;
 }
@@ -120,7 +120,7 @@ function showAudit(id) {
 
 async function novo() {
   const r = $('roteiro').value;
-  conv = await post('/api/conversations', {cliente_id: $('cliente').value, modo: $('modo').value, livre: r === '__livre', roteiro_id: r === '__livre' ? null : r});
+  conv = await post('/api/conversations', {cliente_id: $('cliente').value, modo: $('modo').value, abertura: $('abertura').value, livre: r === '__livre', roteiro_id: r === '__livre' ? null : r});
   $('aval').textContent = '—'; renderChat(); $('msg').focus();
 }
 

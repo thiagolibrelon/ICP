@@ -30,6 +30,7 @@ class NovaConversa(BaseModel):
     modo: str = Field("B", pattern="^[AB]$", description="A = LLM pura (controle) | B = LLM + ferramentas")
     livre: bool = False
     roteiro_id: str | None = None
+    abertura: str | None = Field(None, pattern="^[12]$", description="1 = atual | 2 = SPIN com cadastro como hipótese")
 
 
 class Audio(BaseModel):
@@ -80,6 +81,7 @@ class NovaRodada(BaseModel):
     avaliar_ia: bool = True
     nome: str | None = Field(None, max_length=120)
     workers: int = Field(2, ge=1, le=4)
+    aberturas: list[str] = []
 
 
 class NovoItem(BaseModel):
@@ -130,7 +132,7 @@ def catalogo(cidade: str | None = None):
 
 @app.post("/api/conversations", status_code=201)
 def nova(body: NovaConversa):
-    return _tratar(conv.iniciar, body.cliente_id, body.modo, body.livre, body.roteiro_id)
+    return _tratar(conv.iniciar, body.cliente_id, body.modo, body.livre, body.roteiro_id, body.abertura)
 
 
 @app.get("/api/conversations/{cid}")
@@ -283,7 +285,8 @@ def lab_estimar(body: NovaRodada):
         else:
             itens = laboratorio._itens([p for p in body.personas if p in laboratorio.PERSONAS],
                                        [c for c in body.comportamentos if c in laboratorio.COMPORTAMENTOS],
-                                       [m for m in body.modos if m in ("A", "B")], body.repeticoes, body.max_turnos)
+                                       [m for m in body.modos if m in ("A", "B")], body.repeticoes, body.max_turnos,
+                                       [a for a in body.aberturas if a in ("1", "2")] or None)
         return laboratorio.estimar(itens, body.workers, body.avaliar_ia)
     return _tratar(calc)
 

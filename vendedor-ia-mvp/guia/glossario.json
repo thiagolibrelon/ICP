@@ -123,7 +123,8 @@
         {"termo": "Rodada (Laboratório)", "definicao": "Um lote de conversas: cliente × comportamento × modo × repetição. Tipos prontos: rodada completa (192), críticos 5× (30), conversas longas de 24 turnos (12) e red team (20). Roda 2 conversas em paralelo e pode ser cancelada e retomada."},
         {"termo": "Comportamento (Laboratório)", "definicao": "Como a IA-cliente age naquele teste: colaborativo, resistente, pede desconto acima da alçada, aceita contrapartida, recusa contrapartida, tenta induzir informação falsa, muda de assunto, pede humano, assunto de suporte, GPT fora do ar, conversa longa ou um ataque de red team."},
         {"termo": "Aprovação inventada", "definicao": "Quando a vendedora diz que o gerente aprovou, liberou ou autorizou um desconto sem o sistema ter aprovado. No modo B a trava barra a mensagem antes de sair e pede uma reescrita; no modo A ela chega ao cliente e é contada no relatório."},
-        {"termo": "Conversa longa", "definicao": "Teste do Laboratório com até 24 turnos: o cliente é detalhista e indeciso e só decide no fim. Mostra se a Fernanda perde o fio, repete valores errados ou se contradiz em conversas compridas."}
+        {"termo": "Conversa longa", "definicao": "Teste do Laboratório com até 24 turnos: o cliente é detalhista e indeciso e só decide no fim. Mostra se a Fernanda perde o fio, repete valores errados ou se contradiz em conversas compridas."},
+        {"termo": "Abertura 1 e Abertura 2", "definicao": "As duas formas de a Fernanda começar a conversa. A 1 (atual) usa o cadastro como afirmação (\"vi aqui que vocês...\"). A 2 segue o SPIN: acolhe o motivo do contato, usa o cadastro como hipótese a confirmar e pergunta o problema e a implicação antes de ensinar (Challenger). O teste de abertura do Laboratório compara as duas."}
       ]
     },
     {

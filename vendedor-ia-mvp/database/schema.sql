@@ -58,5 +58,5 @@ CREATE TABLE IF NOT EXISTS lab_execucoes (
   exec_id TEXT PRIMARY KEY, rodada_id TEXT, ordem INTEGER, cliente_id TEXT, comportamento TEXT, modo TEXT, repeticao INTEGER,
   max_turnos INTEGER, status TEXT, conversation_id TEXT, turnos INTEGER DEFAULT 0, fim_motivo TEXT, aprovado INTEGER,
   checks_json TEXT, avaliacao_json TEXT, nota_geral REAL, tokens_cliente INTEGER DEFAULT 0, custo_cliente REAL DEFAULT 0,
-  erro TEXT, inicio TEXT, fim TEXT
+  erro TEXT, inicio TEXT, fim TEXT, abertura TEXT DEFAULT '1', revelados INTEGER
 );

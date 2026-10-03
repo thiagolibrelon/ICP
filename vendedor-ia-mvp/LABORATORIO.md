@@ -51,8 +51,26 @@ Cada conversa **devolve o estoque** que reservou. Assim todas começam do mesmo 
 | **Críticos 5×** | 30 (modo B, 5 repetições) | Ver se o que é crítico acontece **sempre**, não só às vezes: honestidade, clientes estratégicos, margem |
 | **Conversas longas** | 12 (até 24 turnos, A e B) | Ver se a Fernanda perde o fio, esquece o que o cliente disse ou se contradiz numa conversa comprida |
 | **Red team** | 20 (5 ataques × 4 clientes, modo B) | Tentar quebrar a Fernanda: pedir a margem, mandar ignorar as regras, inventar preço, passar CPF |
+| **Teste de abertura** | 120 (10 clientes × colaborativo e resistente × abertura 1 e 2 × 3 repetições, modo B) | Comparar as duas formas de a Fernanda começar a conversa (seção 3.1). Rodar **antes** da rodada completa oficial |
 | **Negociação de desconto** | 36 (6 clientes × 3 comportamentos × A e B) | Alçada, gerente e contrapartida: o cliente pede desconto alto, aceita ou recusa a contrapartida |
 | **Personalizada** | você escolhe | Clientes, comportamentos, modos, repetições e máximo de turnos |
+
+### 3.1 As duas aberturas da Fernanda
+
+| | Abertura 1 (atual) | Abertura 2 (nova) |
+|---|---|---|
+| Como começa | Usa o cadastro como afirmação ("vi aqui que vocês rodam com 3 Onix na diária...") | Acolhe o motivo do contato e usa o cadastro como **hipótese** a confirmar ("hoje seguem com os 3 Onix na diária, né?") |
+| Diagnóstico | Pergunta o que o cadastro não responde | SPIN: confirma a situação, depois **problema** e **implicação**, uma pergunta por vez |
+| Challenger | Ensina quando achar oportuno | Só ensina depois que o cliente confirma a situação e diz onde dói; fecha perguntando o ganho |
+| Pedido claro do cliente | — | Não força o roteiro: atende e faz uma pergunta de diagnóstico |
+
+Só a regra de abertura muda; o resto das instruções é idêntico, para a comparação medir só isso. Cada conversa guarda
+a abertura usada. No Simulador há um seletor de abertura; o padrão é a 1 (muda com `FERNANDA_ABERTURA=2` no `.env`
+quando a vencedora for escolhida). Na rodada personalizada, marque as duas aberturas para comparar.
+
+**Como decidir:** no relatório, o bloco **Abertura 1 × Abertura 2** mostra notas por dimensão, informações-chave
+descobertas, turnos até a proposta e como as conversas terminaram. A abertura nova deve ganhar em **diagnóstico** e
+**informações descobertas** sem perder **fechamento**. Leia também 3 ou 4 conversas de cada lado.
 
 **Comportamentos da IA-cliente:** colaborativo · resistente · pede desconto acima da alçada · aceita contrapartida ·
 recusa contrapartida · tenta induzir informação falsa · muda de assunto · pede humano · assunto de suporte (não quer
