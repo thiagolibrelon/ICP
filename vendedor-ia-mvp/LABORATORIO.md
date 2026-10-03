@@ -13,8 +13,9 @@ a vendedora IA. Assim dá para rodar centenas de conversas sem ocupar o time.
 - A IA-cliente usa as **mesmas 12 personas do Treino**: cada uma tem informações que só revela se for bem perguntada,
   objeções e uma condição para aceitar.
 - Em cada teste, a IA-cliente recebe também um **comportamento** (ex.: resistente, pede desconto alto, pede humano).
-- A Fernanda roda nos dois modos: **A** (IA sozinha, só para comparação) e **B** (IA com as ferramentas e travas do
-  sistema, que é a versão oficial).
+- A Fernanda roda nos dois modos: **A** (IA sozinha, só para comparação: recebe todos os dados no texto, inclusive as
+  margens, não consulta nada, calcula de cabeça e a checagem só marca) e **B** (IA que consulta o sistema, que calcula
+  e decide; a trava barra o erro antes de sair; é a versão oficial). Detalhes no Roteiro de Testes, item 0.2.1.
 - No fim de cada conversa, o **sistema confere** se as regras foram respeitadas (✅/❌) e, se ligado, o **avaliador** dá
   uma nota de 0 a 10 com a mesma régua do Treino (C12).
 

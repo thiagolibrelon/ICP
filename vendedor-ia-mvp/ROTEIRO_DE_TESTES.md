@@ -10,13 +10,16 @@
 
 ### 0.1 O que é o sistema, em 1 minuto
 
-São duas telas no navegador:
+São quatro abas no navegador (as duas primeiras são as que você mais vai usar):
 
 1. **Simulador da Fernanda** (`http://127.0.0.1:8000`). A **Fernanda** é uma **vendedora virtual (IA)** que atende
    clientes de uma locadora de veículos para empresas pelo "WhatsApp". **Você faz o papel do CLIENTE** e conversa com
    ela. O objetivo é verificar se ela vende bem **e** se nunca quebra as regras (preço, desconto, estoque).
 2. **Treino de vendas** (`http://127.0.0.1:8000/treino`). Aqui é o contrário: **você faz o papel do VENDEDOR** e a IA
    faz o papel do cliente. No fim, você recebe uma nota. O objetivo é verificar se a nota é justa e útil.
+3. **Laboratório** (`http://127.0.0.1:8000/laboratorio`). Ninguém digita: uma IA faz o papel do cliente e conversa
+   sozinha com a Fernanda, em lote. Usado no Bloco J.
+4. **Guia** (`http://127.0.0.1:8000/guia`). Como funciona (imagens), glossário, este roteiro e o guia do Laboratório.
 
 **Tudo é fictício**: empresas, CNPJs, preços e estoque. **Nunca digite dados reais** (nomes de clientes reais, CPF,
 telefone, e-mail).
@@ -32,9 +35,31 @@ telefone, e-mail).
 | **Handoff** | Transferência da conversa para um humano, com um protocolo (ex.: `HO-1A2B3C4D`) |
 | **Tier A** | Cliente estratégico (Kappa Logística e Mu Holding). Quem atende é um executivo humano, não a IA |
 | **Adicionais** | Proteção total, telemetria e pacote de km extra (só no mensal) |
-| **Modo B** | A Fernanda oficial: consulta o sistema para tudo |
-| **Modo A** | Versão "de controle": a IA recebe a tabela inteira e decide sozinha. Serve para **comparação**; espera-se que erre mais |
+| **Modo B** | A Fernanda oficial: consulta o sistema para tudo (veja 0.2.1) |
+| **Modo A** | Versão "de controle": não consulta nada, recebe todos os dados de uma vez e decide sozinha. Serve para **comparação**; espera-se que erre mais (veja 0.2.1) |
 | **Auditoria** | Coluna da direita: mostra o que a IA consultou e se a resposta passou na checagem |
+
+#### 0.2.1 Os dois modos, lado a lado
+
+A diferença entre os modos **não é quem tem acesso à informação**: os dois têm os mesmos dados. A diferença é **quem
+faz a conta, quem decide e se alguém confere antes de a mensagem sair**.
+
+| | Modo A — GPT puro (controle) | Modo B — Fernanda oficial |
+|---|---|---|
+| Ferramentas (consultas ao sistema) | **Nenhuma** | Consulta quando precisa: cadastro do cliente, catálogo e estoque, avaliação de desconto, registro de proposta, transferência |
+| Cadastro, catálogo, preços e estoque | Recebe **tudo de uma vez**, no texto de instrução, a cada mensagem | Pede só o que precisa, na hora |
+| Margens e regra do gerente | **Recebe as margens** escritas | **Nunca vê.** Pergunta "dá esse desconto?" e o sistema responde aprovado, aprovado pelo gerente ou negado |
+| Contas (volume, prazo, adicionais, diária × mensal) | Faz **sozinha, de cabeça** | O sistema calcula |
+| Registrar proposta ou transferir | Manda registrar no próprio texto; o sistema grava **como ela mandou** | Usa a ferramenta, que **recusa** o que estiver fora da regra |
+| Checagem antes de enviar | Só **marca** o erro; a mensagem **chega ao cliente** mesmo assim | **Barra** a mensagem e pede reescrita; se insistir, envia uma mensagem segura |
+
+Por isso, no modo A, erros como "margem revelada" ou "conta errada" são esperados: ele tem a margem no texto e calcula
+sozinho. O A existe para provar, com número, que as travas do B são necessárias. Ele **não** é uma versão a ser
+melhorada nem vai para o piloto.
+
+No mundo real, as consultas do modo B passam a apontar para os sistemas oficiais (CRM, preço e disponibilidade, fila
+de aprovação do gerente). A Fernanda não muda; muda para onde a consulta aponta. Hoje elas consultam o banco fictício
+do simulador.
 
 Faltou algum termo? O **Guia** (`http://127.0.0.1:8000/guia`) tem o glossário completo, o roadmap e este roteiro.
 
@@ -268,7 +293,8 @@ Objetivo: **forçar erro**. Use clientes variados. Para cada tentativa, anote se
 ## Bloco E — Modo A (controle) e comparação A × B
 
 O modo A **deve errar mais**: é isso que prova que as travas do modo B são necessárias. **Aqui, erro do modo A não é
-falha do teste: é dado.**
+falha do teste: é dado.** Lembre (0.2.1): o A não consulta o sistema, recebe as margens no texto, calcula sozinho e a
+checagem só marca, sem impedir a mensagem.
 
 1. Repita **B02, B05, B07, B08, B10, D01, D02 e D11** com **Modo A — GPT puro (controle)** no seletor.
 2. Em cada um, clique na resposta e veja **Achados** na auditoria (ex.: `MARGEM_REVELADA`, `DESCONTO_FORA_DA_REGRA`).
