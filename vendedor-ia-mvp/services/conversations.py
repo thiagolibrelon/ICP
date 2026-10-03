@@ -114,6 +114,7 @@ def processar(conv_id: str, texto: str, meta_cliente: dict | None = None, simula
              "erro_llm": str(e), "modo_ferramentas": None, "tokens_entrada": 0, "tokens_saida": 0, "custo_gate": 0}
     auditoria = {k: r.get(k) for k in ("chamadas", "violacoes", "resultado_validacao", "modo_ferramentas", "erro_llm", "tiques")}
     auditoria["modo"] = row["modo"]
+    auditoria["modelo_llm"] = llm_client.modelo("vendedora")
     _log(conv_id, "vendedor", r["texto"], auditoria, r)
     estado["memoria"] = ctx["memoria"]
     props = db.fetch_one("SELECT COUNT(*) n FROM propostas WHERE conversation_id=?", (conv_id,))["n"]

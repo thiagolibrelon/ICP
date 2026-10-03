@@ -82,6 +82,7 @@ class NovaRodada(BaseModel):
     nome: str | None = Field(None, max_length=120)
     workers: int = Field(2, ge=1, le=4)
     aberturas: list[str] = []
+    modelos: dict[str, str] = {}
 
 
 class NovoItem(BaseModel):
@@ -326,9 +327,37 @@ def lab_csv(rid: str):
     return Response(dados, media_type="text/csv", headers={"Content-Disposition": f'attachment; filename="laboratorio_{rid}.csv"'})
 
 
+@app.get("/api/lab/comparar")
+def lab_comparar(ids: str):
+    return _tratar(laboratorio.comparar_rodadas, [i for i in ids.split(",") if i])
+
+
 @app.get("/api/lab/execucoes/{exec_id}")
 def lab_execucao(exec_id: str):
     return _tratar(laboratorio.obter_execucao, exec_id)
+
+
+# ------------------------------------------------------------------ BACKUP DO BANCO (rodadas, conversas e treinos)
+@app.get("/api/backup/banco")
+def backup_banco():
+    import tempfile
+    from datetime import datetime
+    from starlette.background import BackgroundTask
+    pasta = Path(tempfile.mkdtemp(prefix="mvp_backup_"))
+    arq = db.copiar(pasta / "mvp.db")
+    nome = f"mvp_{datetime.now():%Y-%m-%d_%H%M}.db"
+
+    def limpar():
+        import shutil
+        shutil.rmtree(pasta, ignore_errors=True)
+    return FileResponse(arq, media_type="application/octet-stream", filename=nome, background=BackgroundTask(limpar))
+
+
+@app.get("/api/backup/automaticos")
+def backups_automaticos():
+    pasta = db.get_db_path().parent / "backups"
+    arqs = sorted(pasta.glob("*.db"), reverse=True) if pasta.exists() else []
+    return [{"arquivo": a.name, "tamanho_kb": round(a.stat().st_size / 1024)} for a in arqs]
 
 
 # ------------------------------------------------------------------ GUIA (glossário, roadmap com progresso, como utilizar)

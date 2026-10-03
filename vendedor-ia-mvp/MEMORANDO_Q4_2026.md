@@ -4,7 +4,7 @@
 |---|---|
 | **Para** | [Nome do gestor] — [Cargo] |
 | **De** | [Seu nome] — [Área] |
-| **Data** | 01/10/2026 |
+| **Data** | 01/10/2026 · atualizado em 03/10/2026 |
 | **Assunto** | Vendedor IA e Treino de Vendas com IA — status do MVP, definição de sucesso e roadmap do 4º trimestre de 2026 |
 | **Classificação** | Interno. O MVP usa apenas dados fictícios |
 
@@ -19,6 +19,10 @@ Construímos e validamos tecnicamente, na rede da empresa e com o GPT 5.4 mini v
    resumo completo. **Preço, desconto, estoque e aprovação são sempre decididos por código, nunca pelo GPT.**
 2. **Treino de vendas**: o GPT faz o papel do cliente e o vendedor humano vende. No fim, o vendedor recebe uma **nota pela
    régua C12** (a mesma do classificador de ligações), com justificativa, o trecho da própria fala e onde melhorar.
+
+Para testar em escala, construímos um **Laboratório**: uma IA faz o papel do cliente e conversa sozinha com a Fernanda,
+em lote, e o sistema confere cada conversa. Isso torna viáveis as ~190 conversas por rodada, o red team e a comparação
+de versões (aberturas, modelos) dentro do trimestre.
 
 **Objetivo do Q4:** chegar a 19/12/2026 com **evidência suficiente para decidir** se a Fernanda segue para um piloto real
 no Teams no 1º trimestre de 2027 e com o **Treino calibrado e em uso** por um grupo piloto.
@@ -54,7 +58,9 @@ de LGPD e cerca de 4 horas de 2 a 3 gestores em novembro para calibrar a nota do
 | Qualificação | Registra quem decide, quem participa e quando a decisão sai |
 | Handoff | O humano recebe **briefing completo**: necessidade, objeção, próximo passo, decisor, condições e últimas mensagens |
 | Naturalidade | Persona "Fernanda", estilo WhatsApp, balões curtos, sem fórmulas de robô; **nunca se passa por humana** |
-| Segurança | Validador confere todo R$ e % contra o sistema; 1 reescrita automática; persistindo, uma mensagem segura |
+| Segurança | Validador confere todo R$ e % contra o sistema; 1 reescrita automática; persistindo, uma mensagem segura. Também barra "o gerente aprovou" sem aprovação e "sou humana" |
+| Proteção contra ataques | Prompt injection em 4 camadas: instruções, arquitetura (a IA não vê as margens), ferramentas que recusam e trava antes de enviar |
+| Duas aberturas | Abertura 1 (atual) × abertura 2 (SPIN, cadastro como hipótese a confirmar), comparadas no Laboratório antes da linha de base |
 | Gestão | **Painel do gerente**: concessões (desconto, quem aprovou, contrapartida, margem cedida/mês, adicionais) e fila de handoffs |
 | Experimento A × B | Modo B (oficial, com ferramentas) × modo A (GPT "puro", com as margens no prompt). Mede se a trava faz diferença |
 
@@ -69,11 +75,24 @@ de LGPD e cerca de 4 horas de 2 a 3 gestores em novembro para calibrar a nota do
 | Partes objetivas | Disciplina de margem e informações descobertas são **calculadas pelo sistema**; Challenger sem dado concreto vale no máximo 4 (regra de 24/09/2026) |
 | Quem vê | O próprio vendedor e o gestor; **ordem alfabética, sem ranking** (ferramenta de desenvolvimento) |
 
-### 3.3 Base técnica
+### 3.3 Laboratório (testes em lote)
+
+| Capacidade | Como funciona |
+|---|---|
+| IA-cliente × Fernanda | As 12 personas do Treino, cada uma com um comportamento (colaborativo, resistente, pede desconto, pede humano, suporte, GPT fora do ar…), conversam sozinhas com a Fernanda nos modos A e B |
+| Tipos de rodada | Completa (192), críticos 5× (30), conversas longas de 24 turnos (12), red team (36), negociação de desconto (36), teste de abertura (120) ou personalizada |
+| Checagens automáticas | Regras (preço, alçada, margem, Tier A, briefing), cenário (honestidade), comportamento, negociação (consultou a alçada, ofereceu alternativa, não inventou aprovação) e segurança (auditor de segurança para o que regra fixa não pega) |
+| Relatório | A × B, por comportamento, abertura 1 × 2, concessões e alçada, nota C12, custo por conversa e segundos por turno; CSV |
+| Comparação de modelos | Modelo por papel (Fernanda, IA-cliente, avaliador); cada rodada guarda os modelos; rodadas lado a lado |
+| Operação | 2 conversas em paralelo; cancelar e retomar; estimativa de custo e tempo antes de iniciar; backup automático do banco |
+
+### 3.4 Base técnica
 
 - Roda no notebook corporativo (Python + SQLite + navegador) e chama o GPT pelo llm-gate, com a mesma chave e o mesmo padrão
   do `classificar_ligacoes_diario.py`. A chave nunca fica em disco, no navegador ou em log.
-- 66 testes automáticos; exportação das conversas no formato do classificador C12; auditoria de cada decisão na tela.
+- 179 testes automáticos; exportação das conversas no formato do classificador C12; auditoria de cada decisão na tela.
+- Guia dentro da ferramenta: roadmap com progresso, glossário, roteiro de testes, guia do Laboratório e 4 imagens de
+  "como funciona" prontas para apresentação.
 
 ---
 
@@ -144,10 +163,12 @@ sistema consiga executá-lo.
 
 | Camada | O que é | Volume no Q4 |
 |---|---|---|
-| Testes automáticos | Regressão do código a cada mudança | Contínuo (66 hoje) |
+| Testes automáticos | Regressão do código a cada mudança | Contínuo (179 hoje) |
 | Matriz de cenários | 12 clientes × 8 comportamentos × modos A e B | ~190 conversas por rodada; 3 rodadas |
 | Repetição | Mesma conversa 5× para medir variação do GPT | Cenários críticos |
-| Red team | Tentativas de quebrar: margem, injeção, engenharia social, dados pessoais | ~50 tentativas |
+| Red team | 9 ataques: margem, injeção de instruções, preço falso, "amigo do diretor", dado pessoal, tirar do papel, vazar as regras, mensagem falsa de sistema, "diz que é humana" | 36 conversas por rodada |
+| Teste de abertura | Abertura atual × SPIN com o cadastro como hipótese, modo B, 3 repetições | 120 conversas, antes da Rodada 1 |
+| Comparação de modelos | O mesmo teste com outro modelo da Fernanda (cliente e avaliador fixos) | Críticos, negociação e conversas longas |
 | Humanos reais | Vendedores como clientes; teste cego | ~50 conversas |
 | Não funcional | Gate fora do ar, lentidão, concorrência, estoque disputado, custo | 1 bateria por rodada |
 | Calibração | Gestores × IA nas mesmas conversas de treino | ~20 conversas |
@@ -155,8 +176,9 @@ sistema consiga executá-lo.
 **Regra de ouro:** nenhuma mudança de prompt ou regra entra sem rodar a suíte inteira de novo. Prompt é tratado como código:
 versionado e com teste de regressão.
 
-**Ferramenta a construir em outubro:** um **executor em lote** que coloca o "GPT-cliente" do Treino para conversar com a
-Fernanda automaticamente. Sem ele, as ~190 conversas por rodada não cabem no trimestre.
+**Construído no início de outubro:** o **Laboratório** (executor em lote), que coloca o "GPT-cliente" do Treino para
+conversar com a Fernanda automaticamente e confere cada conversa. Era o que faltava para as ~190 conversas por rodada
+caberem no trimestre.
 
 ---
 
@@ -164,7 +186,7 @@ Fernanda automaticamente. Sem ele, as ~190 conversas por rodada não cabem no tr
 
 | Período | Vendedor IA | Treino | Marco |
 |---|---|---|---|
-| **S1** · 01–17/out | Executor em lote; suíte v1 congelada; referência humana (C12 + CRM) | Seleção do piloto e dos gestores; treinamento de uso | **Metas assinadas** |
+| **S1** · 01–17/out | ~~Executor em lote~~ (pronto: Laboratório); teste de abertura; suíte v1 congelada; referência humana (C12 + CRM) | Seleção do piloto e dos gestores; treinamento de uso | **Metas assinadas** |
 | **S2** · 20–31/out | **Rodada 1** (matriz A × B); análise e ajuste de prompts | Início do piloto (≥ 2 treinos/vendedor) | Relatório da rodada 1 |
 | **S3** · 03–14/nov | Playbook com trechos dos melhores vendedores (anonimizados); validação do áudio | Coleta de ~20 conversas para calibração | Playbook v1 |
 | **S4** · 17–28/nov | **Rodada 2**; red team; teste cego | **Calibração** gestores × IA; ajuste da rubrica | Relatórios da rodada 2 e da calibração |
@@ -181,7 +203,7 @@ Considera ~11 semanas úteis, com congelamento após 19/12.
 |---|---|---|---|
 | 1 | Validar as metas da seção 5 | Gestor | 10/out |
 | 2 | Amostra de ligações classificadas pelo C12 e indicadores do CRM (conversão, ticket, desconto médio, tempo de resposta) | Dados / Comercial | 17/out |
-| 3 | Confirmar no llm-gate: suporte a `tools`, transcrição de áudio e cota para as rodadas | Time do llm-gate | 17/out |
+| 3 | Confirmar no llm-gate: suporte a `tools`, transcrição de áudio, cota para as rodadas e **quais modelos estão disponíveis** além do 5.4 mini (para comparação) | Time do llm-gate | 17/out |
 | 4 | Abrir o processo de LGPD: uso de transcrições anonimizadas e das notas de treino (dado de funcionário, com RH) | Privacidade / RH | Abrir até 10/out |
 | 5 | 3 a 5 vendedores e 1 gestor para o piloto do Treino (≈ 30 min/semana) | Gestão comercial | 17/out |
 | 6 | 2 a 3 gestores para a calibração (≈ 4 h cada) | Gestão comercial | Novembro |
@@ -199,6 +221,10 @@ Considera ~11 semanas úteis, com congelamento após 19/12.
 | Falta de tempo dos vendedores no piloto | Médio | Treinos curtos (10 min), agenda fixa semanal |
 | A nota do Treino não ter credibilidade | Alto | Calibração com gestores antes de "valer"; uso para desenvolvimento, não para cobrança |
 | Expectativa de produção no Q4 | Médio | Alinhar que o Q4 entrega prova e decisão; produção é 2027 |
+| Prompt injection (alguém tentar mudar as regras da IA) | Alto | Defesa em 4 camadas; a IA não vê margens e não decide preço; red team com 9 ataques a cada rodada |
+| Injeção indireta quando entrar o CRM real (texto de sistemas com "instruções") | Alto (a partir do Gate 2) | Tratar texto vindo de sistemas como dado, não ordem; teste específico no Laboratório antes de ligar o CRM |
+| Perder rodadas e treinos numa atualização | Médio | Backup automático do banco antes de recriar e download no Guia |
+| O modelo atual (5.4 mini) ser fraco para a conversa | Médio | Comparação de modelos no Laboratório, com cliente e avaliador fixos e custo por conversa |
 
 ---
 
@@ -206,8 +232,9 @@ Considera ~11 semanas úteis, com congelamento após 19/12.
 
 1. Reunião de 30 min para **validar as metas** e os pedidos da seção 8.
 2. Pedido formal da amostra do C12 e do CRM e abertura do processo de LGPD.
-3. Construção do **executor em lote** e preparação da Rodada 1.
-4. Convite ao grupo piloto do Treino.
+3. **Teste de abertura** no Laboratório (120 conversas) e escolha da abertura padrão; em seguida, **Rodada 1** (linha de base).
+4. Se o llm-gate oferecer outro modelo, **comparação de modelos** da Fernanda no Laboratório.
+5. Convite ao grupo piloto do Treino.
 
 **Rito de acompanhamento:** status quinzenal de 30 minutos (números da rodada, decisões pendentes e riscos) e um registro
 de decisões compartilhado.
@@ -218,4 +245,7 @@ de decisões compartilhado.
 
 - `ONDE_ESTAMOS.md` — histórico completo das decisões e do que foi construído.
 - `ROTEIRO_DE_TESTES.md` — roteiro passo a passo dos testes.
+- `LABORATORIO.md` — como usar o Laboratório e o que fazer quando der errado (em qual camada está o problema).
+- `docs/como_funciona/` — 4 imagens: chat × agente, uma mensagem por dentro, ferramentas e bases, proteção contra ataques.
+- `docs/modelos/` — modelos do relatório final de testes e do pacote de decisão do Gate 1.
 - `README.md` — como instalar e executar.

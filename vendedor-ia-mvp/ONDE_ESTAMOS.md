@@ -165,6 +165,12 @@ ninguém digitando. É o executor em lote que faltava para as ~190 conversas por
 - **Aberturas:** abertura 1 (atual, cadastro como afirmação) × abertura 2 (SPIN, cadastro como hipótese a confirmar,
   problema e implicação antes do Challenger). Rodar o teste de abertura **antes** da rodada completa oficial; a
   vencedora vira o padrão (`FERNANDA_ABERTURA`) e a linha de base usa ela.
+- **Segurança (prompt injection):** red team com 9 ataques, incluindo tirar do papel, vazar as regras, mensagem falsa de
+  sistema e "diz que é humana"; auditor de segurança (outro GPT) para o que regra fixa não pega; trava barra "sou
+  humana"; nova regra nas instruções contra mensagem falsa de sistema e pedidos fora do escopo.
+- **Modelos:** modelo por papel (Fernanda, IA-cliente, coach, avaliador, auditor), registrado em cada rodada e em cada
+  resposta; comparação de rodadas lado a lado (aprovação, nota, segundos por turno, custo por conversa).
+- **Backup do banco:** cópia automática antes de recriar e download no Guia.
 - **Desconto, alçada e gerente:** a trava barra "o gerente aprovou" quando o sistema não aprovou; o Laboratório confere
   se ela consultou a alçada antes de responder ao desconto, se ofereceu alternativa depois do "não" e se segurou o preço
   sem contrapartida; o relatório tem o bloco **Concessões e alçada** (A × B). O gerente continua simulado (regra

@@ -1,7 +1,9 @@
 """Cliente do LLM (endpoint compatível com chat/completions). A chave fica só no backend."""
+import contextvars
 import os
 import time
 import uuid
+from contextlib import contextmanager
 from pathlib import Path
 
 import requests
@@ -67,8 +69,58 @@ def headers() -> dict:
             "X-Correlation-ID": str(uuid.uuid4())}
 
 
+# ------------------------------------------------------------------ modelo por papel
+# Cada chamada sabe "quem está falando": a Fernanda (vendedora), a IA-cliente, o coach, o avaliador da nota C12 ou o
+# auditor de segurança. O modelo de cada papel vem de LLM_MODEL_<PAPEL> (ex.: LLM_MODEL_VENDEDORA) e, se não houver,
+# de LLM_MODEL. Uma rodada do Laboratório pode fixar os modelos dela (usando_modelos), o que permite comparar modelos
+# da Fernanda mantendo o cliente e o avaliador iguais.
+PAPEIS = ("vendedora", "cliente", "coach", "avaliador", "auditor")
+_ENV_DO_PAPEL = {"auditor": "avaliador"}  # o auditor de segurança usa o mesmo modelo do avaliador
+_papel = contextvars.ContextVar("papel_llm", default="vendedora")
+_modelos = contextvars.ContextVar("modelos_llm", default=None)
+
+
+@contextmanager
+def papel(nome: str):
+    token = _papel.set(nome)
+    try:
+        yield
+    finally:
+        _papel.reset(token)
+
+
+@contextmanager
+def usando_modelos(modelos: dict | None):
+    token = _modelos.set({k: v for k, v in (modelos or {}).items() if v})
+    try:
+        yield
+    finally:
+        _modelos.reset(token)
+
+
+def papel_atual() -> str:
+    return _papel.get()
+
+
+def modelo(nome_papel: str | None = None) -> str:
+    p = nome_papel or _papel.get()
+    base = _ENV_DO_PAPEL.get(p, p)
+    return ((_modelos.get() or {}).get(p) or (_modelos.get() or {}).get(base) or os.getenv(f"LLM_MODEL_{base.upper()}")
+            or os.getenv("LLM_MODEL", "gpt-5.4-mini"))
+
+
+def modelos_atuais() -> dict:
+    return {p: modelo(p) for p in ("vendedora", "cliente", "avaliador")}
+
+
+def modelos_disponiveis() -> list[str]:
+    """Sugestões para a tela (LLM_MODELOS_DISPONIVEIS, separados por vírgula) + os que já estão configurados."""
+    lista = [m.strip() for m in os.getenv("LLM_MODELOS_DISPONIVEIS", "").split(",") if m.strip()]
+    return list(dict.fromkeys(lista + list(modelos_atuais().values())))
+
+
 def payload(messages: list[dict], max_tokens: int, json_mode: bool = False) -> dict:
-    p = {"model": os.getenv("LLM_MODEL", "gpt-5.4-mini"), "messages": messages,
+    p = {"model": modelo(), "messages": messages,
          "max_completion_tokens": int(os.getenv("LLM_MAX_TOKENS", max_tokens))}
     if json_mode:
         p["response_format"] = {"type": "json_object"}
@@ -125,7 +177,7 @@ def completar(messages: list[dict], max_tokens: int = 1500, retries: int = 2, js
                 data = r.json()
                 usage = data.get("usage", {})
                 choice = data["choices"][0]
-                return {"message": choice.get("message") or {}, "finish_reason": choice.get("finish_reason"),
+                return {"message": choice.get("message") or {}, "finish_reason": choice.get("finish_reason"), "modelo": body["model"],
                         "tokens_entrada": usage.get("prompt_tokens", 0), "tokens_saida": usage.get("completion_tokens", 0),
                         "tokens_cache": (usage.get("prompt_tokens_details") or {}).get("cached_tokens", 0),
                         # o llm-gate devolve o custo real em cost.token.total (mesma leitura do classificador)
@@ -197,6 +249,8 @@ def diagnosticar() -> int:
     host = urlparse(url).hostname or ""
     print(f"URL ............ {url}")
     print(f"Modelo ......... {os.getenv('LLM_MODEL', 'gpt-5.4-mini')}")
+    for p, m in modelos_atuais().items():
+        print(f"  {p:<12} . {m}")
     print(f"Cabeçalho ...... {os.getenv('LLM_AUTH_HEADER', 'api_key')}")
     print(f"Chave .......... {'presente (' + str(len(api_key())) + ' caracteres)' if api_key() else 'AUSENTE — defina API_KEY ou LLM_API_KEY'}")
     proxies = {k: v for k, v in requests.utils.get_environ_proxies(url).items() if k in ("http", "https", "all")}

@@ -51,12 +51,16 @@
         <label>Dificuldade do cliente<select id="dificuldade"><option value="facil">Fácil</option><option value="medio" selected>Médio</option><option value="dificil">Difícil</option></select></label>
         <label>Em paralelo<select id="workers"><option>1</option><option selected>2</option></select></label>
       </div>
+      <label>Modelo da Fernanda<input id="modelo_vendedora" list="modelos-lista" maxlength="80" placeholder="padrão"></label>
+      <datalist id="modelos-lista"></datalist>
+      <div id="modelos-fixos" class="badge"></div>
       <label class="linha-check"><input type="checkbox" id="avaliar_ia" checked>Dar nota C12 em cada conversa (avaliador do Treino)</label>
       <label>Nome (opcional)<input id="nome" maxlength="120" placeholder="ex.: Rodada 1 — linha de base"></label>
       <div id="estimativa" class="tool"></div>
       <button id="btn-criar" class="primary" data-ic="flask">Iniciar rodada</button>
     </div>
-    <h2 style="margin-top:16px">Rodadas</h2>
+    <div class="lab-top" style="margin-top:16px"><h2 style="margin:0">Rodadas</h2><button id="btn-comparar" disabled data-ic="chart">Comparar</button></div>
+    <div class="badge">Marque 2 a 4 rodadas para comparar lado a lado (ex.: mesmo teste com modelos diferentes).</div>
     <div id="rodadas" class="badge">Nenhuma rodada ainda.</div>
   </aside>
   <section id="col-rodada">

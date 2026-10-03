@@ -1,5 +1,6 @@
 // Laboratório: IA-cliente (personas do Treino) conversa sozinha com a Fernanda (modos A e B); o sistema confere cada conversa.
 let cat = null, rodadaId = null, execId = null, timer = null;
+const marcadas = new Set();
 const $ = id => document.getElementById(id);
 const api = async (url, opts) => {
   const r = await fetch(url, opts && {headers: {'Content-Type': 'application/json'}, ...opts});
@@ -23,6 +24,9 @@ async function init() {
   $('preset').innerHTML = cat.presets.map(p => `<option value="${p.id}">${esc(p.titulo)} — ${p.execucoes} conversas</option>`).join('')
     + '<option value="">Personalizada (escolher clientes e comportamentos)</option>';
   $('cli').innerHTML = cat.personas.map(p => `<label><input type="checkbox" value="${p.cliente_id}">${p.cliente_id} · ${esc(p.razao_social)}</label>`).join('');
+  $('modelos-lista').innerHTML = cat.modelos_disponiveis.map(m => `<option value="${esc(m)}">`).join('');
+  $('modelo_vendedora').placeholder = `padrão: ${cat.modelos.vendedora}`;
+  $('modelos-fixos').textContent = `IA-cliente: ${cat.modelos.cliente} · avaliador: ${cat.modelos.avaliador} (fixos, para a comparação ser justa)`;
   $('aberturas').innerHTML = cat.aberturas.map(a => `<label><input type="checkbox" name="abertura" value="${a.id}" ${a.id === cat.abertura_padrao ? 'checked' : ''}>${esc(a.titulo)}</label>`).join('');
   const grupos = {base: 'Comportamentos', negociacao: 'Negociação', longa: 'Conversa longa', red_team: 'Red team (ataques)'};
   $('comp').innerHTML = cat.comportamentos.map(c => `<label title="${esc(c.instrucao)}"><input type="checkbox" value="${c.id}">${esc(c.titulo)}${c.grupo === 'base' ? '' : `<span class="badge"> · ${grupos[c.grupo]}</span>`}</label>`).join('');
@@ -46,7 +50,7 @@ function corpo() {
     modos: [...document.querySelectorAll('input[name=modo]:checked')].map(i => i.value),
     aberturas: [...document.querySelectorAll('input[name=abertura]:checked')].map(i => i.value),
     repeticoes: +$('repeticoes').value || 1, max_turnos: +$('max_turnos').value || 12, dificuldade: $('dificuldade').value,
-    avaliar_ia: $('avaliar_ia').checked, workers: +$('workers').value, nome: $('nome').value.trim() || null};
+    avaliar_ia: $('avaliar_ia').checked, modelos: $('modelo_vendedora').value.trim() ? {vendedora: $('modelo_vendedora').value.trim()} : {}, workers: +$('workers').value, nome: $('nome').value.trim() || null};
 }
 
 async function estimar() {
@@ -74,12 +78,40 @@ $('btn-criar').onclick = async () => {
 async function listar() {
   const rs = await api('/api/lab/rodadas');
   $('rodadas').innerHTML = rs.length ? rs.map(r => `<div class="rod ${r.rodada_id === rodadaId ? 'sel' : ''}" data-id="${r.rodada_id}">
-      <div class="lab-top"><span>${esc(r.nome)}</span><span class="st st-${r.status}">${STATUS[r.status] || r.status}</span></div>
-      <div class="badge">${r.rodada_id} · ${r.feitas}/${r.total} feitas · ${r.aprovadas} aprovadas</div>
+      <div class="lab-top"><span><input type="checkbox" class="marca-comp" data-id="${r.rodada_id}" ${marcadas.has(r.rodada_id) ? 'checked' : ''} title="Comparar"> ${esc(r.nome)}</span><span class="st st-${r.status}">${STATUS[r.status] || r.status}</span></div>
+      <div class="badge">${r.rodada_id} · ${r.feitas}/${r.total} feitas · ${r.aprovadas} aprovadas${r.modelo_vendedora ? ` · ${esc(r.modelo_vendedora)}` : ''}</div>
       <div class="barra"><i style="width:${r.total ? 100 * r.feitas / r.total : 0}%;background:var(--green-l)"></i></div></div>`).join('')
     : 'Nenhuma rodada ainda.';
   $('rodadas').querySelectorAll('.rod').forEach(el => el.onclick = () => abrirRodada(el.dataset.id));
+  $('rodadas').querySelectorAll('.marca-comp').forEach(cb => {
+    cb.onclick = ev => ev.stopPropagation();
+    cb.onchange = () => { cb.checked ? marcadas.add(cb.dataset.id) : marcadas.delete(cb.dataset.id); $('btn-comparar').disabled = marcadas.size < 2 || marcadas.size > 4; };
+  });
+  $('btn-comparar').disabled = marcadas.size < 2 || marcadas.size > 4;
 }
+
+$('btn-comparar').onclick = async () => {
+  clearTimeout(timer);
+  let c;
+  try { c = await api(`/api/lab/comparar?ids=${[...marcadas].join(',')}`); } catch (err) { alert(err.message); return; }
+  const DIM = {diagnostico: 'Diagnóstico', challenger: 'Challenger com dado', objecoes: 'Objeções', qualificacao: 'Qualificação',
+    adicionais: 'Adicionais', fechamento: 'Fechamento', tom: 'Tom', disciplina_margem: 'Disciplina de margem'};
+  const linhas = [
+    ['Modelo da Fernanda', r => esc(r.modelos.vendedora || '—')], ['IA-cliente / avaliador', r => esc(`${r.modelos.cliente || '—'} / ${r.modelos.avaliador || '—'}`)],
+    ['Conversas concluídas', r => r.conversas], ['Erros técnicos', r => r.erros],
+    ['Aprovadas nas checagens (B)', r => pct(r.por_modo.B.aprovadas_pct)], ['Nota C12 média (B)', r => num(r.por_modo.B.nota_media), r => r.por_modo.B.nota_media],
+    ...Object.entries(DIM).map(([k, n]) => [`↳ ${n}`, r => num(r.dimensoes_b[k]), r => r.dimensoes_b[k]]),
+    ['Aprovadas nas checagens (A, controle)', r => pct(r.por_modo.A.aprovadas_pct)],
+    ['Checagens reprovadas', r => r.checagens_reprovadas], ['Tentativas barradas pela trava (B)', r => r.tentativas_barradas_b],
+    ['Desconto médio concedido (B)', r => r.concessoes_b && r.concessoes_b.desconto_medio_concedido != null ? pct(r.concessoes_b.desconto_medio_concedido) : '—'],
+    ['Segundos por turno', r => num(r.segundos_por_turno)], ['Custo por conversa', r => r.custo_por_conversa_usd != null ? 'US$ ' + num(r.custo_por_conversa_usd) : '—'],
+    ['Custo total', r => 'US$ ' + num(r.custo_total_usd)],
+  ];
+  $('rodada').innerHTML = `<div class="lab-top"><h1 class="lab-h1">Comparação de rodadas</h1></div>
+    <div class="badge">Compare só rodadas com o mesmo tipo de teste: o que deve mudar entre elas é o que você quer medir (ex.: o modelo da Fernanda).</div>
+    <table class="comparacao"><tr><th></th>${c.map(r => `<th>${esc(r.nome)}<br><span class="badge">${r.rodada_id}</span></th>`).join('')}</tr>
+      ${linhas.map(([n, f, cc]) => `<tr><td>${n}</td>${c.map(r => `<td${cc ? ` style="color:${cor(cc(r))};font-weight:700"` : ''}>${f(r)}</td>`).join('')}</tr>`).join('')}</table>`;
+};
 
 async function abrirRodada(id) {
   rodadaId = id;
@@ -106,6 +138,7 @@ function renderRodada(r) {
   $('rodada').innerHTML = `
     <div class="lab-top"><h1 class="lab-h1">${esc(r.nome)}</h1><span class="st st-${r.status}">${STATUS[r.status] || r.status}</span></div>
     <div class="badge">${r.rodada_id} · dificuldade ${esc(r.config.dificuldade)} · ${r.config.workers} em paralelo · nota C12 ${r.config.avaliar_ia ? 'ligada' : 'desligada'}</div>
+    ${r.config.modelos ? `<div class="badge">Modelos: Fernanda <b>${esc(r.config.modelos.vendedora)}</b> · IA-cliente ${esc(r.config.modelos.cliente)} · avaliador ${esc(r.config.modelos.avaliador)}</div>` : ''}
     <div class="barra grossa"><i style="width:${s.total ? 100 * feitas / s.total : 0}%;background:var(--green-l)"></i></div>
     <div class="acoes">${botoes}<a href="/api/lab/rodadas/${r.rodada_id}/export.csv"><button data-ic="download">Exportar CSV</button></a></div>
     <div class="kpis">
@@ -114,6 +147,8 @@ function renderRodada(r) {
       <div class="kpi"><b>${s.falhas.length}</b><span>checagens reprovadas</span></div>
       <div class="kpi"><b>${s.tokens.toLocaleString('pt-BR')}</b><span>tokens</span></div>
       <div class="kpi"><b>US$ ${num(s.custo_gate_usd)}</b><span>custo no gate</span></div>
+      <div class="kpi"><b>${s.custo_por_conversa_usd != null ? 'US$ ' + num(s.custo_por_conversa_usd) : '—'}</b><span>por conversa</span></div>
+      <div class="kpi"><b>${s.segundos_por_turno != null ? num(s.segundos_por_turno) + ' s' : '—'}</b><span>por turno</span></div>
     </div>
     <h2>Modo A × Modo B</h2>
     <table><tr><th></th><th>Conversas</th><th>Aprovadas</th><th>Nota C12</th><th>Turnos médios</th></tr>
@@ -205,7 +240,7 @@ async function abrirExecucao(id, silencioso) {
     <div class="lab-top"><span>${x.cliente_id} · ${esc(c ? c.cliente.razao_social : '')}</span><span class="tier">Modo ${x.modo} · Abertura ${esc(x.abertura || '1')}</span></div>
     <div class="badge">${esc(x.comportamento_titulo)} · ${x.turnos || 0}/${x.max_turnos} turnos · ${x.status === 'CONCLUIDA' ? esc(FIM[x.fim_motivo] || x.fim_motivo) : STATUS[x.status]}</div>
     ${x.erro ? `<div class="bad">${esc(x.erro)}</div>` : ''}
-    ${x.checks.length ? `<h2>Checagens do sistema</h2><ul class="checklist">${x.checks.map(ch => `<li>${ch.ok ? '✅' : '❌'} ${esc(ch.check)}${ch.detalhe ? ` <span class="badge">— ${esc(ch.detalhe)}</span>` : ''}</li>`).join('')}</ul>` : ''}
+    ${x.checks.length ? `<h2>Checagens do sistema</h2><ul class="checklist">${x.checks.map(ch => `<li>${ch.ok ? '✅' : '❌'} ${esc(ch.check)}${ch.fonte === 'auditor' ? ' <span class="tier">auditor</span>' : ''}${ch.detalhe ? ` <span class="badge">— ${esc(ch.detalhe)}</span>` : ''}</li>`).join('')}</ul>` : ''}
     ${a ? `<h2>Nota C12</h2><div class="dim"><div class="dim-top"><span>${esc(a.resumo || 'Avaliação')}</span><span style="color:${cor(a.nota_geral)}">${num(a.nota_geral)}</span></div>
       <table>${Object.values(a.dimensoes).map(d => `<tr><td>${esc(d.nome)}</td><td style="color:${cor(d.nota)};font-weight:700">${num(d.nota)}</td></tr>`).join('')}</table>
       ${(a.pontos_a_melhorar || []).length ? `<div class="rotulo">Onde a Fernanda pode melhorar</div><ul>${a.pontos_a_melhorar.map(p => `<li>${esc(p)}</li>`).join('')}</ul>` : ''}</div>` : ''}

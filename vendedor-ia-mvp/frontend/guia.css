@@ -84,3 +84,6 @@ span.st{border:1px solid;border-radius:10px;padding:0 8px;font-size:10.5px;font-
 .figura figcaption{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--bd);flex-wrap:wrap}
 .figura figcaption b{font-size:15px}.figura figcaption span{color:var(--muted);flex:1;min-width:220px}
 .figura img{display:block;width:100%;height:auto}
+
+.baixar-banco{margin-left:auto;text-decoration:none}
+.baixar-banco button{border-radius:16px;height:30px}

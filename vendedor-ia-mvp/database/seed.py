@@ -6,7 +6,9 @@ icp_segmentacao/icps_definidos.md (ICP1 operação móvel, ICP2 mobilidade comer
 """
 import csv
 import json
+import shutil
 import sqlite3
+from datetime import datetime
 from pathlib import Path
 
 from database import db
@@ -119,10 +121,34 @@ def gerar_arquivos(data_dir: Path = DATA_DIR) -> None:
         [{"roteiro_id": r, "titulo": t, "texto": x} for r, t, x in ROTEIROS_GENERICOS], ensure_ascii=False, indent=2), encoding="utf-8")
 
 
+def _versao_do_banco(path: Path) -> str | None:
+    try:
+        conn = sqlite3.connect(path)
+        try:
+            row = conn.execute("SELECT valor FROM meta WHERE chave='versao_mundo'").fetchone()
+        finally:
+            conn.close()
+        return row[0] if row else None
+    except sqlite3.Error:
+        return None
+
+
+def backup_antes_de_recriar(path: Path) -> Path | None:
+    """Nunca apaga o banco sem guardar uma cópia: rodadas do Laboratório, conversas e treinos ficam em database/backups."""
+    if not path.exists() or path.stat().st_size == 0:
+        return None
+    destino = path.parent / "backups" / f"{path.stem}_{datetime.now():%Y-%m-%d_%H%M%S}_{_versao_do_banco(path) or 'sem-versao'}{path.suffix}"
+    destino.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(path, destino)
+    print(f"Backup do banco anterior salvo em: {destino}")
+    return destino
+
+
 def load(db_path=None) -> None:
     gerar_arquivos()
     path = Path(db_path) if db_path else db.get_db_path()
     if path.exists():
+        backup_antes_de_recriar(path)
         path.unlink()
     conn = sqlite3.connect(path)
     with conn:

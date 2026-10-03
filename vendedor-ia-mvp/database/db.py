@@ -40,3 +40,17 @@ def execute(sql: str, params=()) -> None:
             conn.execute(sql, params)
     finally:
         conn.close()
+
+
+def copiar(destino) -> Path:
+    """Cópia consistente do banco (API de backup do SQLite: funciona com o servidor rodando)."""
+    destino = Path(destino)
+    destino.parent.mkdir(parents=True, exist_ok=True)
+    src, dst = sqlite3.connect(_db_path, timeout=30), sqlite3.connect(destino)
+    try:
+        src.backup(dst)
+    finally:
+        dst.close()
+        src.close()
+    return destino
+

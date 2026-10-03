@@ -29,6 +29,12 @@ NOMES = {"diagnostico": "Diagnóstico", "challenger": "Challenger com dado", "ob
          "tom": "Tom e empatia", "adicionais": "Adicionais"}
 
 
+
+def _com_papel(nome: str, *a, **kw):
+    """Chamada ao LLM marcada com o papel (cliente, coach, avaliador): cada papel pode usar um modelo diferente."""
+    with llm_client.papel(nome):
+        return llm_client.completar(*a, **kw)
+
 def _now() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
 
@@ -113,7 +119,7 @@ def mensagem(tid: str, texto: str, meta: dict | None = None) -> dict:
     msgs = [{"role": "system", "content": _persona_prompt(r["cliente_id"], r["dificuldade"])}]
     msgs += [{"role": "assistant" if m["role"] == "cliente" else "user", "content": m["conteudo"]} for m in hist]
     try:
-        out = llm_client.completar(msgs, json_mode=True, max_tokens=600)
+        out = _com_papel("cliente", msgs, json_mode=True, max_tokens=600)
         j = _json(out["message"].get("content"))
         resp = str(j.get("mensagem") or "").strip() or "..."
         validos = {s["id"] for s in PERSONAS[r["cliente_id"]]["segredos"]}
@@ -141,7 +147,7 @@ def _coach(tid: str, r: dict, estado: dict) -> None:
                 "calculos_feitos_pelo_vendedor": len(estado["calculos"]), "propostas": len(estado["propostas"])}
     conversa = "\n".join(f"{'V' if m['role'] == 'vendedor' else 'C'}: {m['conteudo']}" for m in _transcricao(tid))
     try:
-        out = llm_client.completar([{"role": "system", "content": P_COACH},
+        out = _com_papel("coach", [{"role": "system", "content": P_COACH},
                                     {"role": "user", "content": f"CONTEXTO: {json.dumps(pendente, ensure_ascii=False)}\n\nCONVERSA:\n{conversa}"}],
                                    json_mode=True, max_tokens=300, retries=1)
         j = _json(out["message"].get("content"))
@@ -252,7 +258,7 @@ def avaliar_conversa(cliente_id: str, hist: list[dict], estado: dict) -> dict:
                                          "calculos_feitos": [c["entrada"] for c in estado["calculos"]], "propostas": estado["propostas"],
                                          "estado_final_do_cliente": estado["estado_cliente"]}}
         try:
-            out = llm_client.completar([{"role": "system", "content": P_AVALIADOR},
+            out = _com_papel("avaliador", [{"role": "system", "content": P_AVALIADOR},
                                         {"role": "user", "content": f"CONTEXTO: {json.dumps(contexto, ensure_ascii=False, default=str)}\n\n"
                                                                     f"CONVERSA:\n{conversa}"}], json_mode=True, max_tokens=2500)
             j = _json(out["message"].get("content"))

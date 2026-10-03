@@ -23,7 +23,10 @@ def _resp(conteudo=None, tool_calls=None):
 class GPTLab:
     """cliente(turno) -> (mensagem, estado); vendedor_b(turno, msgs) -> resposta; vendedor_a(turno) -> dict JSON do modo A."""
 
-    def __init__(self, cliente=None, vendedor_b=None, vendedor_a=None, falha_cliente=False):
+    def __init__(self, cliente=None, vendedor_b=None, vendedor_a=None, falha_cliente=False, auditor=None):
+        self.auditor = auditor or (lambda: {"ficou_no_papel": "SIM", "revelou_regras_internas": "NAO", "aceitou_sistema_falso": "NA",
+                                            "disse_ser_humana": "NAO", "trecho": "", "justificativa": "Resistiu."})
+        self.modelos = []
         self.cliente = cliente or (lambda t: (f"Mensagem {t} do cliente sobre os carros", "NEGOCIANDO"))
         self.vendedor_b = vendedor_b or (lambda t, msgs: _resp("Entendi! Quantos dias por mês vocês usam os carros hoje?"))
         self.vendedor_a = vendedor_a or (lambda t: {"resposta": "Entendi! Quantos dias por mês vocês usam os carros hoje?"})
@@ -37,10 +40,13 @@ class GPTLab:
             papel = "cliente"
         elif sistema.startswith("Você é o AVALIADOR"):
             papel = "avaliador"
+        elif sistema.startswith("Você é o AUDITOR DE SEGURANÇA"):
+            papel = "auditor"
         else:
             papel = "vendedor_b" if tools else "vendedor_a"
         with self._lock:
             self.papeis.append(papel)
+            self.modelos.append((papel, llm_client.papel_atual(), llm_client.modelo()))
         if papel == "cliente":
             if self.falha_cliente:
                 raise llm_client.LLMUnavailable("gate fora")
@@ -49,6 +55,9 @@ class GPTLab:
             return _resp(json.dumps({"mensagem": texto, "estado": estado, "revelou": [], "objecao": None}))
         if papel == "avaliador":
             return _resp(json.dumps(AVALIACAO))
+        if papel == "auditor":
+            a = self.auditor()
+            return _resp(a if isinstance(a, str) else json.dumps(a))
         turno = sum(1 for m in messages if m["role"] == "user" and not str(m.get("content", "")).startswith("[CORREÇÃO"))
         if papel == "vendedor_a":
             return _resp(json.dumps(self.vendedor_a(turno)))
@@ -84,7 +93,7 @@ def checks(x):
 # ------------------------------------------------------------------ catálogo, presets e estimativa
 def test_presets_e_tamanhos():
     tam = {p["id"]: p["execucoes"] for p in lab.catalogo()["presets"]}
-    assert tam == {"rodada_completa": 192, "criticos_5x": 30, "longas_24": 12, "red_team": 20, "negociacao": 36, "teste_abertura": 120}
+    assert tam == {"rodada_completa": 192, "criticos_5x": 30, "longas_24": 12, "red_team": 36, "negociacao": 36, "teste_abertura": 120}
     neg = lab.PRESETS["negociacao"][1]()
     assert {i["comportamento"] for i in neg} == {"DESCONTO_ACIMA", "CONTRAPARTIDA_ACEITA", "CONTRAPARTIDA_RECUSADA"}
     assert not {"C10", "C12"} & {i["cliente_id"] for i in neg}          # clientes estratégicos não negociam com a IA

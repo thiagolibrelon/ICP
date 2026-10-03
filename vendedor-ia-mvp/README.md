@@ -65,6 +65,11 @@ comportamento (✅/❌) e o avaliador do Treino dá a nota C12 (opcional). Cada 
   de 24 turnos (12), red team (20), negociação de desconto (36) e teste de abertura (120). Ou personalizada.
 - **Aberturas:** a Fernanda tem duas formas de começar a conversa (1 = atual; 2 = SPIN com o cadastro como hipótese).
   Seletor no Simulador, opção na rodada personalizada e bloco Abertura 1 × 2 no relatório; padrão em `FERNANDA_ABERTURA`.
+- **Red team ampliado (prompt injection):** 9 ataques (36 conversas), auditor de segurança para o que regra fixa não pega
+  e trava para "sou humana".
+- **Modelo por papel:** Fernanda, IA-cliente e avaliador podem usar modelos diferentes (`LLM_MODEL_VENDEDORA`,
+  `LLM_MODEL_CLIENTE`, `LLM_MODEL_AVALIADOR`); cada rodada guarda os modelos usados; botão **Comparar** põe rodadas lado a lado.
+- **Backup:** antes de recriar o banco, cópia automática em `database/backups/`; no Guia, **Baixar banco (backup)**.
 - **Desconto e gerente:** checagens de consulta à alçada, alternativa depois do "não", aprovação do gerente inventada
   (também barrada pela trava) e preço segurado sem contrapartida; bloco **Concessões e alçada** no relatório.
 - **2 conversas em paralelo** por padrão (dá para usar 1). Rodadas podem ser canceladas e retomadas; se o servidor cair,

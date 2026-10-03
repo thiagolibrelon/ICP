@@ -47,9 +47,10 @@ def test_roadmap_inicial():
     con = next(f for f in r["fases"] if f["id"] == "CON")
     assert con["resumo"]["pct"] == 100          # o que já foi construído nasce concluído
     s1 = next(f for f in r["fases"] if f["id"] == "S1")
-    # S1-01 (executor em lote = Laboratório) já foi entregue; o restante do sprint nasce não iniciado
-    assert s1["resumo"]["concluido"] == 1 and _item(r, "S1-01")["status"] == "concluido"
-    assert all(i["status"] == "nao_iniciado" for i in s1["itens"] if i["id"] != "S1-01")
+    # já entregues no S1: executor em lote (Laboratório), backup do banco, modelo por papel e red team ampliado
+    entregues = {"S1-01", "S1-07", "S1-08", "S1-09"}
+    assert s1["resumo"]["concluido"] == len(entregues) and all(_item(r, i)["status"] == "concluido" for i in entregues)
+    assert all(i["status"] == "nao_iniciado" for i in s1["itens"] if i["id"] not in entregues)
     assert r["resumo"]["falta"] == r["resumo"]["total"] - r["resumo"]["concluido"]
 
 
@@ -63,7 +64,7 @@ def test_status_persiste_e_calcula_resumo(tmp_path):
     assert _item(r, "S1-01")["status"] == "em_andamento" and r["resumo"]["em_andamento"] == 1
     r = guia.definir_status("S1-01", "concluido")
     i = _item(r, "S1-01")
-    assert i["status"] == "concluido" and i["concluido_em"] and r["fases"][1]["resumo"]["concluido"] == 1
+    assert i["status"] == "concluido" and i["concluido_em"] and r["fases"][1]["resumo"]["concluido"] == 4  # S1-01 + S1-07/08/09
     # persistiu em disco, lido de novo sem estado em memória
     assert json.loads((tmp_path / "roadmap_progresso.json").read_text(encoding="utf-8"))["itens"]["S1-01"]["status"] == "concluido"
     assert _item(guia.roadmap(), "S1-01")["status"] == "concluido"
