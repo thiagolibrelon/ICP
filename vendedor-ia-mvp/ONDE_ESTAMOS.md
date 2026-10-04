@@ -171,6 +171,11 @@ ninguém digitando. É o executor em lote que faltava para as ~190 conversas por
 - **Modelos:** modelo por papel (Fernanda, IA-cliente, coach, avaliador, auditor), registrado em cada rodada e em cada
   resposta; comparação de rodadas lado a lado (aprovação, nota, segundos por turno, custo por conversa).
 - **Backup do banco:** cópia automática antes de recriar e download no Guia.
+- **Referência do time (C12, setembro/2026):** 168 ligações receptivas de venda (15 a 30/09, classificador gpt-5.4-mini):
+  fechou na ligação 12,7%, tentativa comercial 41%, Challenger com dado 22,9%. A régua do classificador mudou com a
+  troca de modelo em 15/09, por isso só a 2ª quinzena vale. Detalhes e propostas de meta em
+  `dados_referencia/REFERENCIA_TIME_SETEMBRO_2026.md`; o resumo é gerado por `scripts/resumo_c12.py` (números
+  agregados, sem trechos). Falta a parte do CRM.
 - **Desconto, alçada e gerente:** a trava barra "o gerente aprovou" quando o sistema não aprovou; o Laboratório confere
   se ela consultou a alçada antes de responder ao desconto, se ofereceu alternativa depois do "não" e se segurou o preço
   sem contrapartida; o relatório tem o bloco **Concessões e alçada** (A × B). O gerente continua simulado (regra

@@ -1,0 +1,428 @@
+{
+  "fonte": "classificador C12 (classificar_ligacoes_diario.py), números agregados, sem trechos nem identificadores",
+  "periodo": "2026-09-01 a 2026-09-30",
+  "total_ligacoes": 8008,
+  "por_direcao": {
+    "Outbound": 7153,
+    "Inbound": 855
+  },
+  "por_fonte": {
+    "gpt": 6073,
+    "auto_curta": 1931,
+    "erro": 4
+  },
+  "fora_do_formato_c12": 235,
+  "modelos_do_classificador": {
+    "gpt-4o-mini": 2421,
+    "gpt-5.4-mini": 3417
+  },
+  "receptivas_inbound": {
+    "ligacoes": 762,
+    "tipo_de_ligacao_pct": {
+      "suporte_operacional": 33.3,
+      "nova_venda": 26.6,
+      "renovacao": 9.7,
+      "cobranca": 9.7,
+      "relacionamento_sem_demanda": 6.2,
+      "misto": 3.7,
+      "duvida_contrato": 3.4,
+      "upsell": 2.1,
+      "pos_venda_manutencao": 1.6,
+      "pos_venda_sinistro": 1.4,
+      "sem_conteudo": 1.0,
+      "onboarding": 0.8,
+      "retencao": 0.4
+    },
+    "venda": {
+      "eram_venda": 400,
+      "eram_venda_pct": 52.5,
+      "desfecho_nas_de_venda_pct": {
+        "interessou_nao_fechou": 86.5,
+        "fechou_novo": 8.0,
+        "fechou_renovacao": 3.8,
+        "nao_era_venda": 1.8
+      },
+      "fechou_pct_das_de_venda": 11.8,
+      "tentativa_comercial_pct_das_de_venda": 59.5,
+      "tentativa_comercial_pct_das_que_nao_eram_venda": 13.8
+    },
+    "challenger": {
+      "com_dado_pct_de_todas": 12.3,
+      "com_dado_pct_das_de_venda": 20.8,
+      "descartados_por_falta_de_dado": 25,
+      "qualidade_pct_dos_challengers": {
+        "alta": 84.0,
+        "media": 16.0
+      },
+      "trouxe_dado_concreto_pct": 17.2,
+      "conectou_a_situacao_do_cliente_pct": 25.7,
+      "cliente_reagiu_pct": 29.1,
+      "tipos_pct_dos_challengers": {
+        "CH6 Antecipação de problema": 58.5,
+        "CH3 Urgência por regra real": 45.7,
+        "CH1 Custo oculto revelado": 20.2,
+        "CH4 Concorrente/alternativa superado com dado": 16.0,
+        "CH7 Necessidade não declarada descoberta": 6.4,
+        "CH5 Dor conectada a produto": 5.3,
+        "CH2 ROI calculado": 5.3
+      }
+    },
+    "problemas": {
+      "com_problema_pct": 42.3,
+      "resolvido_na_ligacao_pct_dos_problemas": {
+        "PARCIAL": 58.7,
+        "NAO": 32.9,
+        "SIM": 8.4
+      },
+      "mais_frequentes_pct_das_ligacoes": {
+        "P1 Acesso/sistema": 11.9,
+        "P2 Faturamento/cobrança": 10.6,
+        "P13 Crédito/cadastro PJ": 8.9,
+        "P10 Reserva/sistema": 5.6,
+        "P7 Disponibilidade": 3.0,
+        "P11 Outro": 2.2,
+        "P4 Manutenção/substituto": 1.7,
+        "P9 Sinistro": 1.3
+      }
+    }
+  },
+  "receptivas_inbound_so_venda": {
+    "ligacoes": 324,
+    "tipo_de_ligacao_pct": {
+      "nova_venda": 62.7,
+      "renovacao": 22.8,
+      "misto": 8.6,
+      "upsell": 4.9,
+      "retencao": 0.9
+    },
+    "venda": {
+      "eram_venda": 322,
+      "eram_venda_pct": 99.4,
+      "desfecho_nas_de_venda_pct": {
+        "interessou_nao_fechou": 87.0,
+        "fechou_novo": 8.1,
+        "fechou_renovacao": 4.7,
+        "nao_era_venda": 0.3
+      },
+      "fechou_pct_das_de_venda": 12.7,
+      "tentativa_comercial_pct_das_de_venda": 65.8,
+      "tentativa_comercial_pct_das_que_nao_eram_venda": 0.0
+    },
+    "challenger": {
+      "com_dado_pct_de_todas": 24.1,
+      "com_dado_pct_das_de_venda": 23.9,
+      "descartados_por_falta_de_dado": 16,
+      "qualidade_pct_dos_challengers": {
+        "alta": 80.8,
+        "media": 19.2
+      },
+      "trouxe_dado_concreto_pct": 32.1,
+      "conectou_a_situacao_do_cliente_pct": 43.5,
+      "cliente_reagiu_pct": 44.8,
+      "tipos_pct_dos_challengers": {
+        "CH6 Antecipação de problema": 56.4,
+        "CH3 Urgência por regra real": 46.2,
+        "CH4 Concorrente/alternativa superado com dado": 19.2,
+        "CH1 Custo oculto revelado": 19.2,
+        "CH7 Necessidade não declarada descoberta": 6.4,
+        "CH2 ROI calculado": 6.4,
+        "CH5 Dor conectada a produto": 5.1
+      }
+    },
+    "problemas": {
+      "com_problema_pct": 32.1,
+      "resolvido_na_ligacao_pct_dos_problemas": {
+        "PARCIAL": 58.7,
+        "NAO": 30.8,
+        "SIM": 10.6
+      },
+      "mais_frequentes_pct_das_ligacoes": {
+        "P13 Crédito/cadastro PJ": 13.0,
+        "P1 Acesso/sistema": 7.7,
+        "P2 Faturamento/cobrança": 5.6,
+        "P7 Disponibilidade": 4.6,
+        "P10 Reserva/sistema": 4.3,
+        "P11 Outro": 1.2,
+        "P14 Preço/competitividade": 1.2,
+        "P6 Km excedente": 0.9
+      }
+    }
+  },
+  "ativas_outbound": {
+    "ligacoes": 5076,
+    "tipo_de_ligacao_pct": {
+      "relacionamento_sem_demanda": 45.9,
+      "nova_venda": 21.5,
+      "suporte_operacional": 14.0,
+      "cobranca": 3.8,
+      "renovacao": 3.3,
+      "sem_conteudo": 2.9,
+      "onboarding": 2.1,
+      "misto": 2.0,
+      "duvida_contrato": 1.3,
+      "upsell": 1.2,
+      "pos_venda_manutencao": 0.9,
+      "retencao": 0.7,
+      "pos_venda_sinistro": 0.4,
+      "supporte_operacional": 0.0
+    },
+    "venda": {
+      "eram_venda": 1818,
+      "eram_venda_pct": 35.8,
+      "desfecho_nas_de_venda_pct": {
+        "interessou_nao_fechou": 90.8,
+        "fechou_novo": 5.3,
+        "fechou_renovacao": 2.0,
+        "nao_era_venda": 1.7,
+        "fechou_upsell": 0.2
+      },
+      "fechou_pct_das_de_venda": 7.3,
+      "tentativa_comercial_pct_das_de_venda": 74.0,
+      "tentativa_comercial_pct_das_que_nao_eram_venda": 64.2
+    },
+    "challenger": {
+      "com_dado_pct_de_todas": 8.7,
+      "com_dado_pct_das_de_venda": 21.2,
+      "descartados_por_falta_de_dado": 69,
+      "qualidade_pct_dos_challengers": {
+        "alta": 82.1,
+        "media": 15.9,
+        "baixa": 2.0
+      },
+      "trouxe_dado_concreto_pct": 12.6,
+      "conectou_a_situacao_do_cliente_pct": 17.1,
+      "cliente_reagiu_pct": 18.6,
+      "tipos_pct_dos_challengers": {
+        "CH6 Antecipação de problema": 50.8,
+        "CH3 Urgência por regra real": 29.9,
+        "CH4 Concorrente/alternativa superado com dado": 24.7,
+        "CH1 Custo oculto revelado": 19.5,
+        "CH7 Necessidade não declarada descoberta": 8.2,
+        "CH2 ROI calculado": 6.3,
+        "CH5 Dor conectada a produto": 4.1
+      }
+    },
+    "problemas": {
+      "com_problema_pct": 20.1,
+      "resolvido_na_ligacao_pct_dos_problemas": {
+        "PARCIAL": 52.7,
+        "NAO": 37.2,
+        "SIM": 9.7,
+        "NENHUM": 0.4
+      },
+      "mais_frequentes_pct_das_ligacoes": {
+        "P1 Acesso/sistema": 7.1,
+        "P2 Faturamento/cobrança": 3.9,
+        "P13 Crédito/cadastro PJ": 3.5,
+        "P10 Reserva/sistema": 1.9,
+        "P7 Disponibilidade": 1.7,
+        "P14 Preço/competitividade": 1.4,
+        "P11 Outro": 1.0,
+        "P4 Manutenção/substituto": 0.8
+      }
+    }
+  },
+  "por_modelo_do_classificador": {
+    "gpt-4o-mini": {
+      "ligacoes": 353,
+      "tipo_de_ligacao_pct": {
+        "suporte_operacional": 33.7,
+        "nova_venda": 27.8,
+        "renovacao": 10.5,
+        "relacionamento_sem_demanda": 8.5,
+        "cobranca": 6.5,
+        "misto": 5.4,
+        "duvida_contrato": 4.2,
+        "pos_venda_sinistro": 1.7,
+        "sem_conteudo": 0.8,
+        "upsell": 0.6,
+        "onboarding": 0.3
+      },
+      "venda": {
+        "eram_venda": 167,
+        "eram_venda_pct": 47.3,
+        "desfecho_nas_de_venda_pct": {
+          "interessou_nao_fechou": 88.0,
+          "fechou_novo": 6.6,
+          "fechou_renovacao": 5.4
+        },
+        "fechou_pct_das_de_venda": 12.0,
+        "tentativa_comercial_pct_das_de_venda": 92.8,
+        "tentativa_comercial_pct_das_que_nao_eram_venda": 18.3
+      },
+      "challenger": {
+        "com_dado_pct_de_todas": 11.6,
+        "com_dado_pct_das_de_venda": 24.0,
+        "descartados_por_falta_de_dado": 24,
+        "qualidade_pct_dos_challengers": {
+          "alta": 73.2,
+          "media": 26.8
+        },
+        "trouxe_dado_concreto_pct": 20.1,
+        "conectou_a_situacao_do_cliente_pct": 38.0,
+        "cliente_reagiu_pct": 46.7,
+        "tipos_pct_dos_challengers": {
+          "CH6 Antecipação de problema": 46.3,
+          "CH3 Urgência por regra real": 41.5,
+          "CH4 Concorrente/alternativa superado com dado": 31.7,
+          "CH1 Custo oculto revelado": 12.2,
+          "CH2 ROI calculado": 9.8,
+          "CH5 Dor conectada a produto": 4.9,
+          "CH7 Necessidade não declarada descoberta": 4.9
+        }
+      },
+      "problemas": {
+        "com_problema_pct": 26.6,
+        "resolvido_na_ligacao_pct_dos_problemas": {
+          "NAO": 87.2,
+          "PARCIAL": 10.6,
+          "SIM": 2.1
+        },
+        "mais_frequentes_pct_das_ligacoes": {
+          "P1 Acesso/sistema": 6.8,
+          "P13 Crédito/cadastro PJ": 5.7,
+          "P2 Faturamento/cobrança": 5.4,
+          "P11 Outro": 4.0,
+          "P10 Reserva/sistema": 2.5,
+          "P7 Disponibilidade": 1.1,
+          "P4 Manutenção/substituto": 0.8,
+          "P9 Sinistro": 0.8
+        }
+      }
+    },
+    "gpt-5.4-mini": {
+      "ligacoes": 409,
+      "tipo_de_ligacao_pct": {
+        "suporte_operacional": 33.0,
+        "nova_venda": 25.7,
+        "cobranca": 12.5,
+        "renovacao": 9.0,
+        "relacionamento_sem_demanda": 4.2,
+        "upsell": 3.4,
+        "pos_venda_manutencao": 2.9,
+        "duvida_contrato": 2.7,
+        "misto": 2.2,
+        "sem_conteudo": 1.2,
+        "pos_venda_sinistro": 1.2,
+        "onboarding": 1.2,
+        "retencao": 0.7
+      },
+      "venda": {
+        "eram_venda": 233,
+        "eram_venda_pct": 57.0,
+        "desfecho_nas_de_venda_pct": {
+          "interessou_nao_fechou": 85.4,
+          "fechou_novo": 9.0,
+          "nao_era_venda": 3.0,
+          "fechou_renovacao": 2.6
+        },
+        "fechou_pct_das_de_venda": 11.6,
+        "tentativa_comercial_pct_das_de_venda": 35.6,
+        "tentativa_comercial_pct_das_que_nao_eram_venda": 9.1
+      },
+      "challenger": {
+        "com_dado_pct_de_todas": 13.0,
+        "com_dado_pct_das_de_venda": 18.5,
+        "descartados_por_falta_de_dado": 1,
+        "qualidade_pct_dos_challengers": {
+          "alta": 92.5,
+          "media": 7.5
+        },
+        "trouxe_dado_concreto_pct": 14.7,
+        "conectou_a_situacao_do_cliente_pct": 15.2,
+        "cliente_reagiu_pct": 13.9,
+        "tipos_pct_dos_challengers": {
+          "CH6 Antecipação de problema": 67.9,
+          "CH3 Urgência por regra real": 49.1,
+          "CH1 Custo oculto revelado": 26.4,
+          "CH7 Necessidade não declarada descoberta": 7.5,
+          "CH5 Dor conectada a produto": 5.7,
+          "CH4 Concorrente/alternativa superado com dado": 3.8,
+          "CH2 ROI calculado": 1.9
+        }
+      },
+      "problemas": {
+        "com_problema_pct": 55.7,
+        "resolvido_na_ligacao_pct_dos_problemas": {
+          "PARCIAL": 78.5,
+          "SIM": 11.0,
+          "NAO": 10.5
+        },
+        "mais_frequentes_pct_das_ligacoes": {
+          "P1 Acesso/sistema": 16.4,
+          "P2 Faturamento/cobrança": 15.2,
+          "P13 Crédito/cadastro PJ": 11.7,
+          "P10 Reserva/sistema": 8.3,
+          "P7 Disponibilidade": 4.6,
+          "P4 Manutenção/substituto": 2.4,
+          "P9 Sinistro": 1.7,
+          "P5 Condutor/cadastro": 1.7
+        }
+      }
+    }
+  },
+  "referencia_recomendada": {
+    "criterio": "Inbound, ligações de venda (nova venda, renovação, upsell, misto, retenção), classificadas por gpt-5.4-mini",
+    "periodo_efetivo": "2026-09-15 a 2026-09-30",
+    "ligacoes": 168,
+    "tipo_de_ligacao_pct": {
+      "nova_venda": 62.5,
+      "renovacao": 22.0,
+      "upsell": 8.3,
+      "misto": 5.4,
+      "retencao": 1.8
+    },
+    "venda": {
+      "eram_venda": 166,
+      "eram_venda_pct": 98.8,
+      "desfecho_nas_de_venda_pct": {
+        "interessou_nao_fechou": 86.7,
+        "fechou_novo": 9.0,
+        "fechou_renovacao": 3.6,
+        "nao_era_venda": 0.6
+      },
+      "fechou_pct_das_de_venda": 12.7,
+      "tentativa_comercial_pct_das_de_venda": 41.0,
+      "tentativa_comercial_pct_das_que_nao_eram_venda": 0.0
+    },
+    "challenger": {
+      "com_dado_pct_de_todas": 23.2,
+      "com_dado_pct_das_de_venda": 22.9,
+      "descartados_por_falta_de_dado": 0,
+      "qualidade_pct_dos_challengers": {
+        "alta": 89.7,
+        "media": 10.3
+      },
+      "trouxe_dado_concreto_pct": 26.2,
+      "conectou_a_situacao_do_cliente_pct": 26.2,
+      "cliente_reagiu_pct": 23.8,
+      "tipos_pct_dos_challengers": {
+        "CH6 Antecipação de problema": 66.7,
+        "CH3 Urgência por regra real": 51.3,
+        "CH1 Custo oculto revelado": 25.6,
+        "CH7 Necessidade não declarada descoberta": 7.7,
+        "CH4 Concorrente/alternativa superado com dado": 5.1,
+        "CH5 Dor conectada a produto": 5.1,
+        "CH2 ROI calculado": 2.6
+      }
+    },
+    "problemas": {
+      "com_problema_pct": 49.4,
+      "resolvido_na_ligacao_pct_dos_problemas": {
+        "PARCIAL": 69.9,
+        "NAO": 16.9,
+        "SIM": 13.3
+      },
+      "mais_frequentes_pct_das_ligacoes": {
+        "P13 Crédito/cadastro PJ": 20.8,
+        "P1 Acesso/sistema": 9.5,
+        "P2 Faturamento/cobrança": 8.9,
+        "P7 Disponibilidade": 7.7,
+        "P10 Reserva/sistema": 7.1,
+        "P14 Preço/competitividade": 2.4,
+        "P6 Km excedente": 1.8,
+        "P5 Condutor/cadastro": 1.8
+      }
+    }
+  }
+}

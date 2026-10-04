@@ -50,7 +50,8 @@ def test_roadmap_inicial():
     # já entregues no S1: executor em lote (Laboratório), backup do banco, modelo por papel e red team ampliado
     entregues = {"S1-01", "S1-07", "S1-08", "S1-09"}
     assert s1["resumo"]["concluido"] == len(entregues) and all(_item(r, i)["status"] == "concluido" for i in entregues)
-    assert all(i["status"] == "nao_iniciado" for i in s1["itens"] if i["id"] not in entregues)
+    assert _item(r, "S1-03")["status"] == "em_andamento"                        # C12 de setembro pronto; falta o CRM
+    assert all(i["status"] == "nao_iniciado" for i in s1["itens"] if i["id"] not in entregues | {"S1-03"})
     assert r["resumo"]["falta"] == r["resumo"]["total"] - r["resumo"]["concluido"]
 
 
@@ -61,7 +62,7 @@ def _item(r, item_id):
 
 def test_status_persiste_e_calcula_resumo(tmp_path):
     r = guia.definir_status("S1-01", "em_andamento")
-    assert _item(r, "S1-01")["status"] == "em_andamento" and r["resumo"]["em_andamento"] == 1
+    assert _item(r, "S1-01")["status"] == "em_andamento" and r["resumo"]["em_andamento"] == 2  # + S1-03 (falta o CRM)
     r = guia.definir_status("S1-01", "concluido")
     i = _item(r, "S1-01")
     assert i["status"] == "concluido" and i["concluido_em"] and r["fases"][1]["resumo"]["concluido"] == 4  # S1-01 + S1-07/08/09
@@ -205,7 +206,7 @@ def test_api_guia_e_roadmap():
         assert "toc" in c.get("/api/guia/como-utilizar").json()
         assert c.get("/api/roadmap").json()["resumo"]["total"] >= 55
         r = c.post("/api/roadmap/S1-01/status", json={"status": "em_andamento"}).json()
-        assert r["resumo"]["em_andamento"] == 1
+        assert r["resumo"]["em_andamento"] == 2  # S1-01 + S1-03
         assert c.post("/api/roadmap/S1-01/status", json={"status": "xx"}).status_code == 400
         assert c.post("/api/roadmap/NAO-01/status", json={"status": "concluido"}).status_code == 404
         n = c.post("/api/roadmap/S1-01/notas", json={"texto": "reunião marcada"})
