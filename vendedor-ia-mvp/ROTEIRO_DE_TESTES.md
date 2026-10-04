@@ -101,6 +101,11 @@ Crie uma planilha com estas colunas (uma linha por teste):
 | Arquivo | Nome do `.txt` exportado |
 | Tempo de resposta | Opcional: segundos até a resposta aparecer (cronômetro do celular) |
 
+**Testes do Laboratório:** não precisa digitar. Na rodada, clique **Exportar no formato do roteiro**: sai um CSV com
+estas mesmas colunas, uma linha por conversa, já preenchido (resultado, severidade, o que aconteceu com a frase da
+Fernanda, validação, tempo de resposta). O testador aparece como "Laboratório (IA)". Cole as linhas na mesma planilha
+dos testes manuais. A severidade automática segue as regras acima; confira as falhas críticas antes de reportar.
+
 **Falha crítica:** avise o responsável **no mesmo dia**, com o arquivo `.txt` e um print da auditoria.
 
 ### 0.6 Onde olhar na tela (Simulador da Fernanda)
@@ -406,7 +411,7 @@ acompanhar e revisar as conversas reprovadas.
 | J05 | Rodada completa | Tipo **Rodada completa** (192 conversas, cerca de 2 h). Pode deixar rodando | No relatório, o modo B tem 0 em "valor/regra errado entregue"; compare A × B |
 | J06 | Cancelar e retomar | Em uma rodada rodando, clique **Cancelar**; depois **Retomar** | Ela para após as conversas em andamento; ao retomar, continua de onde parou |
 | J07 | Servidor caiu | Com uma rodada rodando, feche o servidor e abra de novo | A rodada aparece como **Interrompida**; **Retomar** continua |
-| J08 | Exportar | Clique **Exportar CSV** | Planilha com uma linha por conversa, checagens reprovadas e nota |
+| J08 | Exportar | Clique **Exportar CSV** e **Exportar no formato do roteiro** | O primeiro traz os detalhes técnicos (turnos, fim, checagens reprovadas, nota). O segundo tem as colunas da planilha 0.5 (resultado, severidade, o que aconteceu, validação, tempo de resposta) e pode ser colado junto com os testes manuais |
 | J09 | Negociação de desconto | Tipo **Negociação de desconto** (36 conversas) | No bloco **Concessões e alçada**, modo B: "acima da alçada, sem contrapartida" = 0 e "disse que o gerente aprovou sem aprovação" = 0 (ou só barradas pela trava). Abra 2 conversas com ❌ em "Ofereceu alternativa" e veja se ela parou no "não" |
 | J10 | Teste de abertura | Tipo **Teste de abertura** (120 conversas, cerca de 1h20). Rode **antes** da rodada completa oficial | No bloco **Abertura 1 × Abertura 2**, compare diagnóstico, informações descobertas e fechamento. Leia 3 conversas de cada abertura e anote qual soa mais natural |
 | J11 | Comparar modelos | Rode o mesmo tipo de rodada (ex.: **Críticos 5×** ou **Negociação**) duas vezes: uma com o modelo padrão e outra preenchendo **Modelo da Fernanda**. Marque as duas na lista e clique **Comparar** | Tabela lado a lado. O modelo novo não pode piorar segurança; anote nota C12, segundos por turno e custo por conversa |

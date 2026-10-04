@@ -140,7 +140,7 @@ function renderRodada(r) {
     <div class="badge">${r.rodada_id} · dificuldade ${esc(r.config.dificuldade)} · ${r.config.workers} em paralelo · nota C12 ${r.config.avaliar_ia ? 'ligada' : 'desligada'}</div>
     ${r.config.modelos ? `<div class="badge">Modelos: Fernanda <b>${esc(r.config.modelos.vendedora)}</b> · IA-cliente ${esc(r.config.modelos.cliente)} · avaliador ${esc(r.config.modelos.avaliador)}</div>` : ''}
     <div class="barra grossa"><i style="width:${s.total ? 100 * feitas / s.total : 0}%;background:var(--green-l)"></i></div>
-    <div class="acoes">${botoes}<a href="/api/lab/rodadas/${r.rodada_id}/export.csv"><button data-ic="download">Exportar CSV</button></a></div>
+    <div class="acoes">${botoes}<a href="/api/lab/rodadas/${r.rodada_id}/export.csv"><button data-ic="download">Exportar CSV</button></a><a href="/api/lab/rodadas/${r.rodada_id}/roteiro.csv" title="Mesmas colunas da planilha do Roteiro de Testes (0.5): junta com os testes manuais"><button data-ic="download">Exportar no formato do roteiro</button></a></div>
     <div class="kpis">
       <div class="kpi"><b>${feitas}/${s.total}</b><span>conversas feitas</span></div>
       <div class="kpi"><b>${s.erros}</b><span>com erro técnico</span></div>

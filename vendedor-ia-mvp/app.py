@@ -214,7 +214,7 @@ def exportar_classificador(ids: str | None = None):
         if not msgs:
             continue
         texto = " | ".join(f"{'AGENTE' if m['role'] == 'vendedor' else 'CLIENTE'}: {' '.join(m['conteudo'].split())}" for m in msgs)
-        w.writerow([c["conversation_id"], c["inicio"].replace("T", " ").split("+")[0], "Inbound", f"Vendedor IA ({c['modo']})",
+        w.writerow([c["conversation_id"], c["inicio"].replace("T", " ").split("+")[0].split(".")[0], "Inbound", f"Vendedor IA ({c['modo']})",
                     "success", c["modo"], c["livre"], texto])
     return Response(("﻿" + buf.getvalue()).encode("utf-8"), media_type="text/csv",
                     headers={"Content-Disposition": 'attachment; filename="vendedor_ia_para_classificador.csv"'})
@@ -319,6 +319,12 @@ def lab_retomar(rid: str):
         laboratorio.executar_rodada(rid)
         return laboratorio.obter_rodada(rid)
     return _tratar(ret)
+
+
+@app.get("/api/lab/rodadas/{rid}/roteiro.csv")
+def lab_csv_roteiro(rid: str):
+    dados = _tratar(laboratorio.exportar_csv_roteiro, rid)
+    return Response(dados, media_type="text/csv", headers={"Content-Disposition": f'attachment; filename="laboratorio_{rid}_formato_roteiro.csv"'})
 
 
 @app.get("/api/lab/rodadas/{rid}/export.csv")

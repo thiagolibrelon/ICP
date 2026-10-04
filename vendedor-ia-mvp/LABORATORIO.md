@@ -181,7 +181,11 @@ adicionais, fechamento, tom e disciplina de margem), com justificativa e onde me
   vermelhas devem ficar em 0 (ou "barradas pela trava").
 - **Como as conversas terminaram:** muita conversa batendo no limite de turnos indica que ela não conduz para o fechamento.
 - **Checagens reprovadas:** a lista de tudo que deu ❌. Clique na linha para abrir a conversa.
-- **Exportar CSV:** uma linha por conversa, para a planilha.
+- **Exportar CSV:** uma linha por conversa, com os detalhes técnicos.
+- **Exportar no formato do roteiro:** as mesmas colunas da planilha do Roteiro de Testes (0.5), já preenchidas:
+  resultado (Passou, Falhou, Bloqueado), severidade (Crítica, Alta, Média, pelas mesmas regras do roteiro), o que
+  aconteceu (com a frase da Fernanda quando ela entregou o erro), validação das respostas e tempo de resposta. Serve
+  para juntar Laboratório e testes manuais numa planilha só.
 
 ---
 

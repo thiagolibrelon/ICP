@@ -11,7 +11,7 @@ LOG_FILE = BASE_DIR / "logs" / "conversations.jsonl"
 
 
 def _now() -> str:
-    return datetime.now(timezone.utc).isoformat(timespec="seconds")
+    return datetime.now(timezone.utc).isoformat(timespec="milliseconds")  # ms: mede o tempo de resposta da Fernanda
 
 
 def listar_clientes() -> list[dict]:
