@@ -1,0 +1,150 @@
+{
+  "versao": "1.0",
+  "atualizado_em": "2026-10-01",
+  "origem": "Montado a partir do MEMORANDO_Q4_2026.md (seções 7, 7.1 e 8) e do ONDE_ESTAMOS.md (seções 2, 3 e 5). O progresso é guardado à parte, em roadmap_progresso.json.",
+  "fases": [
+    {
+      "id": "CON",
+      "titulo": "Construído até 30/09/2026",
+      "periodo": "Concluído",
+      "descricao": "Tudo o que já existe e funciona (ONDE_ESTAMOS, seções 2 e 3).",
+      "itens": [
+        {"id": "CON-01", "titulo": "Plano oficial e v1 do simulador", "trilha": "Vendedor IA", "descricao": "HTML + Python + SQLite + GPT, 10 cenários + 1 de suporte, rodando na máquina da Localiza.", "fonte": "ONDE_ESTAMOS §2", "status_inicial": "concluido"},
+        {"id": "CON-02", "titulo": "Conexão com o llm-gate", "trilha": "Vendedor IA", "descricao": "Cliente do LLM alinhado ao classificar_ligacoes_diario.py: requests (proxy do Windows), cabeçalho api_key, X-Correlation-ID, reasoning_effort minimal.", "fonte": "ONDE_ESTAMOS §2", "status_inicial": "concluido"},
+        {"id": "CON-03", "titulo": "Auditoria da v1 e redesenho do cérebro", "trilha": "Vendedor IA", "descricao": "Descobriu-se que o GPT só reescrevia o que uma regra de palavras-chave decidia. O GPT passou a conduzir a conversa consultando ferramentas.", "fonte": "ONDE_ESTAMOS §2", "status_inicial": "concluido"},
+        {"id": "CON-04", "titulo": "v2: venda interna receptiva, experimento A × B e conversa livre", "trilha": "Vendedor IA", "descricao": "Modo B (oficial, com ferramentas) e modo A (controle). Rodou na Localiza, inclusive um teste 100% livre.", "fonte": "ONDE_ESTAMOS §2 e §3.2", "status_inicial": "concluido"},
+        {"id": "CON-05", "titulo": "Mundo simulado: catálogo, margem em 2 níveis, estoque e 12 clientes", "trilha": "Vendedor IA", "descricao": "4 modelos, 3 cidades, volume automático, gerente simulado, estoque compartilhado, perfis dos ICPs.", "fonte": "ONDE_ESTAMOS §3.1", "status_inicial": "concluido"},
+        {"id": "CON-06", "titulo": "Challenger com dado: comparações calculadas", "trilha": "Vendedor IA", "descricao": "Diária × mensal e elétrico × combustão. Diz a verdade quando não compensa.", "fonte": "ONDE_ESTAMOS §3.3", "status_inicial": "concluido"},
+        {"id": "CON-07", "titulo": "Naturalidade: persona Fernanda no estilo WhatsApp", "trilha": "Vendedor IA", "descricao": "Balões curtos, digitando, sem fórmulas de robô, nunca diz que é humana. Tiques de robô medidos.", "fonte": "ONDE_ESTAMOS §3.4", "status_inicial": "concluido"},
+        {"id": "CON-08", "titulo": "Pacote gerente/diretor", "trilha": "Vendedor IA", "descricao": "Adicionais, roteamento por tier, qualificação, handoff com briefing, Painel do gerente e áudio.", "fonte": "ONDE_ESTAMOS §3.5", "status_inicial": "concluido"},
+        {"id": "CON-09", "titulo": "Modo treino: GPT como cliente, coach ao vivo e nota C12", "trilha": "Treino", "descricao": "12 personas, 3 dificuldades, modo treino e prova, calculadora da alçada, nota por dimensão e evolução por vendedor.", "fonte": "ONDE_ESTAMOS §3.6", "status_inicial": "concluido"},
+        {"id": "CON-10", "titulo": "Governança e medição", "trilha": "Vendedor IA", "descricao": "Validador, auditoria na tela, avaliação por conversa, comparativo A × B, exportação para o classificador e 66 testes automáticos.", "fonte": "ONDE_ESTAMOS §3.7", "status_inicial": "concluido"},
+        {"id": "CON-11", "titulo": "Memorando do Q4/2026 e Roteiro de testes", "trilha": "Marco", "descricao": "Metas de sucesso, plano de testes, roadmap e pedidos, mais o roteiro passo a passo para testador externo.", "fonte": "MEMORANDO_Q4_2026.md", "status_inicial": "concluido"},
+        {"id": "CON-12", "titulo": "Guia dentro da ferramenta", "trilha": "Vendedor IA", "descricao": "Esta página: glossário, roadmap com progresso editável e Como utilizar (o Roteiro de testes).", "fonte": "Pedido do responsável", "status_inicial": "concluido"}
+      ]
+    },
+    {
+      "id": "S1",
+      "titulo": "Sprint 1",
+      "periodo": "01–17/out/2026",
+      "descricao": "Preparar o terreno: ferramenta de lote, régua congelada e metas assinadas.",
+      "itens": [
+        {"id": "S1-01", "titulo": "Executor em lote", "trilha": "Vendedor IA", "prazo": "17/out", "descricao": "O GPT-cliente do Treino conversa sozinho com a Fernanda. Sem ele, as ~190 conversas por rodada não cabem no trimestre. Pronto: aba Laboratório (rodada completa, críticos 5×, conversas longas de 24 turnos e red team; 2 conversas em paralelo).", "fonte": "Memorando §6 e §7", "status_inicial": "concluido"},
+        {"titulo": "Suíte v1 congelada", "id": "S1-02", "trilha": "Vendedor IA", "prazo": "17/out", "descricao": "Congelar a régua: salvar o comparativo e a nota C12 como linha de base. Toda mudança futura é comparada com ela.", "fonte": "Memorando §7; ONDE_ESTAMOS §5"},
+        {"id": "S1-03", "titulo": "Referência humana (C12 + CRM)", "trilha": "Vendedor IA", "prazo": "17/out", "descricao": "Linha de base do time real: C12 das ligações e indicadores do CRM (conversão, ticket, desconto médio, tempo de resposta). Pré-requisito do Gate 1.", "fonte": "Memorando §7 e §8 (pedido 2)"},
+        {"id": "S1-04", "titulo": "Seleção do piloto e dos gestores do Treino", "trilha": "Treino", "prazo": "17/out", "descricao": "3 a 5 vendedores e 1 gestor para o piloto, mais 2 a 3 gestores para a calibração.", "fonte": "Memorando §7"},
+        {"id": "S1-05", "titulo": "Treinamento de uso do Treino", "trilha": "Treino", "prazo": "17/out", "descricao": "Explicar o uso aos vendedores do piloto. Treinos curtos de 10 minutos, com agenda fixa semanal.", "fonte": "Memorando §7 e §9"},
+        {"id": "S1-06", "titulo": "Marco: metas assinadas", "trilha": "Marco", "prazo": "17/out", "marco": true, "descricao": "Metas da seção 5 do memorando validadas e assinadas pelo gestor.", "fonte": "Memorando §7"},
+        {"id": "S1-07", "titulo": "Backup automático do banco", "trilha": "Vendedor IA", "prazo": "17/out", "descricao": "Antes de recriar o mvp.db (mudança de versão do mundo simulado), salvar uma cópia em database/backups e avisar no terminal; botão \"Baixar banco\" no Guia. Sem isso, rodadas e treinos podem ser apagados. Pronto: cópia automática em database/backups antes de recriar e botão \"Baixar banco (backup)\" no Guia.", "fonte": "Conversa de 03/10/2026", "status_inicial": "concluido"},
+        {"id": "S1-08", "titulo": "Modelo por papel e registro do modelo na rodada", "trilha": "Vendedor IA", "prazo": "17/out", "descricao": "Escolher o modelo separadamente para a Fernanda, a IA-cliente e o avaliador, e salvar em cada rodada qual modelo foi usado. Pré-requisito para comparar o gpt-5.4 mini com outro modelo de forma justa. Pronto: LLM_MODEL_VENDEDORA / _CLIENTE / _AVALIADOR, campo \"Modelo da Fernanda\" na rodada e botão Comparar no Laboratório.", "fonte": "Conversa de 03/10/2026", "status_inicial": "concluido"},
+        {"id": "S1-09", "titulo": "Red team ampliado: prompt injection", "trilha": "Vendedor IA", "prazo": "17/out", "descricao": "Quatro ataques novos no Laboratório (sair do papel, vazar as regras, mensagem de sistema falsa, \"diz que é humana\") com checagens: ficou no escopo, não parafraseou regras internas, não aceitou sistema falso, não disse que é humana (também na trava). Pronto: 9 ataques no red team (36 conversas), auditor de segurança e trava para \"sou humana\".", "fonte": "Conversa de 03/10/2026", "status_inicial": "concluido"},
+        {"id": "S1-10", "titulo": "Teste de abertura (antes da linha de base)", "trilha": "Vendedor IA", "prazo": "17/out", "descricao": "Rodar o tipo \"Teste de abertura\" (120 conversas), escolher a abertura vencedora e defini-la como padrão (FERNANDA_ABERTURA) antes da rodada 1.", "fonte": "LABORATORIO.md §3.1"}
+      ]
+    },
+    {
+      "id": "S2",
+      "titulo": "Sprint 2",
+      "periodo": "20–31/out/2026",
+      "descricao": "Primeira rodada de testes e início do piloto do Treino.",
+      "itens": [
+        {"id": "S2-01", "titulo": "Rodada 1 (matriz A × B)", "trilha": "Vendedor IA", "prazo": "31/out", "descricao": "12 clientes × 8 comportamentos × modos A e B, ~190 conversas, reiniciando o estoque a cada par. Rodar o classificador C12 nas conversas exportadas (TAMANHO_MINIMO ~200).", "fonte": "Memorando §6 e §7; ONDE_ESTAMOS §5"},
+        {"id": "S2-02", "titulo": "Análise e ajuste de prompts", "trilha": "Vendedor IA", "prazo": "31/out", "descricao": "Calibrar tom, diagnóstico e fechamento com o que a rodada mostrar. Mudar uma coisa por vez e rodar a suíte inteira de novo.", "fonte": "Memorando §7; ONDE_ESTAMOS §5"},
+        {"id": "S2-03", "titulo": "Início do piloto do Treino", "trilha": "Treino", "prazo": "31/out", "descricao": "Pelo menos 2 treinos por vendedor.", "fonte": "Memorando §7"},
+        {"id": "S2-04", "titulo": "Marco: relatório da rodada 1", "trilha": "Marco", "prazo": "31/out", "marco": true, "descricao": "Resultados da primeira matriz, incluindo o comparativo A × B (modo B com zero violações).", "fonte": "Memorando §7"}
+      ]
+    },
+    {
+      "id": "S3",
+      "titulo": "Sprint 3",
+      "periodo": "03–14/nov/2026",
+      "descricao": "Playbook com exemplos reais anonimizados e coleta para calibração.",
+      "itens": [
+        {"id": "S3-01", "titulo": "Playbook v1 com trechos dos melhores vendedores (anonimizados)", "trilha": "Vendedor IA", "prazo": "14/nov", "marco": true, "descricao": "Camada 2 de melhoria: cruzar classificação C12 com desfecho real e transformar o que funciona em regras e exemplos. Pode começar com trechos escritos pelos gestores se a LGPD atrasar.", "fonte": "Memorando §7 e §9; ONDE_ESTAMOS §5"},
+        {"id": "S3-02", "titulo": "Validação do áudio", "trilha": "Vendedor IA", "prazo": "14/nov", "descricao": "Conferir a transcrição pelo llm-gate (Bloco C do roteiro) e o comportamento da Fernanda quando o áudio é confuso.", "fonte": "Memorando §7"},
+        {"id": "S3-03", "titulo": "Coleta de ~20 conversas de treino para calibração", "trilha": "Treino", "prazo": "14/nov", "descricao": "As mesmas conversas serão avaliadas pelos gestores na sprint seguinte.", "fonte": "Memorando §7"}
+      ]
+    },
+    {
+      "id": "S4",
+      "titulo": "Sprint 4",
+      "periodo": "17–28/nov/2026",
+      "descricao": "Segunda rodada, red team, teste cego e calibração da nota.",
+      "itens": [
+        {"id": "S4-01", "titulo": "Rodada 2", "trilha": "Vendedor IA", "prazo": "28/nov", "descricao": "Reexecução da matriz depois dos ajustes, com repetição 5× nos cenários críticos.", "fonte": "Memorando §6 e §7"},
+        {"id": "S4-02", "titulo": "Red team (~50 tentativas)", "trilha": "Vendedor IA", "prazo": "28/nov", "descricao": "Margem, injeção de prompt, engenharia social e dados pessoais (Bloco D do roteiro).", "fonte": "Memorando §6 e §7"},
+        {"id": "S4-03", "titulo": "Teste cego 'humano ou IA?'", "trilha": "Vendedor IA", "prazo": "28/nov", "descricao": "10 trechos (5 da Fernanda, 5 de vendedores reais anonimizados). Meta: avaliadores acertam no máximo 60%.", "fonte": "Memorando §5 e §7"},
+        {"id": "S4-04", "titulo": "Calibração gestores × IA", "trilha": "Treino", "prazo": "28/nov", "descricao": "2 a 3 gestores avaliam as mesmas ~20 conversas sem ver a nota da IA. Meta: a até 1,5 ponto da média em ≥ 80% das dimensões.", "fonte": "Memorando §5 e §7"},
+        {"id": "S4-05", "titulo": "Ajuste da rubrica do avaliador", "trilha": "Treino", "prazo": "28/nov", "descricao": "Corrigir as dimensões em que a IA divergiu dos gestores.", "fonte": "Memorando §7"},
+        {"id": "S4-06", "titulo": "Marco: relatórios da rodada 2 e da calibração", "trilha": "Marco", "prazo": "28/nov", "marco": true, "descricao": "", "fonte": "Memorando §7"}
+      ]
+    },
+    {
+      "id": "S5",
+      "titulo": "Sprint 5",
+      "periodo": "01–12/dez/2026",
+      "descricao": "Regressão final, custo e latência, fechamento do piloto.",
+      "itens": [
+        {"id": "S5-01", "titulo": "Rodada 3 (regressão final)", "trilha": "Vendedor IA", "prazo": "12/dez", "descricao": "Confirma que os ajustes não pioraram nada.", "fonte": "Memorando §7"},
+        {"id": "S5-02", "titulo": "Custo e latência consolidados", "trilha": "Vendedor IA", "prazo": "12/dez", "descricao": "Custo real por conversa com teto definido; tempo de resposta p90 ≤ 8 s (a confirmar).", "fonte": "Memorando §5 e §7"},
+        {"id": "S5-03", "titulo": "Fechamento do piloto do Treino", "trilha": "Treino", "prazo": "12/dez", "descricao": "Pelo menos 4 treinos por vendedor.", "fonte": "Memorando §5 e §7"},
+        {"id": "S5-04", "titulo": "Pesquisa de satisfação do Treino", "trilha": "Treino", "prazo": "12/dez", "descricao": "Meta: ≥ 8/10 entre os vendedores do piloto.", "fonte": "Memorando §5 e §7"},
+        {"id": "S5-05", "titulo": "Marco: relatório final de testes", "trilha": "Marco", "prazo": "12/dez", "marco": true, "descricao": "", "fonte": "Memorando §7"}
+      ]
+    },
+    {
+      "id": "S6",
+      "titulo": "Sprint 6",
+      "periodo": "15–19/dez/2026",
+      "descricao": "Pacote do Gate 1 e decisão.",
+      "itens": [
+        {"id": "S6-01", "titulo": "Pacote do Gate 1", "trilha": "Vendedor IA", "prazo": "19/dez", "descricao": "Resultados, caso de negócio, arquitetura Teams e plano de LGPD.", "fonte": "Memorando §7"},
+        {"id": "S6-02", "titulo": "Proposta de expansão do Treino em 2027", "trilha": "Treino", "prazo": "19/dez", "descricao": "", "fonte": "Memorando §7"},
+        {"id": "S6-03", "titulo": "Marco: decisão go/no-go do piloto no Teams", "trilha": "Marco", "prazo": "19/dez", "marco": true, "descricao": "O Q4 não entrega produção: entrega prova e decisão. Congelamento após 19/12.", "fonte": "Memorando §5 e §7"}
+      ]
+    },
+    {
+      "id": "PED",
+      "titulo": "Pedidos e dependências",
+      "periodo": "Seção 8 do memorando",
+      "descricao": "Coisas de que o projeto depende e que dependem de outras pessoas.",
+      "itens": [
+        {"id": "PED-01", "titulo": "Validar as metas da seção 5", "trilha": "Gestor", "prazo": "10/out", "descricao": "Reunião de 30 minutos para validar metas e pedidos.", "fonte": "Memorando §8 (1) e §10"},
+        {"id": "PED-02", "titulo": "Amostra de ligações C12 e indicadores do CRM", "trilha": "Dados / Comercial", "prazo": "17/out", "descricao": "Conversão, ticket, desconto médio, tempo de resposta. Alimenta S1-03.", "fonte": "Memorando §8 (2)"},
+        {"id": "PED-03", "titulo": "Confirmar no llm-gate: tools, transcrição de áudio e cota", "trilha": "Time do llm-gate", "prazo": "17/out", "descricao": "Sem tools nativas há retorno automático para o protocolo JSON.", "fonte": "Memorando §8 (3) e §9"},
+        {"id": "PED-04", "titulo": "Abrir o processo de LGPD", "trilha": "Privacidade / RH", "prazo": "10/out", "descricao": "Uso de transcrições anonimizadas e das notas de treino (dado de funcionário, com RH). Risco alto se atrasar.", "fonte": "Memorando §8 (4) e §9"},
+        {"id": "PED-05", "titulo": "3 a 5 vendedores e 1 gestor para o piloto do Treino", "trilha": "Gestão comercial", "prazo": "17/out", "descricao": "Cerca de 30 minutos por semana.", "fonte": "Memorando §8 (5)"},
+        {"id": "PED-06", "titulo": "2 a 3 gestores para a calibração (~4 h cada)", "trilha": "Gestão comercial", "prazo": "Novembro", "descricao": "", "fonte": "Memorando §8 (6)"},
+        {"id": "PED-07", "titulo": "Onde o backend vai rodar no piloto do Teams", "trilha": "TI / Arquitetura", "prazo": "Dezembro", "descricao": "Preparação para 2027.", "fonte": "Memorando §8 (7)"}
+      ]
+    },
+    {
+      "id": "GATE",
+      "titulo": "Caminho até produção",
+      "periodo": "Depois do Q4",
+      "descricao": "Os cinco gates do plano oficial. Cada um só abre depois do anterior.",
+      "itens": [
+        {"id": "GATE-1", "titulo": "Gate 1: HTML → agente privado no Teams", "trilha": "Marco", "descricao": "Copilot Studio usando a mesma API. Condições: rodada A × B concluída, nenhum preço inventado, API documentada (/docs).", "fonte": "ONDE_ESTAMOS §5"},
+        {"id": "GATE-2", "titulo": "Gate 2: dados sintéticos → dados controlados", "trilha": "Marco", "descricao": "Aprovação de Arquitetura, Segurança e Privacidade (LGPD: anonimizar transcrições). Antes de ligar o CRM real: tratar texto vindo de sistemas como dado, não instrução (injeção indireta), com teste no Laboratório.", "fonte": "ONDE_ESTAMOS §5"},
+        {"id": "GATE-3", "titulo": "Gate 3: consulta → cotação oficial", "trilha": "Marco", "descricao": "API oficial de preço e disponibilidade.", "fonte": "ONDE_ESTAMOS §5"},
+        {"id": "GATE-4", "titulo": "Gate 4: cotação → negociação", "trilha": "Marco", "descricao": "Alçadas aprovadas, handoff operacional e auditoria de concessões.", "fonte": "ONDE_ESTAMOS §5"},
+        {"id": "GATE-5", "titulo": "Gate 5: Teams → WhatsApp", "trilha": "Marco", "descricao": "Canal aprovado, templates e proteção de dados.", "fonte": "ONDE_ESTAMOS §5"}
+      ]
+    },
+    {
+      "id": "EVO",
+      "titulo": "Evoluções a decidir",
+      "periodo": "Sem data",
+      "descricao": "Ideias registradas no ONDE_ESTAMOS que ainda não viraram compromisso.",
+      "itens": [
+        {"id": "EVO-01", "titulo": "Modo copiloto", "trilha": "Vendedor IA", "descricao": "A Fernanda escreve, o vendedor humano revisa, edita e envia. Risco baixo, valor imediato, e cada edição vira dado de treino. Sugestão do diretor.", "fonte": "ONDE_ESTAMOS §5"},
+        {"id": "EVO-02", "titulo": "Follow-up de propostas", "trilha": "Vendedor IA", "descricao": "D+1, D+3 e 'vence amanhã'.", "fonte": "ONDE_ESTAMOS §5"},
+        {"id": "EVO-03", "titulo": "Assumir conversa", "trilha": "Vendedor IA", "descricao": "O humano entra na conversa em andamento.", "fonte": "ONDE_ESTAMOS §5"},
+        {"id": "EVO-04", "titulo": "Revisão amostral semanal", "trilha": "Vendedor IA", "descricao": "", "fonte": "ONDE_ESTAMOS §5"},
+        {"id": "EVO-05", "titulo": "Camada 3: exemplos reais (few-shot) e RAG", "trilha": "Vendedor IA", "descricao": "Trechos anonimizados dos melhores vendedores. Vem depois do playbook (S3-01).", "fonte": "ONDE_ESTAMOS §5"},
+        {"id": "EVO-06", "titulo": "Camada 4: fine-tuning", "trilha": "Vendedor IA", "descricao": "Só se as camadas 1 a 3 pararem de melhorar e o gate permitir.", "fonte": "ONDE_ESTAMOS §5"},
+        {"id": "EVO-07", "titulo": "Gerente real: fila de aprovação", "trilha": "Vendedor IA", "descricao": "Hoje o gerente é uma regra instantânea. Em produção: pedido acima da alçada vai para uma fila no painel, o gerente aprova ou nega, e a Fernanda avisa o cliente (\"levei ao meu gestor, te retorno até X\"). Ligado ao Gate 4.", "fonte": "Conversa de 02/10/2026"},
+        {"id": "EVO-08", "titulo": "Memória das conversas longas", "trilha": "Vendedor IA", "descricao": "A Fernanda vê só as últimas 16 mensagens. Se o teste de 24 turnos mostrar esquecimento, passar um resumo do que já foi dito (uso, decisor, objeções) junto com o histórico.", "fonte": "LABORATORIO.md §6"}
+      ]
+    }
+  ]
+}

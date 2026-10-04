@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vendedor IA — Simulador</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/marca.css">
+<link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="tb-left">
+    <img class="tb-logo-img" src="/static/assets/localiza-logo.png" alt="Localiza">
+    <span class="tb-sep"></span>
+    <span class="tb-title">Vendedor IA<small>ambiente simulado · dados fictícios</small></span>
+  </div>
+  <div class="tb-right">
+    <span id="llm" class="tb-status"></span>
+    <button id="btn-gerente" class="tb-btn green" data-ic="chart">Painel do gerente</button>
+    <button class="theme-btn" id="theme-btn" title="Tema claro/escuro"><span class="tt-k"></span></button>
+  </div>
+</header>
+<nav class="tabs-bar">
+  <a class="tab active" href="/" data-ic="car">Simulador da Fernanda</a>
+  <a class="tab" href="/treino" data-ic="target">Treino de vendas</a>
+  <a class="tab" href="/laboratorio" data-ic="flask">Laboratório</a>
+  <a class="tab" href="/guia" data-ic="book">Guia</a>
+</nav>
+<div class="toolbar">
+  <div class="linha">
+    <span class="tb-label">Conversa</span>
+    <select id="cliente" title="Cliente cadastrado que você vai interpretar"></select>
+    <select id="modo" title="Modo do vendedor">
+      <option value="B">Modo B — GPT + ferramentas (oficial)</option>
+      <option value="A">Modo A — GPT puro (controle)</option>
+    </select>
+    <select id="abertura" title="Como a Fernanda conduz o início da conversa. 1 = atual; 2 = SPIN, usando o cadastro como hipótese a confirmar">
+      <option value="1">Abertura 1 (atual)</option>
+      <option value="2">Abertura 2 (SPIN)</option>
+    </select>
+    <select id="roteiro" title="Roteiro de quem faz o papel do cliente"></select>
+    <button id="btn-novo" class="primary">Nova conversa</button>
+    <button id="btn-reset" data-ic="refresh">Reiniciar conversa</button>
+    <button id="btn-fechar">Encerrar</button>
+    <button id="btn-estoque" data-ic="refresh">Reiniciar estoque</button>
+  </div>
+  <div class="linha">
+    <span class="tb-label">Análise</span>
+    <button id="btn-aval" data-ic="chart">Avaliar conversa</button>
+    <button id="btn-comp" data-ic="chart">Comparativo A × B</button>
+    <button id="btn-json" data-ic="download">Exportar JSON</button>
+    <button id="btn-txt" data-ic="download">Exportar transcrição</button>
+    <button id="btn-cls" data-ic="download" title="Todas as conversas no formato de entrada do classificar_ligacoes_diario.py">Exportar p/ classificador</button>
+    <button id="btn-audit">Ocultar auditoria</button>
+  </div>
+</div>
+<main>
+  <aside id="col-cliente">
+    <h2>Cliente</h2><div id="info-cliente">—</div>
+    <div id="box-roteiro"><h2>Seu papel (roteiro)</h2><div id="roteiro-texto" class="roteiro">—</div></div>
+    <h2>Estoque ao vivo <small>(compartilhado)</small></h2><div id="estoque"></div>
+  </aside>
+  <section id="col-chat">
+    <div id="chat"><div class="nota">Escolha um cliente e clique em <b>Nova conversa</b>. O atendimento é receptivo: quem começa é você, no papel do cliente.</div></div>
+    <form id="form"><button type="button" id="btn-mic" title="Gravar áudio como o cliente (clique para começar e para enviar)" disabled data-ic="mic"></button><input id="msg" autocomplete="off" placeholder="Escreva como o cliente..." disabled><button id="btn-enviar" class="primary" disabled data-ic="send">Enviar</button></form>
+  </section>
+  <aside id="col-audit">
+    <div id="audit-box"><h2>Auditoria</h2><div id="audit">Clique numa resposta do vendedor.</div></div>
+    <h2>Avaliação</h2><div id="aval">—</div>
+  </aside>
+</main>
+<div id="modal" hidden><div class="modal-box"><div class="modal-top"><h2>Painel do gerente</h2><button id="btn-fechar-modal">Fechar</button></div>
+  <div class="tabs"><button data-tab="concessoes" class="tab-btn ativo">Concessões</button><button data-tab="handoffs" class="tab-btn">Fila de handoffs</button></div>
+  <div id="modal-conteudo"></div></div></div>
+<script src="/static/marca.js"></script>
+<script src="/static/app.js"></script>
+</body>
+</html>
