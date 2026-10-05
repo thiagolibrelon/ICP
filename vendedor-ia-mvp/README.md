@@ -70,6 +70,10 @@ comportamento (✅/❌) e o avaliador do Treino dá a nota C12 (opcional). Cada 
 - **Modelo por papel:** Fernanda, IA-cliente e avaliador podem usar modelos diferentes (`LLM_MODEL_VENDEDORA`,
   `LLM_MODEL_CLIENTE`, `LLM_MODEL_AVALIADOR`); cada rodada guarda os modelos usados; botão **Comparar** põe rodadas lado a lado.
 - **Backup:** antes de recriar o banco, cópia automática em `database/backups/`; no Guia, **Baixar banco (backup)**.
+- **Frente ativa:** a Fernanda inicia o contato com a carteira, com motivo verdadeiro do cadastro. Regras no sistema
+  (Tier A bloqueado, descadastro, 1 contato a cada 7 dias, 1 follow-up sem resposta, identificação como assistente
+  virtual). No Simulador (seletor de frente e Painel do gerente › Carteira), no Laboratório (tipo Frente ativa, 84
+  conversas) e no Treino (o vendedor chama o cliente). Detalhes em `LABORATORIO.md` §3.2.
 - **Desconto e gerente:** checagens de consulta à alçada, alternativa depois do "não", aprovação do gerente inventada
   (também barrada pela trava) e preço segurado sem contrapartida; bloco **Concessões e alçada** no relatório.
 - **2 conversas em paralelo** por padrão (dá para usar 1). Rodadas podem ser canceladas e retomadas; se o servidor cair,
@@ -112,4 +116,4 @@ protocolo JSON equivalente (`LLM_TOOLS`). Custo real lido de `cost.token.total`.
 ## Estrutura
 
 `app.py` (API) · `iniciar.py` · `frontend/` · `services/` (`catalog` = ferramentas determinísticas, `agent` = modos A/B,
-`validator`, `conversations`, `evaluation`, `training`, `laboratorio`, `guia`, `llm_client`) · `prompts/` (base, regras B, regras A) · `guia/` (glossário e roadmap) · `database/` · `tests/`.
+`validator`, `conversations`, `evaluation`, `training`, `laboratorio`, `ativa`, `guia`, `llm_client`) · `prompts/` (base, regras B, regras A) · `guia/` (glossário e roadmap) · `database/` · `tests/`.

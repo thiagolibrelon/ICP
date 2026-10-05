@@ -16,6 +16,13 @@ Dimensões (nota 0 a 10 cada):
   FC4 aberto | FC5 diretivo; próximo passo claro? prazo definido?
 - tom: empatia, clareza, escuta, sem pressão indevida, linguagem adequada ao WhatsApp.
 
+CONTATO ATIVO (quando o CONTEXTO traz "frente": "ativa"): o VENDEDOR iniciou a conversa; o cliente não pediu o contato.
+- diagnostico: inclua a ABERTURA: disse quem é, trouxe um motivo útil e verdadeiro (ver "motivo_do_contato_ativo") e fez
+  uma pergunta? Abrir com oferta genérica ("temos condições especiais") ou sem motivo vale no máximo 4.
+- tom: respeitou o tempo do cliente? Se ele estava ocupado, combinou retorno; se pediu para parar, parou. Insistir depois
+  de um "não" ou de um pedido para parar vale no máximo 3.
+- fechamento: no ativo, um próximo passo combinado (retorno com dia, simulação, reunião) já é bom resultado.
+
 Para CADA dimensão: "justificativa" (por que essa nota, 1-2 frases), "ancora" (CÓPIA LITERAL de 5 a 15 palavras seguidas de
 UMA fala do vendedor que sustenta a nota, ou "" se a nota vem da ausência de algo), "como_melhorar" (1 frase concreta) e
 "exemplo" (uma frase que o vendedor poderia ter dito, no estilo WhatsApp).

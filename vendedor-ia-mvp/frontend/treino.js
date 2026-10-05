@@ -24,11 +24,13 @@ function render() {
   const c = tr.cliente, pr = tr.progresso;
   $('info').innerHTML = `<dl><dt>Empresa</dt><dd>${esc(c.razao_social)}</dd><dt>Contato</dt><dd>${esc(tr.contato.nome)} · ${esc(tr.contato.cargo)}</dd>
     <dt>Cidade</dt><dd>${esc(c.cidade)}</dd><dt>Perfil</dt><dd>${esc(c.icp)} · Tier ${esc(c.tier)}</dd>
-    <dt>Uso atual</dt><dd>${esc(c.situacao)}</dd><dt>Treino</dt><dd>${tr.modo === 'PROVA' ? 'Prova' : 'Treino'} · ${esc(tr.dificuldade)}</dd></dl>`;
+    <dt>Uso atual</dt><dd>${esc(c.situacao)}</dd><dt>Treino</dt><dd>${tr.modo === 'PROVA' ? 'Prova' : 'Treino'} · ${esc(tr.dificuldade)} · ${tr.frente === 'ativa' ? 'contato ativo' : 'receptivo'}</dd></dl>
+    ${tr.frente === 'ativa' && tr.motivo ? `<div class="roteiro" style="margin-top:8px"><b>Motivo do contato (carteira):</b> ${esc(tr.motivo.titulo)} · ${esc(tr.motivo.resumo)}.<br>Você inicia a conversa: diga quem é, traga o motivo e faça uma pergunta.</div>` : ''}`;
   $('progresso').innerHTML = `Informações-chave descobertas: <b>${pr.segredos_descobertos} de ${pr.segredos_total}</b> · cliente: <b>${esc(pr.estado_cliente)}</b>`;
   $('chat').innerHTML = tr.mensagens.map(m => m.role === 'coach'
       ? `<div class="m coach">${icon('bulb')} <b>Coach:</b> ${esc(m.conteudo)}</div>`
       : `<div class="m ${m.role === 'vendedor' ? 'cliente' : 'vendedor'}"><div class="who">${m.role === 'vendedor' ? 'Você (vendedor)' : esc(tr.contato.nome) + ' · cliente'}</div>${m.meta && m.meta.audio ? icon('mic') + ' ' : ''}${esc(m.conteudo)}</div>`).join('');
+  if (!tr.mensagens.length) $('chat').innerHTML = '<div class="nota">Contato ativo: você começa. Escreva a primeira mensagem para o cliente.</div>';
   $('chat').scrollTop = 1e9;
   const dicas = tr.mensagens.filter(m => m.role === 'coach');
   $('coach').innerHTML = tr.modo === 'PROVA' ? 'Modo prova: sem dicas. Boa sorte!' : dicas.length ? `${icon('bulb')} ${esc(dicas[dicas.length - 1].conteudo)}` : 'A primeira dica aparece depois da sua primeira resposta.';
@@ -42,7 +44,7 @@ $('btn-iniciar').onclick = async () => {
   const v = $('vendedor').value.trim();
   if (!v) { alert('Informe seu nome.'); return; }
   try { localStorage.setItem('vendedor', v); } catch (e) {}
-  tr = await post('/api/treino', {vendedor: v, cliente_id: $('cliente').value, modo: $('modo').value, dificuldade: $('dificuldade').value});
+  tr = await post('/api/treino', {vendedor: v, cliente_id: $('cliente').value, modo: $('modo').value, dificuldade: $('dificuldade').value, frente: $('frente').value});
   $('resultado').innerHTML = '<div class="badge">A nota aparece quando você encerra.</div>'; $('calc-res').textContent = 'Calculadora pronta.';
   render(); $('msg').focus();
 };

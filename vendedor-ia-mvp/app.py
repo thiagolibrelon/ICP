@@ -10,7 +10,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from database import db, seed
-from services import catalog, conversations as conv, evaluation, guia, laboratorio, llm_client, training
+from services import ativa, catalog, conversations as conv, evaluation, guia, laboratorio, llm_client, training
 
 BASE = Path(__file__).resolve().parent
 
@@ -19,6 +19,7 @@ BASE = Path(__file__).resolve().parent
 async def _lifespan(_app):
     seed.ensure()
     laboratorio.recuperar_interrompidas()
+    ativa.garantir_tabelas()
     yield
 
 
@@ -31,6 +32,8 @@ class NovaConversa(BaseModel):
     livre: bool = False
     roteiro_id: str | None = None
     abertura: str | None = Field(None, pattern="^[12]$", description="1 = atual | 2 = SPIN com cadastro como hipótese")
+    origem: str = Field("receptiva", pattern="^(receptiva|ativa)$", description="ativa = a Fernanda inicia o contato")
+    motivo: str | None = None
 
 
 class Audio(BaseModel):
@@ -44,6 +47,7 @@ class NovoTreino(BaseModel):
     cliente_id: str
     modo: str = Field("TREINO", pattern="^(PROVA|TREINO)$")
     dificuldade: str = Field("medio", pattern="^(facil|medio|dificil)$")
+    frente: str = Field("receptiva", pattern="^(receptiva|ativa)$", description="ativa = o vendedor inicia o contato")
 
 
 class Condicao(BaseModel):
@@ -133,7 +137,26 @@ def catalogo(cidade: str | None = None):
 
 @app.post("/api/conversations", status_code=201)
 def nova(body: NovaConversa):
-    return _tratar(conv.iniciar, body.cliente_id, body.modo, body.livre, body.roteiro_id, body.abertura)
+    def criar():
+        c = conv.iniciar(body.cliente_id, body.modo, body.livre, body.roteiro_id, body.abertura, body.origem, body.motivo)
+        return conv.abrir_contato(c["conversation_id"]) if body.origem == "ativa" else c
+    return _tratar(criar)
+
+
+@app.post("/api/conversations/{cid}/follow-up")
+def follow_up(cid: str):
+    return _tratar(conv.follow_up, cid)
+
+
+@app.get("/api/ativa/carteira")
+def carteira():
+    return ativa.carteira()
+
+
+@app.post("/api/ativa/carteira/reiniciar")
+def carteira_reiniciar():
+    ativa.reiniciar_carteira()
+    return ativa.carteira()
 
 
 @app.get("/api/conversations/{cid}")
@@ -171,7 +194,10 @@ def handoffs():
 
 @app.post("/api/conversations/{cid}/reset")
 def reset(cid: str):
-    return _tratar(conv.reiniciar, cid)
+    def reiniciar():
+        c = conv.reiniciar(cid)
+        return conv.abrir_contato(cid) if c.get("origem") == "ativa" else c
+    return _tratar(reiniciar)
 
 
 @app.post("/api/conversations/{cid}/close")
@@ -228,7 +254,7 @@ def treino_personas():
 
 @app.post("/api/treino", status_code=201)
 def treino_novo(body: NovoTreino):
-    return _tratar(training.iniciar, body.vendedor, body.cliente_id, body.modo, body.dificuldade)
+    return _tratar(training.iniciar, body.vendedor, body.cliente_id, body.modo, body.dificuldade, body.frente)
 
 
 @app.get("/api/treino/historico")

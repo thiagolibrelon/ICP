@@ -13,7 +13,7 @@ from pathlib import Path
 
 from database import db
 from database.personas import DIFICULDADES, PERSONAS
-from services import agent, catalog, llm_client, validator
+from services import ativa, agent, catalog, llm_client, validator
 from services.catalog import ErroFerramenta
 from services.util import palavras
 
@@ -66,7 +66,14 @@ def personas() -> list[dict]:
 
 
 # ------------------------------------------------------------------ ciclo do treino
-def iniciar(vendedor: str, cliente_id: str, modo: str = "TREINO", dificuldade: str = "medio") -> dict:
+FRENTES = ("receptiva", "ativa")
+CONTEXTO_ATIVA = ("\n\nCONTEXTO: você NÃO procurou a locadora. O vendedor está te chamando agora pelo WhatsApp (contato ativo), no "
+                  "meio do seu dia de trabalho. Dê atenção de verdade só se o motivo for relevante para você e bem explicado; se ele "
+                  "for genérico, insistente ou não disser quem é, responda curto e esfrie a conversa. Seus segredos e objeções valem "
+                  "do mesmo jeito.")
+
+
+def iniciar(vendedor: str, cliente_id: str, modo: str = "TREINO", dificuldade: str = "medio", frente: str = "receptiva") -> dict:
     vendedor = (vendedor or "").strip()
     if not vendedor:
         raise ValueError("Informe o nome do vendedor")
@@ -74,11 +81,16 @@ def iniciar(vendedor: str, cliente_id: str, modo: str = "TREINO", dificuldade: s
         raise LookupError("Cliente sem persona de treino")
     if modo not in ("PROVA", "TREINO") or dificuldade not in DIFICULDADES:
         raise ValueError("Modo deve ser PROVA ou TREINO; dificuldade facil, medio ou dificil")
+    if frente not in FRENTES:
+        raise ValueError("Frente deve ser receptiva ou ativa")
     tid = "TR-" + uuid.uuid4().hex[:10].upper()
-    estado = {"revelados": [], "objecoes": [], "calculos": [], "propostas": [], "estado_cliente": "NEGOCIANDO"}
+    estado = {"revelados": [], "objecoes": [], "calculos": [], "propostas": [], "estado_cliente": "NEGOCIANDO", "frente": frente}
+    if frente == "ativa":
+        estado["motivo"] = ativa.motivos(cliente_id)[0]  # o motivo verdadeiro do contato, tirado do cadastro
     db.execute("INSERT INTO treinos VALUES (?,?,?,?,?,?,?,?,?,?,?)",
                (tid, vendedor, cliente_id, modo, dificuldade, _now(), None, "ATIVO", json.dumps(estado), None, None))
-    _log(tid, "cliente", PERSONAS[cliente_id]["abertura"])  # receptivo: o cliente começa
+    if frente == "receptiva":
+        _log(tid, "cliente", PERSONAS[cliente_id]["abertura"])  # receptivo: o cliente começa; ativo: o vendedor começa
     return obter(tid)
 
 
@@ -91,17 +103,18 @@ def obter(tid: str) -> dict:
         m["meta"] = json.loads(m.pop("meta_json") or "{}")
     p = PERSONAS[r["cliente_id"]]
     return {**r, "mensagens": msgs, "resultado": res, "cliente": catalog.consultar_cliente(r["cliente_id"]),
+            "frente": estado.get("frente", "receptiva"), "motivo": estado.get("motivo"),
             "contato": {"nome": p["contato"], "cargo": p["cargo"]}, "calculos": estado["calculos"], "propostas": estado["propostas"],
             "progresso": {"segredos_descobertos": len(estado["revelados"]), "segredos_total": len(p["segredos"]),
                           "estado_cliente": estado["estado_cliente"]}}
 
 
-def _persona_prompt(cliente_id: str, dificuldade: str) -> str:
+def _persona_prompt(cliente_id: str, dificuldade: str, frente: str = "receptiva") -> str:
     p, c = PERSONAS[cliente_id], catalog.consultar_cliente(cliente_id)
     dados = {"voce": f"{p['contato']}, {p['cargo']} da {c['razao_social']} ({c['cidade']})",
              "situacao": c["situacao"], "segredos": p["segredos"], "objecoes": p["objecoes"],
              "condicao_aceite": p["condicao_aceite"], "dificuldade": DIFICULDADES[dificuldade]}
-    return P_CLIENTE + "\n\nSUA PERSONA:\n" + json.dumps(dados, ensure_ascii=False)
+    return P_CLIENTE + "\n\nSUA PERSONA:\n" + json.dumps(dados, ensure_ascii=False) + (CONTEXTO_ATIVA if frente == "ativa" else "")
 
 
 def _transcricao(tid: str) -> list[dict]:
@@ -116,7 +129,7 @@ def mensagem(tid: str, texto: str, meta: dict | None = None) -> dict:
     _log(tid, "vendedor", texto, meta)
     hist = _transcricao(tid)
     # o GPT é o cliente: as falas do vendedor chegam como 'user' e as do cliente como 'assistant'
-    msgs = [{"role": "system", "content": _persona_prompt(r["cliente_id"], r["dificuldade"])}]
+    msgs = [{"role": "system", "content": _persona_prompt(r["cliente_id"], r["dificuldade"], estado.get("frente", "receptiva"))}]
     msgs += [{"role": "assistant" if m["role"] == "cliente" else "user", "content": m["conteudo"]} for m in hist]
     try:
         out = _com_papel("cliente", msgs, json_mode=True, max_tokens=600)
@@ -144,7 +157,11 @@ def _coach(tid: str, r: dict, estado: dict) -> None:
     p = PERSONAS[r["cliente_id"]]
     pendente = {"segredos_ainda_nao_descobertos": [s["revela_se"] for s in p["segredos"] if s["id"] not in estado["revelados"]],
                 "desafio_challenger": p["desafio_challenger"], "janela_adicional": p["janela_adicional"],
-                "calculos_feitos_pelo_vendedor": len(estado["calculos"]), "propostas": len(estado["propostas"])}
+                "calculos_feitos_pelo_vendedor": len(estado["calculos"]), "propostas": len(estado["propostas"]),
+                "frente": estado.get("frente", "receptiva")}
+    if estado.get("frente") == "ativa":
+        pendente["contato_ativo"] = ("O vendedor iniciou o contato. Abra com quem é e o motivo útil para o cliente, uma pergunta por vez, "
+                                    "e respeite se o cliente não puder falar ou pedir para parar.")
     conversa = "\n".join(f"{'V' if m['role'] == 'vendedor' else 'C'}: {m['conteudo']}" for m in _transcricao(tid))
     try:
         out = _com_papel("coach", [{"role": "system", "content": P_COACH},
@@ -253,7 +270,8 @@ def avaliar_conversa(cliente_id: str, hist: list[dict], estado: dict) -> dict:
     dims, extra, aviso = {}, {}, None
     if falas:
         conversa = "\n".join(f"{'V' if m['role'] == 'vendedor' else 'C'}: {m['conteudo']}" for m in hist)
-        contexto = {"persona": {k: p[k] for k in ("segredos", "objecoes", "condicao_aceite", "desafio_challenger", "janela_adicional")},
+        contexto = {"frente": estado.get("frente", "receptiva"), "motivo_do_contato_ativo": estado.get("motivo"),
+                    "persona": {k: p[k] for k in ("segredos", "objecoes", "condicao_aceite", "desafio_challenger", "janela_adicional")},
                     "fatos_do_sistema": {"segredos_descobertos": estado["revelados"], "objecoes_levantadas": estado["objecoes"],
                                          "calculos_feitos": [c["entrada"] for c in estado["calculos"]], "propostas": estado["propostas"],
                                          "estado_final_do_cliente": estado["estado_cliente"]}}

@@ -176,6 +176,13 @@ ninguém digitando. É o executor em lote que faltava para as ~190 conversas por
   troca de modelo em 15/09, por isso só a 2ª quinzena vale. Detalhes e propostas de meta em
   `dados_referencia/REFERENCIA_TIME_SETEMBRO_2026.md`; o resumo é gerado por `scripts/resumo_c12.py` (números
   agregados, sem trechos). Falta a parte do CRM.
+- **Frente ativa (05/10/2026):** a segunda frente. A Fernanda chama clientes da carteira com um motivo verdadeiro
+  (contrato vencendo, diária alta, frota própria, km acima da franquia). O sistema decide quem pode ser chamado (Tier A
+  nunca; descadastro vale para sempre; 1 contato a cada 7 dias; 1 follow-up sem resposta) e a trava exige que ela se
+  identifique como assistente virtual. Laboratório com 7 reações do cliente (84 conversas), Treino ativo para o
+  vendedor humano e carteira no Painel do gerente. Os clientes autorizam o contato por contrato; falta o jurídico
+  confirmar que a cláusula cobre WhatsApp e atendimento por IA. O Q4 continua focado na receptiva; a ativa entra no
+  pacote do Gate 1 como próximo passo para 2027 (copiloto da carteira → WhatsApp com modelo aprovado).
 - **Desconto, alçada e gerente:** a trava barra "o gerente aprovou" quando o sistema não aprovou; o Laboratório confere
   se ela consultou a alçada antes de responder ao desconto, se ofereceu alternativa depois do "não" e se segurou o preço
   sem contrapartida; o relatório tem o bloco **Concessões e alçada** (A × B). O gerente continua simulado (regra

@@ -60,3 +60,13 @@ CREATE TABLE IF NOT EXISTS lab_execucoes (
   checks_json TEXT, avaliacao_json TEXT, nota_geral REAL, tokens_cliente INTEGER DEFAULT 0, custo_cliente REAL DEFAULT 0,
   erro TEXT, inicio TEXT, fim TEXT, abertura TEXT DEFAULT '1', revelados INTEGER
 );
+
+-- ATIVA: carteira de contatos ativos (a Fernanda inicia a conversa)
+CREATE TABLE IF NOT EXISTS ativo_contatos (
+  contato_id TEXT PRIMARY KEY, conversation_id TEXT, cliente_id TEXT, motivo TEXT, motivo_json TEXT, origem TEXT,
+  criado_em TEXT, follow_ups INTEGER DEFAULT 0, respondeu INTEGER DEFAULT 0, resultado TEXT, detalhe TEXT,
+  retorno_em TEXT, atualizado_em TEXT
+);
+CREATE TABLE IF NOT EXISTS ativo_descadastros (
+  cliente_id TEXT PRIMARY KEY, criado_em TEXT, origem TEXT, conversation_id TEXT
+);

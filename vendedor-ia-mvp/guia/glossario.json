@@ -8,6 +8,10 @@
       "descricao": "Palavras do dia a dia da venda de locação para empresas.",
       "termos": [
         {"termo": "Venda interna receptiva", "definicao": "Atendimento em que o cliente já cadastrado procura a empresa (receptivo). Quem começa a conversa é o cliente; a Fernanda não prospecta nem liga para ninguém. É o escopo do simulador."},
+        {"termo": "Frente ativa", "definicao": "Quando a Fernanda (ou o vendedor, no Treino) inicia o contato com um cliente da carteira, com um motivo verdadeiro tirado do cadastro (contrato vencendo, diária alta, frota própria, km acima da franquia). O oposto da venda receptiva, em que o cliente procura a empresa."},
+        {"termo": "Carteira", "definicao": "Lista de clientes da venda interna priorizada pelo sistema: quem chamar, por quê e se pode chamar agora. Cliente estratégico (Tier A) e quem pediu para parar ficam bloqueados."},
+        {"termo": "Descadastro", "definicao": "O cliente pediu para não receber mais contato ativo. A Fernanda registra, confirma em uma frase e para; o sistema bloqueia novos contatos ativos com ele."},
+        {"termo": "Follow-up", "definicao": "Mensagem de retomada quando o cliente não respondeu. Na frente ativa, o sistema permite no máximo 1 follow-up sem resposta e no máximo 1 contato por cliente a cada 7 dias."},
         {"termo": "Diária (AD)", "definicao": "Aluguel por dia, sem contrato longo. Mais flexível, porém mais caro por dia quando o cliente usa o carro muitos dias no mês."},
         {"termo": "Mensal (AM)", "definicao": "Contrato de 12, 24 ou 36 meses. Quanto maior o prazo, menor o preço mensal por veículo. A ferramenta comparar_diaria_mensal calcula a partir de quantos dias de uso por mês o mensal compensa."},
         {"termo": "Franquia de km", "definicao": "Quilometragem incluída no mensal: 2.000 km por mês por veículo. Acima disso, o cliente paga km excedente ou contrata o pacote de km extra."},

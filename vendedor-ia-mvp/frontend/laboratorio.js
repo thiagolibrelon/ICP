@@ -14,7 +14,9 @@ const pct = v => v == null ? '—' : `${String(v).replace('.', ',')}%`;
 const num = v => v == null ? '—' : String(v).replace('.', ',');
 const STATUS = {PENDENTE: 'Na fila', EM_ANDAMENTO: 'Rodando', CONCLUIDA: 'Concluída', CANCELADA: 'Cancelada', ERRO: 'Erro', INTERROMPIDA: 'Interrompida'};
 const FIM = {CLIENTE_ACEITOU: 'Cliente aceitou', CLIENTE_RECUSOU: 'Cliente recusou', CLIENTE_VAI_PENSAR: 'Cliente vai pensar', PROPOSTA: 'Proposta registrada',
-  HANDOFF: 'Transferiu para humano', LIMITE_DE_TURNOS: 'Limite de turnos', LOOP: 'Conversa em loop', CANCELADA: 'Cancelada'};
+  HANDOFF: 'Transferiu para humano', LIMITE_DE_TURNOS: 'Limite de turnos', LOOP: 'Conversa em loop', CANCELADA: 'Cancelada',
+  SEM_RESPOSTA: 'Cliente não respondeu', ATIVO_DESCADASTRO: 'Pediu para parar', ATIVO_PESSOA_ERRADA: 'Pessoa errada',
+  ATIVO_RETORNAR_DEPOIS: 'Retorno combinado', ATIVO_PERDIDO_CONCORRENTE: 'Perdido p/ concorrente', ATIVO_SEM_INTERESSE: 'Sem interesse'};
 
 async function init() {
   const h = await api('/api/health');
@@ -28,7 +30,7 @@ async function init() {
   $('modelo_vendedora').placeholder = `padrão: ${cat.modelos.vendedora}`;
   $('modelos-fixos').textContent = `IA-cliente: ${cat.modelos.cliente} · avaliador: ${cat.modelos.avaliador} (fixos, para a comparação ser justa)`;
   $('aberturas').innerHTML = cat.aberturas.map(a => `<label><input type="checkbox" name="abertura" value="${a.id}" ${a.id === cat.abertura_padrao ? 'checked' : ''}>${esc(a.titulo)}</label>`).join('');
-  const grupos = {base: 'Comportamentos', negociacao: 'Negociação', longa: 'Conversa longa', red_team: 'Red team (ataques)'};
+  const grupos = {base: 'Comportamentos', negociacao: 'Negociação', ativa: 'Frente ativa', longa: 'Conversa longa', red_team: 'Red team (ataques)'};
   $('comp').innerHTML = cat.comportamentos.map(c => `<label title="${esc(c.instrucao)}"><input type="checkbox" value="${c.id}">${esc(c.titulo)}${c.grupo === 'base' ? '' : `<span class="badge"> · ${grupos[c.grupo]}</span>`}</label>`).join('');
   document.querySelectorAll('.lab-form select, .lab-form input').forEach(el => el.addEventListener('change', estimar));
   document.querySelectorAll('[data-todos],[data-nenhum]').forEach(a => a.onclick = ev => {
@@ -158,6 +160,7 @@ function renderRodada(r) {
     ${comps.length > 1 ? `<h2>Por comportamento</h2><table><tr><th>Comportamento</th><th>A aprov.</th><th>A nota</th><th>A turnos</th><th>B aprov.</th><th>B nota</th><th>B turnos</th></tr>
       ${comps.map(([c, v]) => `<tr><td>${esc((cat.comportamentos.find(x => x.id === c) || {}).titulo || c)}</td>${bloco(v.A)}${bloco(v.B)}</tr>`).join('')}</table>` : ''}
     ${aberturas(s.aberturas)}
+    ${blocoAtiva(s.ativa)}
     ${concessoes(s.concessoes)}
     ${Object.keys(s.fim).length ? `<h2>Como as conversas terminaram</h2><div class="chips">${Object.entries(s.fim).map(([f, n]) => `<span class="chip">${esc(FIM[f] || f)} <b>${n}</b></span>`).join('')}</div>` : ''}
     ${s.falhas.length ? `<h2>Checagens reprovadas</h2><table class="falhas"><tr><th>Execução</th><th>Modo</th><th>Checagem</th><th>Detalhe</th></tr>
@@ -177,6 +180,19 @@ function renderRodada(r) {
     try { await post(`/api/lab/rodadas/${r.rodada_id}/retomar`); } catch (err) { alert(err.message); }
     abrirRodada(r.rodada_id);
   };
+}
+
+function blocoAtiva(at) {
+  if (!at) return '';
+  const RES = {INTERESSADO: 'Interessado', RETORNAR_DEPOIS: 'Retorno combinado', SEM_INTERESSE: 'Sem interesse', PERDIDO_CONCORRENTE: 'Perdido p/ concorrente',
+    PESSOA_ERRADA: 'Pessoa errada', DESCADASTRO: 'Pediu para parar', SEM_REGISTRO: 'Sem registro'};
+  const linhas = [['Contatos', a => a.contatos], ['Responderam', a => pct(a.responderam_pct)], ['Pediram para parar', a => pct(a.descadastro_pct)],
+    ['Chegaram a proposta', a => pct(a.proposta_pct)], ['Follow-ups enviados', a => a.follow_ups], ['Aprovadas nas checagens', a => pct(a.aprovadas_pct)],
+    ['Resultados registrados', a => Object.entries(a.resultados).map(([k, n]) => `${esc(RES[k] || k)} ${n}`).join(' · ')]];
+  return `<h2>Frente ativa (a Fernanda iniciou)</h2>
+    <table class="aberturas"><tr><th></th><th>A · LLM pura</th><th>B · com ferramentas</th></tr>
+      ${linhas.map(([n, f]) => `<tr><td>${n}</td>${['A', 'B'].map(m => `<td>${at[m] ? f(at[m]) : '—'}</td>`).join('')}</tr>`).join('')}</table>
+    <div class="badge">Taxa de resposta e descadastro aqui são da IA-cliente (simulação): servem para comparar versões da Fernanda, não para prever o mundo real.</div>`;
 }
 
 function aberturas(ab) {

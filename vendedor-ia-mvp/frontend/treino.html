@@ -34,6 +34,9 @@
     <span class="tb-label">Treino</span>
     <input id="vendedor" placeholder="Seu nome" size="16">
     <select id="cliente"></select>
+    <select id="frente" title="Receptiva: o cliente te chama. Ativa: você chama o cliente da carteira, com um motivo">
+      <option value="receptiva">Receptiva (o cliente chama)</option><option value="ativa">Ativa (você chama o cliente)</option>
+    </select>
     <select id="dificuldade"><option value="facil">Fácil</option><option value="medio" selected>Médio</option><option value="dificil">Difícil</option></select>
     <select id="modo"><option value="TREINO">Modo treino (com dicas do coach)</option><option value="PROVA">Modo prova (sem dicas)</option></select>
     <button id="btn-iniciar" class="primary">Iniciar</button>

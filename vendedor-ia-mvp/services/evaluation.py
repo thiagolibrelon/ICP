@@ -106,12 +106,15 @@ def _qualificou_antes(auds: list) -> bool:
 
 def comparativo() -> dict:
     """A x B só com conversas de roteiro (não livres) que tiveram pelo menos 1 turno do cliente."""
-    convs = db.fetch_all("SELECT conversation_id, modo, livre FROM conversas")
+    convs = db.fetch_all("SELECT conversation_id, modo, livre, estado_json FROM conversas")
     res = {"A": [], "B": []}
-    livres = 0
+    livres = ativas = 0
     for c in convs:
         if c["livre"]:
             livres += 1
+            continue
+        if json.loads(c["estado_json"] or "{}").get("origem") == "ativa":  # frente ativa tem relatório próprio
+            ativas += 1
             continue
         a = avaliar(c["conversation_id"])
         if a["turnos_cliente"]:
@@ -141,4 +144,5 @@ def comparativo() -> dict:
                 "tokens_por_conversa": round(sum(a["tokens"] for a in lst) / n),
                 "custo_gate_por_conversa": round(sum(a["custo_gate"] for a in lst) / n, 6)}
 
-    return {"A_llm_pura": resumo(res["A"]), "B_llm_com_ferramentas": resumo(res["B"]), "conversas_livres_fora_do_comparativo": livres}
+    return {"A_llm_pura": resumo(res["A"]), "B_llm_com_ferramentas": resumo(res["B"]), "conversas_livres_fora_do_comparativo": livres,
+            "conversas_ativas_fora_do_comparativo": ativas}

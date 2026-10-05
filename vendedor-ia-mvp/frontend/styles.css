@@ -119,3 +119,7 @@ tr.clicavel{cursor:pointer}tr.clicavel:hover td{background:var(--s2)}tr.sel td{b
 .execs td:last-child,.execs th:last-child{text-align:right}
 .lab-form .checks .badge{font-size:11px}
 @media(max-width:1100px){main.lab{grid-template-columns:1fr}.tabs-bar{overflow-x:auto}.tabs-bar .tab{white-space:nowrap}}
+
+/* Carteira (frente ativa) */
+.carteira th,.carteira td{text-align:left;vertical-align:top}
+.carteira td:first-child{text-align:right;font-variant-numeric:tabular-nums}

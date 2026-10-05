@@ -9,7 +9,7 @@ from services.util import norm, parse_brl
 
 TOLERANCIA = 0.011
 NOMES_FERRAMENTAS = ("consultar_cliente", "identificar_cliente", "consultar_catalogo", "comparar_diaria_mensal", "comparar_eletrico",
-                     "avaliar_proposta", "registrar_proposta", "criar_handoff")
+                     "avaliar_proposta", "registrar_proposta", "criar_handoff", "consultar_carteira", "registrar_resultado_contato")
 
 
 def _numeros(obj, out_money: set, out_pct: set, chave: str = "") -> None:
@@ -86,6 +86,11 @@ def afirma_ser_humana(texto: str) -> bool:
     """A Fernanda nunca pode dizer que é humana ("sou uma pessoa", "não sou robô"). "Não sou humana" é o certo."""
     t = norm(texto)
     return any(rx.search(t) for rx in _HUMANA)
+
+
+def identifica_assistente(texto: str) -> bool:
+    """Contato ativo: a primeira mensagem precisa dizer que é assistente virtual (o cliente não pediu o contato)."""
+    return bool(re.search(r"\bassistente (virtual|digital)\b|\b(sou|e) (uma )?(ia|inteligencia artificial)\b", norm(texto)))
 
 
 def aprovacao_do_gerente_nas_saidas(saidas: list) -> bool:

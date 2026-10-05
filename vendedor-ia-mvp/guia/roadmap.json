@@ -103,6 +103,20 @@
       ]
     },
     {
+      "id": "ATV",
+      "titulo": "Fernanda ativa (carteira)",
+      "periodo": "Q4/2026 → 2027",
+      "descricao": "A segunda frente: a Fernanda inicia o contato com clientes da carteira, sempre com um motivo verdadeiro do cadastro. Não muda o escopo do Q4 da receptiva.",
+      "itens": [
+        {"id": "ATV-01", "titulo": "Simulação da frente ativa", "trilha": "Vendedor IA", "descricao": "Carteira priorizada, motivos do cadastro, regras no sistema (Tier A bloqueado, descadastro, 1 contato a cada 7 dias, 1 follow-up), Fernanda abrindo a conversa, Laboratório (84 conversas, 7 reações) e Treino ativo.", "fonte": "Conversa de 05/10/2026", "status_inicial": "concluido"},
+        {"id": "ATV-02", "titulo": "Confirmar com o jurídico a cláusula de contato", "trilha": "Vendedor IA", "prazo": "31/out", "descricao": "O contrato autoriza o contato; confirmar que cobre WhatsApp e atendimento automatizado/IA, e que o contato é com a pessoa cadastrada como responsável.", "fonte": "Conversa de 05/10/2026"},
+        {"id": "ATV-03", "titulo": "Referência das ligações ativas (C12)", "trilha": "Vendedor IA", "prazo": "31/out", "descricao": "Classificar as ligações ativas dos 12 meses (ou uma amostra) com o gpt-5.4-mini: a linha de base do time para a frente ativa.", "fonte": "Conversa de 05/10/2026"},
+        {"id": "ATV-04", "titulo": "Rodada da frente ativa no Laboratório", "trilha": "Vendedor IA", "prazo": "28/nov", "descricao": "Tipo de rodada Frente ativa: zero falha crítica no modo B (identificação, motivo, descadastro, pessoa errada, follow-up). Entra no pacote do Gate 1 como próximo passo.", "fonte": "LABORATORIO.md §3.2"},
+        {"id": "ATV-05", "titulo": "Copiloto da carteira", "trilha": "Vendedor IA", "descricao": "2027: a Fernanda prioriza a carteira e rascunha a mensagem; o vendedor revisa e envia. Primeiro uso real, sem WhatsApp automático.", "fonte": "Conversa de 05/10/2026"},
+        {"id": "ATV-06", "titulo": "Contato ativo pelo WhatsApp com modelo aprovado", "trilha": "Vendedor IA", "descricao": "2027, depois dos Gates 2 e 5: primeira mensagem por modelo aprovado na plataforma; quando o cliente responde, a Fernanda conversa.", "fonte": "Conversa de 05/10/2026"}
+      ]
+    },
+    {
       "id": "PED",
       "titulo": "Pedidos e dependências",
       "periodo": "Seção 8 do memorando",
@@ -114,7 +128,8 @@
         {"id": "PED-04", "titulo": "Abrir o processo de LGPD", "trilha": "Privacidade / RH", "prazo": "10/out", "descricao": "Uso de transcrições anonimizadas e das notas de treino (dado de funcionário, com RH). Risco alto se atrasar.", "fonte": "Memorando §8 (4) e §9"},
         {"id": "PED-05", "titulo": "3 a 5 vendedores e 1 gestor para o piloto do Treino", "trilha": "Gestão comercial", "prazo": "17/out", "descricao": "Cerca de 30 minutos por semana.", "fonte": "Memorando §8 (5)"},
         {"id": "PED-06", "titulo": "2 a 3 gestores para a calibração (~4 h cada)", "trilha": "Gestão comercial", "prazo": "Novembro", "descricao": "", "fonte": "Memorando §8 (6)"},
-        {"id": "PED-07", "titulo": "Onde o backend vai rodar no piloto do Teams", "trilha": "TI / Arquitetura", "prazo": "Dezembro", "descricao": "Preparação para 2027.", "fonte": "Memorando §8 (7)"}
+        {"id": "PED-07", "titulo": "Onde o backend vai rodar no piloto do Teams", "trilha": "TI / Arquitetura", "prazo": "Dezembro", "descricao": "Preparação para 2027.", "fonte": "Memorando §8 (7)"},
+        {"id": "PED-08", "titulo": "Orçamento de uso do llm-gate no Q4 (US$ 200)", "trilha": "Gestor", "prazo": "07/out", "descricao": "Cobre as rodadas do Laboratório, o teste de abertura, a comparação de modelos, a frente ativa, o piloto do Treino e a reclassificação de 12 meses de ligações. Detalhe em docs/PEDIDO_ORCAMENTO_Q4.md.", "fonte": "Conversa de 05/10/2026"}
       ]
     },
     {

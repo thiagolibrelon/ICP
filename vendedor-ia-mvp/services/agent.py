@@ -11,7 +11,7 @@ from functools import lru_cache
 from pathlib import Path
 
 from database import db
-from services import catalog, llm_client, validator
+from services import ativa, catalog, llm_client, validator
 from services.catalog import ErroFerramenta
 
 PROMPTS = Path(__file__).resolve().parent.parent / "prompts"
@@ -33,6 +33,7 @@ def instrucoes_base(abertura: str | None) -> str:
     return ABERTURAS.get(str(abertura or abertura_padrao()), BASE)
 REGRAS_B = (PROMPTS / "vendedor_b.md").read_text(encoding="utf-8")
 REGRAS_A = (PROMPTS / "vendedor_a.md").read_text(encoding="utf-8")
+REGRAS_ATIVA = (PROMPTS / "vendedor_ativa.md").read_text(encoding="utf-8")
 MAX_PASSOS = 8
 CONTINGENCIA = ("Opa, meu sistema deu uma travada aqui e não tô conseguindo consultar agora 😕\n\n"
                 "Já anotei sua mensagem e te retorno ainda hoje ou, no máximo, em 1 dia útil, tá?")
@@ -78,6 +79,17 @@ TOOLS = [
       "objecao": {**_str, "description": "Principal objeção ou problema, se houver"},
       "proximo_passo_sugerido": {**_str, "description": "O que o humano deve fazer primeiro"}}, ["motivo", "resumo"]),
 ]
+# Só na frente ativa (a Fernanda iniciou o contato)
+TOOLS_ATIVA = [
+    ("consultar_carteira", "Motivos reais do contato ativo com este cliente (contrato vencendo, uso de diária, frota própria, km). "
+                           "Use para citar o motivo; não invente datas ou números.", {}, []),
+    ("registrar_resultado_contato", "Registra o resultado do contato ativo. DESCADASTRO quando o cliente pedir para parar (vale para sempre).",
+     {"resultado": {**_str, "enum": list(ativa.RESULTADOS)},
+      "detalhe": {**_str, "description": "Motivo (ex.: concorrente e por quê) ou observação curta"},
+      "retorno_em": {**_str, "description": "RETORNAR_DEPOIS: dia combinado (dd/mm)"}}, ["resultado"]),
+]
+TOOLS = TOOLS + TOOLS_ATIVA
+NOMES_ATIVA = {n for n, *_ in TOOLS_ATIVA}
 TOOLS_SCHEMA = [{"type": "function", "function": {"name": n, "description": d,
                                                   "parameters": {"type": "object", "properties": p, "required": r}}}
                 for n, d, p, r in TOOLS]
@@ -86,6 +98,22 @@ PROTOCOLO_JSON = ("\n\nFERRAMENTAS (responda SEMPRE um objeto JSON):\n"
                   '- para falar com o cliente: {"acao": "responder", "texto": "<mensagem>"}\n'
                   "Depois de cada consulta você recebe o RESULTADO e decide o próximo passo.\n"
                   + "\n".join(f"* {n}({', '.join(p)}): {d}" for n, d, p, _ in TOOLS))
+
+TOOLS_SCHEMA_RECEPTIVA = [t for t in TOOLS_SCHEMA if t["function"]["name"] not in NOMES_ATIVA]
+
+
+def _tools_da_conversa(ctx: dict) -> list[dict]:
+    return TOOLS_SCHEMA if ctx.get("origem") == "ativa" else TOOLS_SCHEMA_RECEPTIVA
+
+
+def _protocolo_json(ctx: dict) -> str:
+    nomes = {t["function"]["name"] for t in _tools_da_conversa(ctx)}
+    return ("\n\nFERRAMENTAS (responda SEMPRE um objeto JSON):\n"
+            '- para consultar: {"acao": "ferramenta", "nome": "<nome>", "argumentos": {...}}\n'
+            '- para falar com o cliente: {"acao": "responder", "texto": "<mensagem>"}\n'
+            "Depois de cada consulta você recebe o RESULTADO e decide o próximo passo.\n"
+            + "\n".join(f"* {n}({', '.join(p)}): {d}" for n, d, p, _ in TOOLS if n in nomes))
+
 
 _modo_ferramentas = {"atual": os.getenv("LLM_TOOLS", "auto")}  # auto -> native, cai para json se o gate recusar
 
@@ -98,6 +126,14 @@ def _int(v):
 def executar(nome: str, args: dict, ctx: dict) -> dict:
     a = args or {}
     try:
+        if nome in NOMES_ATIVA and ctx.get("origem") != "ativa":
+            return {"erro": "Ferramenta só existe em contato ativo"}
+        if nome == "consultar_carteira":
+            return {"cliente_id": ctx["cliente_id"], "contato": ativa.contato_de(ctx["cliente_id"]),
+                    "motivo_principal": ctx.get("motivo") or ativa.motivos(ctx["cliente_id"])[0],
+                    "outros_motivos": [m for m in ativa.motivos(ctx["cliente_id"]) if m["motivo"] != (ctx.get("motivo") or {}).get("motivo")]}
+        if nome == "registrar_resultado_contato":
+            return ativa.registrar_resultado(ctx["conversation_id"], a.get("resultado"), a.get("detalhe") or "", a.get("retorno_em"))
         if nome == "consultar_cliente":
             return catalog.consultar_cliente(_cliente_do_grupo(a.get("cliente_id"), ctx))
         if nome == "identificar_cliente":
@@ -177,9 +213,15 @@ def _contexto(ctx: dict) -> str:
     tier = ("\nCLIENTE TIER A (estratégico): atendimento é do EXECUTIVO DEDICADO. Acolha com simpatia, entenda em uma frase o que "
             "ele precisa e faça criar_handoff com motivo CLIENTE_ESTRATEGICO e briefing completo. Não cote nem negocie.") if c["tier"] == "A" else ""
     memoria = json.dumps(ctx["memoria"][-10:], ensure_ascii=False, default=str)[-8000:] if ctx["memoria"] else "nenhuma ainda"
-    return (f"\n\nATENDIMENTO ATUAL: mensagem recebida do WhatsApp cadastrado de {c['razao_social']} (cliente_id {ctx['cliente_id']}, "
-            f"{catalog.CIDADE_NOME.get(c['cidade'], c['cidade'])}). Consulte o cadastro antes de ofertar.{tier}\n"
-            f"CONSULTAS JÁ FEITAS NESTA CONVERSA (resultados reais): {memoria}")
+    if ctx.get("origem") == "ativa":
+        ct = ativa.contato_de(ctx["cliente_id"])
+        atual = (f"\n\n{REGRAS_ATIVA}\nCONTATO ATIVO: você está chamando {ct['nome']} ({ct['cargo']}) da {c['razao_social']} "
+                 f"(cliente_id {ctx['cliente_id']}, {catalog.CIDADE_NOME.get(c['cidade'], c['cidade'])}) pelo WhatsApp cadastrado. "
+                 f"MOTIVO (do sistema, verdadeiro): {json.dumps(ctx.get('motivo') or {}, ensure_ascii=False)}")
+    else:
+        atual = (f"\n\nATENDIMENTO ATUAL: mensagem recebida do WhatsApp cadastrado de {c['razao_social']} (cliente_id {ctx['cliente_id']}, "
+                 f"{catalog.CIDADE_NOME.get(c['cidade'], c['cidade'])}). Consulte o cadastro antes de ofertar.")
+    return f"{atual}{tier}\nCONSULTAS JÁ FEITAS NESTA CONVERSA (resultados reais): {memoria}"
 
 
 def turno_b(ctx: dict, historico: list[dict], texto_cliente: str) -> dict:
@@ -205,9 +247,9 @@ def turno_b(ctx: dict, historico: list[dict], texto_cliente: str) -> dict:
         nativo = _modo_ferramentas["atual"] in ("auto", "native")
         try:
             if nativo:
-                r = llm_client.completar([{"role": "system", "content": sistema}] + msgs, tools=TOOLS_SCHEMA)
+                r = llm_client.completar([{"role": "system", "content": sistema}] + msgs, tools=_tools_da_conversa(ctx))
             else:
-                r = llm_client.completar([{"role": "system", "content": sistema + PROTOCOLO_JSON}] + msgs, json_mode=True)
+                r = llm_client.completar([{"role": "system", "content": sistema + _protocolo_json(ctx)}] + msgs, json_mode=True)
         except llm_client.ToolsNaoSuportadas:
             _modo_ferramentas["atual"] = "json"
             continue
@@ -271,7 +313,10 @@ def _validar(texto: str, ctx: dict) -> list[str]:
     houve_prop = any(m["ferramenta"] == "registrar_proposta" and m["saida"].get("registrada") for m in ctx["memoria"])
     houve_ho = any(m["ferramenta"] == "criar_handoff" and m["saida"].get("protocolo") for m in ctx["memoria"])
     _, pct = validator.permitidos(saidas)
-    return validator.validar(texto, saidas, houve_prop, houve_ho, margens_gerente(), pct)
+    v = validator.validar(texto, saidas, houve_prop, houve_ho, margens_gerente(), pct)
+    if ctx.get("primeira_ativa") and not validator.identifica_assistente(texto):
+        v.append("SEM_IDENTIFICACAO_ASSISTENTE")
+    return v
 
 
 # ------------------------------------------------------------------ modo A (controle)
@@ -324,8 +369,16 @@ def _valores_calculaveis(chave_veiculos: str) -> frozenset:
 
 def turno_a(ctx: dict, historico: list[dict], texto_cliente: str) -> dict:
     internos = dados_internos(ctx["cliente_id"])
+    if ctx.get("origem") == "ativa":
+        ct = ativa.contato_de(ctx["cliente_id"])
+        internos["carteira"] = {"motivo": ctx.get("motivo"), "outros_motivos": ativa.motivos(ctx["cliente_id"])}
+        atual = (f"\n\n{REGRAS_ATIVA}\nCONTATO ATIVO: você está chamando {ct['nome']} ({ct['cargo']}) da "
+                 f"{internos['cliente']['razao_social']} pelo WhatsApp cadastrado. No JSON, inclua também "
+                 '"resultado_contato": null ou {"resultado": "' + "|".join(ativa.RESULTADOS) + '", "detalhe": "...", "retorno_em": "dd/mm"}.')
+    else:
+        atual = f"\n\nATENDIMENTO ATUAL: WhatsApp cadastrado de {internos['cliente']['razao_social']}."
     sistema = (instrucoes_base(ctx.get("abertura")) + "\n" + REGRAS_A + "\n\nDADOS INTERNOS:\n" + json.dumps(internos, ensure_ascii=False, default=str)
-               + f"\n\nATENDIMENTO ATUAL: WhatsApp cadastrado de {internos['cliente']['razao_social']}.")
+               + atual)
     msgs = [{"role": "system", "content": sistema}]
     msgs += [{"role": "user" if m["role"] == "cliente" else "assistant", "content": m["conteudo"]} for m in historico[-16:]]
     msgs.append({"role": "user", "content": texto_cliente})
@@ -337,6 +390,16 @@ def turno_a(ctx: dict, historico: list[dict], texto_cliente: str) -> dict:
         j = {"resposta": conteudo}
     texto = formatar_baloes(str(j.get("resposta") or "").strip())
     acoes, marcas = [], []
+    res = j.get("resultado_contato")
+    if ctx.get("origem") == "ativa" and isinstance(res, dict):
+        try:
+            out = ativa.registrar_resultado(ctx["conversation_id"], res.get("resultado"), res.get("detalhe") or "", res.get("retorno_em"))
+        except ValueError as e:
+            out = {"erro": str(e)}
+        acoes.append({"nome": "registrar_resultado_contato (decidido pelo modelo)", "entrada": res, "saida": out})
+        ctx["memoria"].append({"ferramenta": "registrar_resultado_contato", "entrada": res, "saida": out})
+    if ctx.get("primeira_ativa") and not validator.identifica_assistente(texto):
+        marcas.append("SEM_IDENTIFICACAO_ASSISTENTE")
     prop = j.get("registrar_proposta")
     if isinstance(prop, dict):
         out, m = _registrar_a(ctx, prop)
