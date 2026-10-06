@@ -1,0 +1,89 @@
+/* Guia (roadmap, glossário, como utilizar). Usa os tokens de marca.css; não carrega styles.css, que é o layout de tela cheia
+   do simulador e do treino. A página rola normalmente, com a topbar e as abas fixas no topo. */
+body.guia{--sticky:100px}
+.subtabs{display:flex;flex-wrap:wrap;gap:6px;max-width:1100px;margin:0 auto;padding:14px 18px 0}
+.subtab{border-radius:16px;height:30px;padding:0 15px}
+.subtab.ativo,.chip.ativo{background:var(--green-l);border-color:var(--green-l);color:#fff}
+[data-theme="dark"] .subtab.ativo,[data-theme="dark"] .chip.ativo{color:#0B1A06}
+.subtab.ativo:hover:not(:disabled),.chip.ativo:hover:not(:disabled){color:#fff}
+[data-theme="dark"] .subtab.ativo:hover:not(:disabled),[data-theme="dark"] .chip.ativo:hover:not(:disabled){color:#0B1A06}
+.painel{max-width:1100px;margin:0 auto;padding:14px 18px 48px}.painel[hidden]{display:none}
+.erro-barra{background:var(--red-bg);color:var(--red);border-bottom:1px solid var(--red-bd);padding:8px 18px;font-weight:600}.erro-barra[hidden]{display:none}
+
+.nota{color:var(--muted);font-size:13px;padding:6px 0;margin:0}
+.badge{font-size:12px;color:var(--muted)}.bad{color:var(--red);font-weight:700}
+.kpis{display:flex;flex-wrap:wrap;gap:10px;margin:4px 0 10px}
+.kpi{background:var(--s1);border:1px solid var(--bd);border-radius:10px;padding:10px 16px;min-width:150px;box-shadow:var(--shadow)}
+.kpi b{display:block;font-size:22px;line-height:1.2}.kpi span{font-size:12px;color:var(--muted)}
+.barra{height:8px;background:var(--s3);border-radius:4px;overflow:hidden;margin:6px 0}.barra i{display:block;height:100%;border-radius:4px}
+.barra.grande{height:12px;border-radius:6px}
+
+/* Glossário */
+.barra-busca{position:sticky;top:var(--sticky);background:var(--bg);padding:6px 0 10px;z-index:5}
+.barra-busca input{width:100%;font-size:15px;padding:10px 14px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chip{border-radius:16px;height:28px;padding:0 12px}.chip span{color:var(--muted);font-size:11px;font-weight:500}
+.chip.ativo span{color:inherit;opacity:.85}
+h2.cat{font-size:15px;text-transform:none;letter-spacing:0;color:var(--text);margin:24px 0 8px;border-bottom:1px solid var(--bd);padding-bottom:5px}
+h2.cat small{display:block;margin-top:2px;font-size:12px}
+.termo{background:var(--s1);border:1px solid var(--bd);border-radius:10px;padding:9px 14px;margin:6px 0;box-shadow:var(--shadow)}
+.termo b{display:block;color:var(--green-tx)}.termo p{margin:2px 0 0}
+
+/* Como utilizar (o Roteiro de Testes) */
+.doc-layout{display:grid;grid-template-columns:230px 1fr;gap:20px;align-items:start}
+.toc{position:sticky;top:calc(var(--sticky) + 12px);display:flex;flex-direction:column;gap:2px;max-height:calc(100vh - var(--sticky) - 30px);overflow:auto}
+.toc b{color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:1.1px;margin-bottom:4px}
+.toc a{color:var(--green-tx);text-decoration:none;padding:3px 0;font-size:12.5px}.toc a:hover{text-decoration:underline}
+.doc{background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:10px 24px 22px;min-width:0;line-height:1.6;box-shadow:var(--shadow)}
+.doc h1{font-family:var(--serif);font-size:24px;margin:14px 0 6px}
+.doc h2{font-size:17px;text-transform:none;letter-spacing:0;color:var(--text);margin:30px 0 8px;border-bottom:1px solid var(--bd);padding-bottom:5px;scroll-margin-top:calc(var(--sticky) + 8px)}
+.doc h3{font-size:14.5px;margin:22px 0 6px;scroll-margin-top:calc(var(--sticky) + 8px)}.doc h4{font-size:13.5px}
+.doc blockquote{margin:12px 0;padding:7px 14px;border-left:3px solid var(--green-l);background:var(--green-bg);border-radius:6px}
+.doc code{background:var(--s2);border:1px solid var(--bd);border-radius:4px;padding:0 5px;font-size:12px}
+.doc pre{background:var(--s2);padding:10px;border-radius:8px;overflow:auto}.doc pre code{border:0;padding:0}
+.doc hr{border:0;border-top:1px solid var(--bd);margin:24px 0}
+.doc .tabela{overflow-x:auto;margin:10px 0}.doc table{border-collapse:collapse;width:100%;font-size:12.5px}
+.doc th,.doc td{text-align:left;vertical-align:top;padding:6px 9px;border:1px solid var(--bd)}
+.doc th{background:var(--s2);font-size:10.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}
+.doc li{margin:3px 0}
+
+/* Roadmap */
+.agora{background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:12px 16px;margin:14px 0;box-shadow:var(--shadow)}
+.agora h2{margin:0 0 6px}.agora-item{padding:3px 0}.agora-item a{color:var(--green-tx);text-decoration:none;font-weight:600}.agora-item small{color:var(--muted)}
+.controles{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:12px 0}.controles label{display:flex;gap:6px;align-items:center;font-weight:500}
+.controles input[type=checkbox]{padding:0;accent-color:var(--green-l)}
+details.fase{background:var(--s1);border:1px solid var(--bd);border-radius:12px;margin:10px 0;padding:0 16px 12px;box-shadow:var(--shadow)}
+details.fase>summary{cursor:pointer;padding:12px 0;display:grid;grid-template-columns:1fr auto;gap:2px 12px;align-items:center;list-style:none;position:relative}
+details.fase>summary::-webkit-details-marker{display:none}
+details.fase>summary::before{content:'▸';position:absolute;left:-12px;top:12px;color:var(--muted)}details[open].fase>summary::before{content:'▾'}
+.fase-titulo{font-weight:700;font-size:14.5px}.periodo{color:var(--muted);font-size:12px;grid-column:1}.fase-res{grid-row:1;grid-column:2;font-size:12.5px;color:var(--muted)}
+details.fase>summary .barra{grid-column:1/3;margin:2px 0 0}
+.fase-desc{color:var(--muted);margin:0 0 6px}
+.item{border-top:1px solid var(--bd);padding:10px 0;transition:background .4s}.item.destaque{background:var(--green-bg)}
+.item-topo{display:grid;grid-template-columns:150px 1fr auto;gap:12px;align-items:start}
+.item-corpo b{font-weight:700;font-size:13.5px}.item-desc{margin:3px 0 0;color:var(--text2)}
+.meta{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:4px}
+.tag{font-size:10.5px;font-weight:600;background:var(--s2);border:1px solid var(--bd);border-radius:10px;padding:0 8px;color:var(--muted)}
+.tag.ok-tag{color:var(--win);border-color:var(--win-bd);background:var(--win-bg)}.fonte{font-size:11px;color:var(--muted2)}
+.item-acoes{display:flex;gap:4px}.item-acoes button{height:28px;padding:0 10px;font-size:11.5px}
+select.st{font-weight:700;font-size:12px;padding:5px 8px;height:30px}
+.st.nao_iniciado{color:var(--muted)}.st.em_andamento{color:var(--amber);border-color:var(--amber-bd);background:var(--amber-bg)}
+.st.concluido{color:var(--win);border-color:var(--win-bd);background:var(--win-bg)}.st.bloqueado{color:var(--red);border-color:var(--red-bd);background:var(--red-bg)}
+span.st{border:1px solid;border-radius:10px;padding:0 8px;font-size:10.5px;font-weight:700}
+.item.st-concluido .item-corpo b{color:var(--muted);text-decoration:line-through;text-decoration-color:var(--bd2)}
+.notas{margin:8px 0 0 162px;background:var(--s2);border-radius:10px;padding:9px 12px}
+.nota-linha{display:flex;gap:8px;align-items:flex-start}.nota-linha span{color:var(--muted);font-size:12px;white-space:nowrap;padding-top:1px}
+.nota-linha p{margin:0;flex:1;white-space:pre-wrap}.nota-linha button{height:auto;padding:0 6px;font-size:12px;border:0;background:none;color:var(--muted)}
+.notas form,.novo form{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}.notas form input{flex:1;min-width:200px}.novo form input{flex:1;min-width:180px}
+.novo{margin-top:8px}.novo>button{font-size:12px;height:30px}
+@media(max-width:800px){.doc-layout{grid-template-columns:1fr}.toc{position:static;max-height:none}.item-topo{grid-template-columns:1fr}.notas{margin-left:0}
+  .topbar .tb-title{font-size:13px}.doc{padding:6px 14px 16px}}
+
+/* Como funciona: imagens da arquitetura */
+.figura{margin:0 0 22px;background:var(--s1);border:1px solid var(--bd);border-radius:12px;overflow:hidden;box-shadow:var(--shadow)}
+.figura figcaption{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--bd);flex-wrap:wrap}
+.figura figcaption b{font-size:15px}.figura figcaption span{color:var(--muted);flex:1;min-width:220px}
+.figura img{display:block;width:100%;height:auto}
+
+.baixar-banco{margin-left:auto;text-decoration:none}
+.baixar-banco button{border-radius:16px;height:30px}

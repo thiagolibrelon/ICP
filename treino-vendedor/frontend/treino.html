@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Treino de vendas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/marca.css">
+<link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="tb-left">
+    <img class="tb-logo-img" src="/static/assets/localiza-logo.png" alt="Localiza">
+    <span class="tb-sep"></span>
+    <span class="tb-title">Treino de vendas<small>ambiente simulado · dados fictícios</small></span>
+  </div>
+  <div class="tb-right">
+    <span id="llm" class="tb-status"></span>
+    
+    <button class="theme-btn" id="theme-btn" title="Tema claro/escuro"><span class="tt-k"></span></button>
+  </div>
+</header>
+<nav class="tabs-bar">
+  <a class="tab active" href="/" data-ic="target">Treino de vendas</a>
+  <a class="tab" href="/api/backup/banco" data-ic="download" title="Baixa uma cópia do banco do Treino (treinos e notas)">Baixar banco (backup)</a>
+</nav>
+<div class="toolbar">
+  <div class="linha">
+    <span class="tb-label">Treino</span>
+    <input id="vendedor" placeholder="Seu nome" size="16">
+    <select id="cliente"></select>
+    <select id="frente" title="Receptiva: o cliente te chama. Ativa: você chama o cliente da carteira, com um motivo">
+      <option value="receptiva">Receptiva (o cliente chama)</option><option value="ativa">Ativa (você chama o cliente)</option>
+    </select>
+    <select id="dificuldade"><option value="facil">Fácil</option><option value="medio" selected>Médio</option><option value="dificil">Difícil</option></select>
+    <select id="modo"><option value="TREINO">Modo treino</option><option value="PROVA">Modo prova (sem dicas)</option></select>
+    <button id="btn-coach" type="button" aria-pressed="true" title="Liga ou desliga as dicas do coach IA. Desligado: o treino segue igual, sem dicas (ex.: um líder coach acompanha no lugar da IA). Dá para trocar no meio do treino; a troca fica registrada no resultado." data-ic="bulb">Coach IA: ligado</button>
+    <button id="btn-iniciar" class="primary">Iniciar</button>
+    <button id="btn-encerrar" disabled data-ic="flag">Encerrar e ver nota</button>
+    <button id="btn-historico" data-ic="chart">Minha evolução / gestor</button>
+    <button id="btn-trilha" data-ic="flag" title="Competências da trilha, níveis Bronze/Prata/Ouro e os cenários de cada uma">Trilha</button>
+  </div>
+</div>
+<main>
+  <aside>
+    <h2>Cadastro do cliente (CRM)</h2><div id="info">—</div>
+    <div class="progresso" id="progresso"></div>
+    <h2>Calculadora (sua alçada)</h2>
+    <form id="calc" class="calc">
+      <label>Modelo<select name="modelo"><option>Onix</option><option>Polo</option><option>Creta</option><option>Dolphin</option></select></label>
+      <label>Cidade<select name="cidade"><option value="sp">São Paulo</option><option value="curitiba">Curitiba</option><option value="bh">Belo Horizonte</option></select></label>
+      <label>Produto<select name="produto"><option value="AM">Mensal</option><option value="AD">Diária</option></select></label>
+      <label>Qtd<input name="quantidade" type="number" min="1" value="1"></label>
+      <label>Prazo (meses)<select name="prazo_meses"><option>12</option><option>24</option><option>36</option></select></label>
+      <label>Dias (diária)<input name="dias" type="number" min="1" placeholder="—"></label>
+      <label>Desconto %<input name="desconto_pct" type="number" min="0" step="0.5" value="0"></label>
+      <label>Pacotes +1.000 km<input name="pacotes_km_extra" type="number" min="0" value="0"></label>
+      <div class="full"><span><label><input type="checkbox" name="PROTECAO_TOTAL">Proteção total</label><label><input type="checkbox" name="TELEMETRIA">Telemetria</label></span></div>
+      <button type="button" id="btn-avaliar">Avaliar condição</button><button type="button" id="btn-registrar">Registrar proposta</button>
+    </form>
+    <div id="calc-res" class="tool">Use a calculadora antes de falar preço ou desconto: é assim que um vendedor faz no dia a dia.</div>
+  </aside>
+  <section id="col-chat">
+    <div id="chat"><div class="nota">Informe seu nome, escolha o cliente, a dificuldade e o modo, e clique em <b>Iniciar</b>. O cliente vai te chamar no WhatsApp.</div></div>
+    <form id="form"><button type="button" id="btn-mic" disabled title="Responder por áudio" data-ic="mic"></button><input id="msg" autocomplete="off" placeholder="Responda como vendedor..." disabled><button id="btn-enviar" class="primary" disabled data-ic="send">Enviar</button></form>
+  </section>
+  <aside id="lado">
+    <h2>Coach</h2><div id="coach" class="badge">No modo treino, as dicas aparecem aqui e no chat.</div>
+    <h2>Resultado</h2><div id="resultado" class="result-hero"><div class="badge">A nota aparece quando você encerra.</div></div>
+  </aside>
+</main>
+<div id="modal" hidden><div class="modal-box"><div class="modal-top"><h2 id="modal-titulo">Resultado</h2><button id="btn-fechar-modal">Fechar</button></div><div id="modal-conteudo"></div></div></div>
+<script src="/static/marca.js"></script>
+<script src="/static/treino.js"></script>
+</body>
+</html>

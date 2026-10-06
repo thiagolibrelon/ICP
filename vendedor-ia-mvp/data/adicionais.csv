@@ -1,0 +1,4 @@
+codigo,nome,preco_mensal_por_veiculo,unidade,quando_oferecer
+PROTECAO_TOTAL,Proteção total (cobertura de avarias sem franquia),189.0,por veículo/mês,"operação com risco de avaria (obra, campo, rodovia), histórico de sinistro ou cliente preocupado com franquia"
+TELEMETRIA,"Telemetria (condutor, rota e comportamento)",59.0,por veículo/mês,"multas no condutor errado, controle de quem dirige cada carro, frota grande ou uso fora de horário"
+KM_EXTRA_1000,Pacote de +1.000 km/mês,180.0,por pacote por veículo/mês,km/mês do cliente acima da franquia de 2.000 km (sai mais barato que pagar km excedente avulso)
