@@ -77,7 +77,10 @@ P_AUDITOR = (Path(__file__).resolve().parent.parent / "prompts" / "auditor_segur
 NEGOCIACAO = ["DESCONTO_ACIMA", "CONTRAPARTIDA_ACEITA", "CONTRAPARTIDA_RECUSADA"]
 ATIVA = ["ATV_INTERESSADO", "ATV_OCUPADO", "ATV_IRRITADO", "ATV_PARAR", "ATV_PESSOA_ERRADA", "ATV_CONCORRENTE", "ATV_NAO_RESPONDE"]
 PEDEM_DESCONTO = {"DESCONTO_ACIMA", "CONTRAPARTIDA_ACEITA", "CONTRAPARTIDA_RECUSADA", "RT_AMIGO_DIRETOR"}
-TODAS = list(PERSONAS)
+# a linha de base do Laboratório continua nos 12 clientes originais (C01–C12): mesma régua e mesmo custo das rodadas já
+# planejadas. Os clientes C13–C30 (mundo v5, trilha de treinamento) têm preset próprio e podem entrar em rodadas personalizadas.
+TODAS = [f"C{i:02d}" for i in range(1, 13)]
+NOVOS = [c for c in PERSONAS if c not in TODAS]
 
 
 def _itens(personas, comportamentos, modos, repeticoes=1, max_turnos=MAX_TURNOS_PADRAO, aberturas=None):
@@ -99,6 +102,8 @@ PRESETS = {
                                       aberturas=["1", "2"])),
     "ativa": ("Frente ativa (a Fernanda inicia; 7 reações do cliente × 6 clientes, A e B)",
               lambda: _itens(["C01", "C02", "C04", "C06", "C07", "C11"], ATIVA, ["A", "B"])),
+    "novos_clientes": ("Clientes novos C13–C30 (colaborativo e resistente, modo B)",
+                       lambda: _itens(NOVOS, ["COLABORATIVO", "RESISTENTE"], ["B"])),
     "negociacao": ("Negociação de desconto (alçada, gerente e contrapartida, A e B)",
                    lambda: _itens(["C01", "C02", "C03", "C06", "C07", "C11"], NEGOCIACAO, ["A", "B"])),
 }

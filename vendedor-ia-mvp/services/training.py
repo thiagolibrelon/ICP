@@ -2,6 +2,8 @@
 um avaliador aplica a régua C12 e devolve nota + justificativa + onde melhorar.
 
 - Modo PROVA: sem dicas; nota no fim.  Modo TREINO: dica do coach a cada troca; nota no fim.
+- Coach ligado/desligado: no modo TREINO o coach pode ser desligado (no início ou no meio do treino) para a frente de
+  líder coach validar o treino com um líder humano no lugar da IA. Cada troca fica registrada e vai para o resultado.
 - Partes determinísticas da nota: segredos descobertos (diagnóstico) e disciplina de margem (ferramentas).
 - Âncoras do avaliador são conferidas contra as falas do vendedor (mesma técnica do classificador de ligações).
 """
@@ -73,7 +75,8 @@ CONTEXTO_ATIVA = ("\n\nCONTEXTO: você NÃO procurou a locadora. O vendedor est�
                   "do mesmo jeito.")
 
 
-def iniciar(vendedor: str, cliente_id: str, modo: str = "TREINO", dificuldade: str = "medio", frente: str = "receptiva") -> dict:
+def iniciar(vendedor: str, cliente_id: str, modo: str = "TREINO", dificuldade: str = "medio", frente: str = "receptiva",
+            coach: bool | None = None) -> dict:
     vendedor = (vendedor or "").strip()
     if not vendedor:
         raise ValueError("Informe o nome do vendedor")
@@ -83,8 +86,12 @@ def iniciar(vendedor: str, cliente_id: str, modo: str = "TREINO", dificuldade: s
         raise ValueError("Modo deve ser PROVA ou TREINO; dificuldade facil, medio ou dificil")
     if frente not in FRENTES:
         raise ValueError("Frente deve ser receptiva ou ativa")
+    if modo == "PROVA" and coach:
+        raise ValueError("Na prova o coach fica desligado")
+    coach = modo == "TREINO" if coach is None else bool(coach)
     tid = "TR-" + uuid.uuid4().hex[:10].upper()
-    estado = {"revelados": [], "objecoes": [], "calculos": [], "propostas": [], "estado_cliente": "NEGOCIANDO", "frente": frente}
+    estado = {"revelados": [], "objecoes": [], "calculos": [], "propostas": [], "estado_cliente": "NEGOCIANDO", "frente": frente,
+              "coach": coach, "coach_trocas": []}
     if frente == "ativa":
         estado["motivo"] = ativa.motivos(cliente_id)[0]  # o motivo verdadeiro do contato, tirado do cadastro
     db.execute("INSERT INTO treinos VALUES (?,?,?,?,?,?,?,?,?,?,?)",
@@ -103,7 +110,7 @@ def obter(tid: str) -> dict:
         m["meta"] = json.loads(m.pop("meta_json") or "{}")
     p = PERSONAS[r["cliente_id"]]
     return {**r, "mensagens": msgs, "resultado": res, "cliente": catalog.consultar_cliente(r["cliente_id"]),
-            "frente": estado.get("frente", "receptiva"), "motivo": estado.get("motivo"),
+            "frente": estado.get("frente", "receptiva"), "motivo": estado.get("motivo"), "coach": coach_ligado(r, estado),
             "contato": {"nome": p["contato"], "cargo": p["cargo"]}, "calculos": estado["calculos"], "propostas": estado["propostas"],
             "progresso": {"segredos_descobertos": len(estado["revelados"]), "segredos_total": len(p["segredos"]),
                           "estado_cliente": estado["estado_cliente"]}}
@@ -147,10 +154,44 @@ def mensagem(tid: str, texto: str, meta: dict | None = None) -> dict:
         _log(tid, "cliente", "(o cliente não respondeu: GPT indisponível)", {"erro_llm": str(e)})
         _salvar(tid, estado)
         return obter(tid)
-    if r["modo"] == "TREINO":
+    if coach_ligado(r, estado):
         _coach(tid, r, estado)
     _salvar(tid, estado)
     return obter(tid)
+
+
+def coach_ligado(r: dict, estado: dict) -> bool:
+    """Treinos antigos (sem a chave) seguem a regra de antes: coach no modo TREINO, nunca na PROVA."""
+    return r["modo"] == "TREINO" and estado.get("coach", True)
+
+
+def definir_coach(tid: str, ligado: bool) -> dict:
+    """Liga ou desliga o coach no meio do treino. Registra em que resposta do vendedor a troca aconteceu."""
+    r = _row(tid)
+    if r["status"] != "ATIVO":
+        raise ValueError("Treino encerrado")
+    if r["modo"] != "TREINO":
+        raise ValueError("Na prova o coach fica desligado")
+    estado = json.loads(r["estado_json"])
+    if estado.get("coach", True) != bool(ligado):
+        vendedor = sum(1 for m in _transcricao(tid) if m["role"] == "vendedor")
+        estado["coach"] = bool(ligado)
+        estado.setdefault("coach_trocas", []).append({"ligado": bool(ligado), "depois_da_resposta": vendedor, "quando": _now()})
+        _salvar(tid, estado)
+    return obter(tid)
+
+
+def resumo_coach(tid: str, r: dict, estado: dict) -> dict:
+    """Como o coach esteve neste treino: 'ligado', 'desligado' ou 'misto' (trocado no meio), e quantas dicas deu."""
+    dicas = db.fetch_one("SELECT COUNT(*) AS n FROM treino_mensagens WHERE treino_id=? AND role='coach'", (tid,))["n"]
+    trocas = estado.get("coach_trocas") or []
+    if r["modo"] != "TREINO":
+        situacao = "prova"
+    elif trocas:
+        situacao = "misto"
+    else:
+        situacao = "ligado" if estado.get("coach", True) else "desligado"
+    return {"situacao": situacao, "dicas": dicas, "trocas": trocas}
 
 
 def _coach(tid: str, r: dict, estado: dict) -> None:
@@ -255,6 +296,7 @@ def encerrar(tid: str) -> dict:
         return obter(tid)
     estado = json.loads(r["estado_json"])
     resultado = avaliar_conversa(r["cliente_id"], _transcricao(tid), estado)
+    resultado["coach"] = resumo_coach(tid, r, estado)
     db.execute("UPDATE treinos SET status='AVALIADO', fim=?, resultado_json=?, nota_geral=? WHERE treino_id=?",
                (_now(), json.dumps(resultado, ensure_ascii=False, default=str), resultado["nota_geral"], tid))
     return obter(tid)
@@ -352,6 +394,7 @@ def historico(vendedor: str | None = None) -> dict:
     for r in rows:
         res = json.loads(r.pop("resultado_json") or "{}")
         r["notas"] = {k: v.get("nota") for k, v in (res.get("dimensoes") or {}).items()}
+        r["coach"] = (res.get("coach") or {}).get("situacao") or ("ligado" if r["modo"] == "TREINO" else "prova")
         r["cliente"] = catalog.consultar_cliente(r["cliente_id"])["razao_social"]
         por.setdefault(r["vendedor"], []).append(r)
     resumo = []
@@ -365,5 +408,15 @@ def historico(vendedor: str | None = None) -> dict:
         resumo.append({"vendedor": v, "treinos": len(lst), "media_geral": round(sum(t["nota_geral"] for t in lst) / len(lst), 1),
                        "ultima_nota": lst[-1]["nota_geral"], "evolucao": [t["nota_geral"] for t in lst],
                        "media_por_dimensao": {NOMES[k]: round(sum(n) / len(n), 1) for k, n in dims.items()},
+                       "por_coach": _por_coach(lst),
                        "ponto_mais_fraco": NOMES[min(dims, key=lambda k: sum(dims[k]) / len(dims[k]))] if dims else None})
-    return {"vendedores": resumo, "treinos": [t for v in por.values() for t in v]}
+    todos = [t for v in por.values() for t in v]
+    return {"vendedores": resumo, "treinos": todos, "por_coach": _por_coach(todos)}
+
+
+def _por_coach(treinos: list[dict]) -> dict:
+    """Média da nota por situação do coach (ligado, desligado, misto, prova): base para a frente de líder coach comparar."""
+    grupos = {}
+    for t in treinos:
+        grupos.setdefault(t["coach"], []).append(t["nota_geral"])
+    return {k: {"treinos": len(v), "media": round(sum(v) / len(v), 1)} for k, v in sorted(grupos.items())}

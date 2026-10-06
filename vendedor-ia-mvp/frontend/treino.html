@@ -38,10 +38,12 @@
       <option value="receptiva">Receptiva (o cliente chama)</option><option value="ativa">Ativa (você chama o cliente)</option>
     </select>
     <select id="dificuldade"><option value="facil">Fácil</option><option value="medio" selected>Médio</option><option value="dificil">Difícil</option></select>
-    <select id="modo"><option value="TREINO">Modo treino (com dicas do coach)</option><option value="PROVA">Modo prova (sem dicas)</option></select>
+    <select id="modo"><option value="TREINO">Modo treino</option><option value="PROVA">Modo prova (sem dicas)</option></select>
+    <button id="btn-coach" type="button" aria-pressed="true" title="Liga ou desliga as dicas do coach IA. Desligado: o treino segue igual, sem dicas (ex.: um líder coach acompanha no lugar da IA). Dá para trocar no meio do treino; a troca fica registrada no resultado." data-ic="bulb">Coach IA: ligado</button>
     <button id="btn-iniciar" class="primary">Iniciar</button>
     <button id="btn-encerrar" disabled data-ic="flag">Encerrar e ver nota</button>
     <button id="btn-historico" data-ic="chart">Minha evolução / gestor</button>
+    <button id="btn-trilha" data-ic="flag" title="Competências da trilha, níveis Bronze/Prata/Ouro e os cenários de cada uma">Trilha</button>
   </div>
 </div>
 <main>

@@ -10,7 +10,7 @@ Tudo é fictício (clientes, preços, estoque e conversas).
 No Laboratório ninguém digita. Uma IA faz o papel do **cliente** (a "IA-cliente") e conversa sozinha com a **Fernanda**,
 a vendedora IA. Assim dá para rodar centenas de conversas sem ocupar o time.
 
-- A IA-cliente usa as **mesmas 12 personas do Treino**: cada uma tem informações que só revela se for bem perguntada,
+- A IA-cliente usa as **personas do Treino** (a linha de base fica nos 12 originais, C01–C12; os 18 novos, C13–C30, têm o tipo "Clientes novos", com 36 conversas): cada uma tem informações que só revela se for bem perguntada,
   objeções e uma condição para aceitar.
 - Em cada teste, a IA-cliente recebe também um **comportamento** (ex.: resistente, pede desconto alto, pede humano).
 - A Fernanda roda nos dois modos: **A** (IA sozinha, só para comparação: recebe todos os dados no texto, inclusive as

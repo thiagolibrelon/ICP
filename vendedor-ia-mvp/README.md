@@ -1,7 +1,7 @@
 # Vendedor IA — MVP simulado (v2: venda interna receptiva)
 
 Simulador de atendimento da **venda interna**: só clientes cadastrados, contato **receptivo** (quem começa é o cliente).
-O vendedor é o GPT; preço, margem, aprovação e estoque vêm de um banco próprio **fictício** (4 modelos, 3 cidades, 12 clientes).
+O vendedor é o GPT; preço, margem, aprovação e estoque vêm de um banco próprio **fictício** (4 modelos, 3 cidades, 30 clientes).
 
 ## Executar (Windows, rede Localiza)
 
@@ -37,7 +37,7 @@ Mesmos clientes e roteiros nos dois modos; o botão **Comparativo A × B** mostr
   menos. Faltando, há prazo de entrega. Botão **Reiniciar estoque**; reiniciar uma conversa devolve o que ela reservou.
 - **Challenger com dado:** `comparar_diaria_mensal` (equilíbrio em 17 dias/mês) e `comparar_eletrico` (Dolphin compensa
   a partir de ~930 km/mês contra Creta e ~3.721 km/mês contra Onix). As ferramentas dizem quando **não** compensa.
-- **12 clientes** com perfis dos ICPs (`../icp_segmentacao/icps_definidos.md`): 5 do ICP1, 4 do ICP2, 2 do ICP3, 1 do ICP5
+- **30 clientes** (mundo v5; C13–C30 entraram para a trilha de treinamento, ver `TRILHA_TREINAMENTO.md`) com perfis dos ICPs (`../icp_segmentacao/icps_definidos.md`): 5 do ICP1, 4 do ICP2, 2 do ICP3, 1 do ICP5
   (grupo com 2 CNPJs). Cada um tem um roteiro; há 5 roteiros genéricos (suporte, multa, reclamação, humano, arrancar margem)
   e a opção **Conversa livre** (sem roteiro, para quem quiser "brincar").
 
@@ -53,6 +53,13 @@ O GPT interpreta o cliente (persona com segredos, objeções e condição de ace
 usando a calculadora da alçada. **Modo treino** (coach com dicas) ou **modo prova** (sem dicas). Ao encerrar: nota 0–10
 por dimensão da régua C12, com justificativa, trecho da própria fala, como melhorar e exemplo. Disciplina de margem e
 informações descobertas são calculadas pelo sistema. Evolução por vendedor em ordem alfabética (sem ranking).
+
+- **Coach IA: ligado/desligado.** No modo treino o coach pode ser desligado antes de iniciar ou no meio do treino (frente
+  de líder coach: um líder humano acompanha no lugar da IA). A troca fica registrada e a evolução mostra a média com e
+  sem coach. Na prova o coach está sempre desligado.
+- **Trilha.** 9 competências tiradas dos 15 prompts de análise de ligações, 30 cenários e nível Bronze/Prata/Ouro por
+  competência (só provas contam). Botão "Trilha" na tela e `GET /api/treino/trilha?vendedor=...`. Desenho completo em
+  `TRILHA_TREINAMENTO.md`.
 
 ## Laboratório (IA-cliente × Fernanda, em lote) — http://127.0.0.1:8000/laboratorio
 

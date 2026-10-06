@@ -17,7 +17,7 @@ def _now() -> str:
 def listar_clientes() -> list[dict]:
     rows = db.fetch_all("SELECT c.*, r.roteiro_id, r.texto AS roteiro_texto FROM clientes c LEFT JOIN roteiros r "
                         "ON r.cliente_id = c.cliente_id ORDER BY c.cliente_id")
-    return [r for r in rows if r["roteiro_id"]]  # os 12 atendíveis (a filial C12B entra só como outro CNPJ do grupo)
+    return [r for r in rows if r["roteiro_id"]]  # os 30 atendíveis (a filial C12B entra só como outro CNPJ do grupo)
 
 
 def fila_handoffs() -> list[dict]:

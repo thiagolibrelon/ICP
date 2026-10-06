@@ -123,7 +123,7 @@ def test_historico_em_ordem_alfabetica_sem_ranking(gpt):
 
 def test_api_treino():
     with TestClient(A.app) as c:
-        assert len(c.get("/api/treino/personas").json()) == 12
+        assert len(c.get("/api/treino/personas").json()) == 30
         t = c.post("/api/treino", json={"vendedor": "Ana", "cliente_id": "C04", "modo": "PROVA", "dificuldade": "dificil"}).json()
         r = c.post(f"/api/treino/{t['treino_id']}/avaliar-condicao", json={"modelo": "dolphin", "quantidade": 2, "cidade": "curitiba",
                                                                            "produto": "AM", "prazo_meses": 24, "pacotes_km_extra": 3})
@@ -131,3 +131,62 @@ def test_api_treino():
         assert c.post(f"/api/treino/{t['treino_id']}/encerrar").json()["status"] == "AVALIADO"
         assert c.get("/treino").status_code == 200
         assert c.post("/api/treino", json={"vendedor": "Ana", "cliente_id": "C01", "modo": "X"}).status_code == 422
+
+
+# ------------------------------------------------------------------ coach ligado/desligado (frente de líder coach)
+def test_coach_desligado_no_inicio_nao_da_dica(gpt):
+    gpt(cliente("Uns 22 dias."))
+    t = tr.iniciar("Ana", "C01", "TREINO", coach=False)
+    assert t["coach"] is False and t["modo"] == "TREINO"
+    t = tr.mensagem(t["treino_id"], "Quantos dias?")
+    assert "coach" not in [m["role"] for m in t["mensagens"]]
+
+
+def test_coach_padrao_ligado_no_treino_e_desligado_na_prova():
+    assert tr.iniciar("Ana", "C01", "TREINO")["coach"] is True
+    assert tr.iniciar("Ana", "C01", "PROVA")["coach"] is False
+    with pytest.raises(ValueError):
+        tr.iniciar("Ana", "C01", "PROVA", coach=True)
+
+
+def test_coach_trocado_no_meio_fica_registrado(gpt):
+    gpt(cliente("Uns 22 dias.", revelou=["uso"]), json.dumps({"dica": "Pergunte quem decide."}),
+        cliente("O Marcos."), json.dumps(AVALIACAO))
+    tid = tr.iniciar("Ana", "C01", "TREINO")["treino_id"]
+    tr.mensagem(tid, "Quantos dias por mês vocês usam os carros?")             # coach ligado: 1 dica
+    assert tr.definir_coach(tid, False)["coach"] is False
+    tr.definir_coach(tid, False)                                                # repetir não cria outra troca
+    t = tr.mensagem(tid, "E quem decide aí?")                                   # coach desligado: sem dica
+    assert [m["role"] for m in t["mensagens"]].count("coach") == 1
+    r = tr.encerrar(tid)["resultado"]["coach"]
+    assert r["situacao"] == "misto" and r["dicas"] == 1
+    assert [(x["ligado"], x["depois_da_resposta"]) for x in r["trocas"]] == [(False, 1)]
+    with pytest.raises(ValueError):
+        tr.definir_coach(tid, True)                                             # encerrado
+
+
+def test_prova_nao_liga_coach():
+    tid = tr.iniciar("Ana", "C01", "PROVA")["treino_id"]
+    with pytest.raises(ValueError):
+        tr.definir_coach(tid, True)
+
+
+def test_historico_separa_com_e_sem_coach(gpt):
+    for coach in (True, False, False):
+        gpt(cliente("Uns 22 dias."), *( [json.dumps({"dica": "ok"})] if coach else []), json.dumps(AVALIACAO))
+        tid = tr.iniciar("Ana", "C01", "TREINO", coach=coach)["treino_id"]
+        tr.mensagem(tid, "Quantos dias por mês vocês usam os carros?")
+        tr.encerrar(tid)
+    h = tr.historico()
+    assert h["por_coach"]["ligado"]["treinos"] == 1 and h["por_coach"]["desligado"]["treinos"] == 2
+    assert {t["coach"] for t in h["treinos"]} == {"ligado", "desligado"}
+    assert set(h["vendedores"][0]["por_coach"]) == {"ligado", "desligado"}
+
+
+def test_api_coach():
+    with TestClient(A.app) as c:
+        t = c.post("/api/treino", json={"vendedor": "Ana", "cliente_id": "C01", "coach": False}).json()
+        assert t["coach"] is False
+        assert c.post(f"/api/treino/{t['treino_id']}/coach", json={"ligado": True}).json()["coach"] is True
+        p = c.post("/api/treino", json={"vendedor": "Ana", "cliente_id": "C01", "modo": "PROVA"}).json()
+        assert c.post(f"/api/treino/{p['treino_id']}/coach", json={"ligado": True}).status_code == 400

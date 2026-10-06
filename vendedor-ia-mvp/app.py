@@ -10,7 +10,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from database import db, seed
-from services import ativa, catalog, conversations as conv, evaluation, guia, laboratorio, llm_client, training
+from services import ativa, catalog, conversations as conv, evaluation, guia, laboratorio, llm_client, training, trilha
 
 BASE = Path(__file__).resolve().parent
 
@@ -48,6 +48,11 @@ class NovoTreino(BaseModel):
     modo: str = Field("TREINO", pattern="^(PROVA|TREINO)$")
     dificuldade: str = Field("medio", pattern="^(facil|medio|dificil)$")
     frente: str = Field("receptiva", pattern="^(receptiva|ativa)$", description="ativa = o vendedor inicia o contato")
+    coach: bool | None = Field(None, description="Coach IA ligado? Padrão: ligado no TREINO, sempre desligado na PROVA")
+
+
+class Coach(BaseModel):
+    ligado: bool
 
 
 class Condicao(BaseModel):
@@ -254,12 +259,21 @@ def treino_personas():
 
 @app.post("/api/treino", status_code=201)
 def treino_novo(body: NovoTreino):
-    return _tratar(training.iniciar, body.vendedor, body.cliente_id, body.modo, body.dificuldade, body.frente)
+    return _tratar(training.iniciar, body.vendedor, body.cliente_id, body.modo, body.dificuldade, body.frente, body.coach)
 
 
 @app.get("/api/treino/historico")
 def treino_historico(vendedor: str | None = None):
     return training.historico(vendedor)
+
+
+@app.get("/api/treino/trilha")
+def treino_trilha(vendedor: str | None = None):
+    """A trilha (competências × 15 prompts × cenários) e, se vier o vendedor, o nível dele em cada competência."""
+    out = trilha.mapa()
+    if vendedor:
+        out["progresso"] = _tratar(trilha.progresso, vendedor)
+    return out
 
 
 @app.get("/api/treino/{tid}")
@@ -289,6 +303,11 @@ def treino_avaliar(tid: str, body: Condicao):
 @app.post("/api/treino/{tid}/registrar-proposta")
 def treino_registrar(tid: str, body: Condicao):
     return _tratar(training.registrar, tid, body.model_dump())
+
+
+@app.post("/api/treino/{tid}/coach")
+def treino_coach(tid: str, body: Coach):
+    return _tratar(training.definir_coach, tid, body.ligado)
 
 
 @app.post("/api/treino/{tid}/encerrar")

@@ -68,7 +68,7 @@
         {"termo": "Áudio (🎤)", "definicao": "Grava como cliente de WhatsApp. O llm-gate transcreve e a conversa segue o fluxo normal, marcada [ÁUDIO TRANSCRITO]; se algo soar estranho, a Fernanda confirma números e cidade. Se o gate não tiver transcrição, o botão fica desativado."},
         {"termo": "llm-gate", "definicao": "Gateway corporativo por onde o sistema chama o GPT (e a transcrição de áudio). A chave é a variável API_KEY, fica só na memória do processo e nunca vai para HTML, log ou Git."},
         {"termo": "GPT 5.4 mini", "definicao": "O modelo usado pelo gate neste MVP, com reasoning_effort minimal para ser rápido e barato."},
-        {"termo": "Mundo simulado", "definicao": "O banco próprio e fictício: 4 modelos, 3 cidades, 12 clientes, preços, margens e estoque. Quando muda de versão, o banco é recriado sozinho. Nada ali é real nem proposta juridicamente válida."}
+        {"termo": "Mundo simulado", "definicao": "O banco próprio e fictício: 4 modelos, 3 cidades, 30 clientes, preços, margens e estoque. Quando muda de versão, o banco é recriado sozinho. Nada ali é real nem proposta juridicamente válida."}
       ]
     },
     {
@@ -79,7 +79,8 @@
         {"termo": "Treino de vendas", "definicao": "Tela em que o vendedor humano atende um cliente simulado pelo GPT e, ao final, recebe uma nota pela régua C12. Ferramenta de desenvolvimento, não de cobrança."},
         {"termo": "Modo treino", "definicao": "Com coach: depois de cada troca o Coach dá uma dica curta."},
         {"termo": "Modo prova", "definicao": "Sem dicas. Use para medir de verdade e comparar antes e depois."},
-        {"termo": "Coach", "definicao": "Voz que, no modo treino, comenta o que o vendedor poderia fazer melhor naquela troca."},
+        {"termo": "Coach", "definicao": "Voz que, no modo treino, comenta o que o vendedor poderia fazer melhor naquela troca. Tem botão de ligar e desligar (para o líder coach acompanhar no lugar da IA); na prova fica sempre desligado."},
+        {"termo": "Trilha de treinamento", "definicao": "O caminho do vendedor no Treino: 9 competências (abertura, diagnóstico, Challenger, objeções, portfólio, suporte que vira oportunidade, fechamento e promessas, saúde da conta, disciplina de margem), cada uma com cenários e níveis Bronze, Prata e Ouro. As competências vêm dos 15 prompts de análise de ligações: o que se mede na ligação real é o que se treina."},
         {"termo": "Persona", "definicao": "O cliente interpretado pelo GPT: contato, cargo, abertura, segredos, objeções, condição de aceite, desafio Challenger e janela de adicional. Há 12, uma por cliente cadastrado."},
         {"termo": "Segredo", "definicao": "Informação que o cliente só revela se o vendedor perguntar bem (ex.: 'usam 22 dias por mês', 'quem decide é o sócio'). São 25 no total; o sistema conta quantos foram descobertos."},
         {"termo": "Condição de aceite", "definicao": "O que precisa acontecer para o cliente aceitar (ex.: ver com número que o mensal sai mais barato)."},
@@ -158,7 +159,7 @@
       "descricao": "O projeto de segmentação que deu origem aos perfis de cliente do simulador.",
       "termos": [
         {"termo": "ICP (Ideal Customer Profile)", "definicao": "Perfil de cliente ideal: o tipo de empresa que mais vale a pena atender e como. No repositório, a base de ~86 mil clientes foi dividida em perfis por setor, uso de produto, duração de contrato e estrutura de grupo. Serve para decidir para quem ligar primeiro e com qual abordagem."},
-        {"termo": "ICP1 a ICP5", "definicao": "ICP1 operação móvel recorrente (construção, energia, telecom, facilities) — validado. ICP2 mobilidade comercial e executiva (consultorias, seguros) — validado. ICP3 frota própria substituível (contratos longos) — hipótese, nicho de alto valor. ICP4 demanda sazonal ou por projeto — rejeitado pelos dados. ICP5 multiproduto ou grupo econômico — hipótese parcial. Os 12 clientes do simulador usam esses perfis."},
+        {"termo": "ICP1 a ICP5", "definicao": "ICP1 operação móvel recorrente (construção, energia, telecom, facilities) — validado. ICP2 mobilidade comercial e executiva (consultorias, seguros) — validado. ICP3 frota própria substituível (contratos longos) — hipótese, nicho de alto valor. ICP4 demanda sazonal ou por projeto — rejeitado pelos dados. ICP5 multiproduto ou grupo econômico — hipótese parcial. Os 30 clientes do simulador usam esses perfis."},
         {"termo": "Score ICP e Tier (no ICP)", "definicao": "Pontuação por cliente (valor, potencial, recompra, risco) que gera o score ICP e o Tier. Atenção: o Tier do projeto de ICP é derivado de score; o Tier do simulador é uma regra de roteamento (A vai para humano)."},
         {"termo": "MASTER_CLASSIFICADA", "definicao": "Tabela final do projeto de ICP: cada cliente com ICP principal, tags secundárias, tier, próxima melhor ação e canal recomendado."}
       ]

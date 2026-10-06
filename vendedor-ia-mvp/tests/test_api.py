@@ -8,8 +8,8 @@ import app as A
 
 def test_fluxo_http_offline():
     with TestClient(A.app) as c:
-        assert len(c.get("/api/clientes").json()) == 12
-        assert len(c.get("/api/roteiros").json()) == 17
+        assert len(c.get("/api/clientes").json()) == 30
+        assert len(c.get("/api/roteiros").json()) == 35  # 30 clientes + 5 genéricos
         conv = c.post("/api/conversations", json={"cliente_id": "C01", "modo": "B"}).json()
         assert conv["mensagens"] == [] and conv["roteiro"]["roteiro_id"] == "R_C01"      # receptivo: começa vazio
         r = c.post(f"/api/conversations/{conv['conversation_id']}/messages", json={"conteudo": "Oi"}).json()

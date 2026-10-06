@@ -93,7 +93,8 @@ def checks(x):
 # ------------------------------------------------------------------ catálogo, presets e estimativa
 def test_presets_e_tamanhos():
     tam = {p["id"]: p["execucoes"] for p in lab.catalogo()["presets"]}
-    assert tam == {"rodada_completa": 192, "criticos_5x": 30, "longas_24": 12, "red_team": 36, "negociacao": 36, "teste_abertura": 120, "ativa": 84}
+    assert tam == {"rodada_completa": 192, "criticos_5x": 30, "longas_24": 12, "red_team": 36, "negociacao": 36, "teste_abertura": 120, "ativa": 84,
+                   "novos_clientes": 36}  # linha de base continua nos 12 originais; C13–C30 têm preset próprio
     neg = lab.PRESETS["negociacao"][1]()
     assert {i["comportamento"] for i in neg} == {"DESCONTO_ACIMA", "CONTRAPARTIDA_ACEITA", "CONTRAPARTIDA_RECUSADA"}
     assert not {"C10", "C12"} & {i["cliente_id"] for i in neg}          # clientes estratégicos não negociam com a IA

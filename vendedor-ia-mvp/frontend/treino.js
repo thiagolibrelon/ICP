@@ -1,4 +1,4 @@
-let tr = null, micIndisponivel = false;
+let tr = null, micIndisponivel = false, coachInicial = true;
 const $ = id => document.getElementById(id);
 const api = async (url, opts) => {
   const r = await fetch(url, opts && {headers: {'Content-Type': 'application/json'}, ...opts});
@@ -24,7 +24,7 @@ function render() {
   const c = tr.cliente, pr = tr.progresso;
   $('info').innerHTML = `<dl><dt>Empresa</dt><dd>${esc(c.razao_social)}</dd><dt>Contato</dt><dd>${esc(tr.contato.nome)} · ${esc(tr.contato.cargo)}</dd>
     <dt>Cidade</dt><dd>${esc(c.cidade)}</dd><dt>Perfil</dt><dd>${esc(c.icp)} · Tier ${esc(c.tier)}</dd>
-    <dt>Uso atual</dt><dd>${esc(c.situacao)}</dd><dt>Treino</dt><dd>${tr.modo === 'PROVA' ? 'Prova' : 'Treino'} · ${esc(tr.dificuldade)} · ${tr.frente === 'ativa' ? 'contato ativo' : 'receptivo'}</dd></dl>
+    <dt>Uso atual</dt><dd>${esc(c.situacao)}</dd><dt>Treino</dt><dd>${tr.modo === 'PROVA' ? 'Prova' : 'Treino'}${tr.modo === 'TREINO' ? (tr.coach ? ' (coach ligado)' : ' (coach desligado)') : ''} · ${esc(tr.dificuldade)} · ${tr.frente === 'ativa' ? 'contato ativo' : 'receptivo'}</dd></dl>
     ${tr.frente === 'ativa' && tr.motivo ? `<div class="roteiro" style="margin-top:8px"><b>Motivo do contato (carteira):</b> ${esc(tr.motivo.titulo)} · ${esc(tr.motivo.resumo)}.<br>Você inicia a conversa: diga quem é, traga o motivo e faça uma pergunta.</div>` : ''}`;
   $('progresso').innerHTML = `Informações-chave descobertas: <b>${pr.segredos_descobertos} de ${pr.segredos_total}</b> · cliente: <b>${esc(pr.estado_cliente)}</b>`;
   $('chat').innerHTML = tr.mensagens.map(m => m.role === 'coach'
@@ -33,7 +33,8 @@ function render() {
   if (!tr.mensagens.length) $('chat').innerHTML = '<div class="nota">Contato ativo: você começa. Escreva a primeira mensagem para o cliente.</div>';
   $('chat').scrollTop = 1e9;
   const dicas = tr.mensagens.filter(m => m.role === 'coach');
-  $('coach').innerHTML = tr.modo === 'PROVA' ? 'Modo prova: sem dicas. Boa sorte!' : dicas.length ? `${icon('bulb')} ${esc(dicas[dicas.length - 1].conteudo)}` : 'A primeira dica aparece depois da sua primeira resposta.';
+  pintarCoach();
+  $('coach').innerHTML = tr.modo === 'PROVA' ? 'Modo prova: sem dicas. Boa sorte!' : !tr.coach ? 'Coach IA desligado: sem dicas neste treino.' + (dicas.length ? ` Última dica: ${esc(dicas[dicas.length - 1].conteudo)}` : '') : dicas.length ? `${icon('bulb')} ${esc(dicas[dicas.length - 1].conteudo)}` : 'A primeira dica aparece depois da sua primeira resposta.';
   const ativo = tr.status === 'ATIVO';
   ['msg', 'btn-enviar', 'btn-encerrar'].forEach(id => $(id).disabled = !ativo);
   $('btn-mic').disabled = !ativo || micIndisponivel;
@@ -44,9 +45,27 @@ $('btn-iniciar').onclick = async () => {
   const v = $('vendedor').value.trim();
   if (!v) { alert('Informe seu nome.'); return; }
   try { localStorage.setItem('vendedor', v); } catch (e) {}
-  tr = await post('/api/treino', {vendedor: v, cliente_id: $('cliente').value, modo: $('modo').value, dificuldade: $('dificuldade').value, frente: $('frente').value});
+  tr = await post('/api/treino', {vendedor: v, cliente_id: $('cliente').value, modo: $('modo').value, dificuldade: $('dificuldade').value, frente: $('frente').value,
+    coach: $('modo').value === 'TREINO' ? coachInicial : false});
   $('resultado').innerHTML = '<div class="badge">A nota aparece quando você encerra.</div>'; $('calc-res').textContent = 'Calculadora pronta.';
   render(); $('msg').focus();
+};
+
+// coach IA: liga/desliga antes de iniciar (vale para o próximo treino) ou no meio (vale a partir da próxima resposta)
+function pintarCoach() {
+  const prova = (tr && tr.status === 'ATIVO' ? tr.modo : $('modo').value) === 'PROVA';
+  const ligado = !prova && (tr && tr.status === 'ATIVO' ? tr.coach : coachInicial);
+  $('btn-coach').disabled = prova;
+  $('btn-coach').setAttribute('aria-pressed', String(ligado));
+  $('btn-coach').classList.toggle('primary', ligado);
+  $('btn-coach').lastChild.textContent = prova ? 'Coach IA: desligado na prova' : ligado ? 'Coach IA: ligado' : 'Coach IA: desligado';
+}
+$('modo').onchange = () => { if (!tr || tr.status !== 'ATIVO') pintarCoach(); };
+$('btn-coach').onclick = async () => {
+  if (tr && tr.status === 'ATIVO') {
+    try { tr = await post(`/api/treino/${tr.treino_id}/coach`, {ligado: !tr.coach}); coachInicial = tr.coach; render(); }
+    catch (err) { alert(err.message); }
+  } else { coachInicial = !coachInicial; pintarCoach(); }
 };
 
 async function enviar(chamada, previa) {
@@ -105,6 +124,7 @@ function abrirResultado(r) {
   $('modal-conteudo').innerHTML = `${r.aviso ? `<div class="bad">${esc(r.aviso)}</div>` : ''}
     <div style="display:flex;gap:24px;align-items:center;flex-wrap:wrap"><div class="nota-geral" style="color:${cor(r.nota_geral)}">${r.nota_geral}<small>/10</small></div>
       <div>${esc(r.resumo || '')}<div class="badge">Cliente terminou: ${esc(r.estado_final_do_cliente)} · ${r.descobertas.segredos_descobertos} de ${r.descobertas.segredos_total} informações-chave descobertas</div></div></div>
+    ${r.coach ? `<div class="rotulo">Coach: ${esc(NOME_COACH[r.coach.situacao] || r.coach.situacao)} · ${r.coach.dicas} dica(s)${r.coach.trocas.length ? ` · ${r.coach.trocas.length} troca(s) no meio do treino` : ''}</div>` : ''}
     ${(r.pontos_fortes || []).length ? `<h2>Pontos fortes</h2><ul>${r.pontos_fortes.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
     ${(r.pontos_a_melhorar || []).length ? `<h2>Onde melhorar</h2><ul>${r.pontos_a_melhorar.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
     <h2>Nota por dimensão (régua C12)</h2>
@@ -124,13 +144,38 @@ function abrirResultado(r) {
 }
 $('btn-fechar-modal').onclick = () => { $('modal').hidden = true; };
 
+// trilha de treinamento: competências (dos 15 prompts de análise), níveis e cenários; nível só conta PROVA
+const NIVEL = {bronze: 'Bronze', prata: 'Prata', ouro: 'Ouro'};
+$('btn-trilha').onclick = async () => {
+  const v = $('vendedor').value.trim();
+  const t = await api('/api/treino/trilha' + (v ? '?vendedor=' + encodeURIComponent(v) : ''));
+  const prog = {}; ((t.progresso || {}).competencias || []).forEach(c => prog[c.id] = c);
+  const nomes = {}; [...$('cliente').options].forEach(o => nomes[o.value] = o.textContent.split(' — ')[0]);
+  $('modal-titulo').textContent = 'Trilha de treinamento' + (v ? ' · ' + v : '');
+  $('modal-conteudo').innerHTML = `<div class="badge">Nível conta só provas (modo prova, sem coach). É para o seu desenvolvimento, não é ranking.</div>
+    ${t.progresso ? `<div class="rotulo" style="margin:8px 0">${t.progresso.provas} prova(s) · ${t.niveis.map(n => `${NIVEL[n.id]} em ${t.progresso.por_nivel[n.id]} de ${t.progresso.total}`).join(' · ')}</div>` : '<div class="rotulo" style="margin:8px 0">Informe seu nome para ver o seu nível.</div>'}
+    <div class="rotulo">${t.niveis.map(n => `<b>${NIVEL[n.id]}:</b> ${esc(n.regra)}`).join('<br>')}</div>
+    ${t.competencias.map(c => { const p = prog[c.id]; return `<div class="dim"><div class="dim-top"><span>${esc(c.nome)}</span><span>${p ? (p.nivel ? NIVEL[p.nivel] : 'sem nível') : ''}</span></div>
+      <div>${esc(c.objetivo)}</div>
+      <div class="rotulo">${c.prompts.length ? 'Medido nas ligações por ' + c.prompts.join(', ') + (c.codigos.length ? ' · códigos ' + c.codigos.slice(0, 8).map(esc).join(', ') + (c.codigos.length > 8 ? '…' : '') : '') : 'Regra do sistema'}${c.observacao ? ' · ' + esc(c.observacao) : ''}</div>
+      ${p && p.proximo ? `<div class="rotulo">Próximo: ${NIVEL[p.proximo.nivel]} — ${esc(p.proximo.regra)} (${p.proximo.aprovadas} aprovada(s))</div>` : ''}
+      <div class="rotulo">Cenários: ${c.cenarios.map(id => `<a href="#" data-cenario="${id}">${esc(nomes[id] || id)}</a>`).join(' · ')}</div></div>`; }).join('')}
+    <h2>Os 15 prompts na trilha</h2><table>${t.prompts.map(x => `<tr><td>${x.prompt}</td><td>${esc(x.nome)}</td><td>${x.competencia ? esc((t.competencias.find(c => c.id === x.competencia) || {}).nome) : esc(x.uso)}</td></tr>`).join('')}</table>`;
+  $('modal-conteudo').querySelectorAll('[data-cenario]').forEach(a => a.onclick = e => { e.preventDefault(); $('cliente').value = a.dataset.cenario; $('modal').hidden = true; });
+  $('modal').hidden = false;
+};
+
+const NOME_COACH = {ligado: 'coach IA ligado', desligado: 'coach IA desligado', misto: 'trocado no meio', prova: 'prova'};
 $('btn-historico').onclick = async () => {
   const v = $('vendedor').value.trim();
   const h = await api('/api/treino/historico');
   $('modal-titulo').textContent = 'Evolução nos treinos';
+  const pc = Object.entries(h.por_coach || {});
   $('modal-conteudo').innerHTML = `<div class="badge">Ordem alfabética — é ferramenta de desenvolvimento, não ranking.</div>
+    ${pc.length ? `<div class="rotulo" style="margin:8px 0">Todos os treinos, por coach: ${pc.map(([k, g]) => `${esc(NOME_COACH[k] || k)}: média ${g.media} em ${g.treinos}`).join(' · ')}</div>` : ''}
     ${h.vendedores.map(x => `<div class="dim" style="${x.vendedor === v ? 'border-color:var(--green-l)' : ''}"><div class="dim-top"><span>${esc(x.vendedor)}</span><span>média ${x.media_geral} · última ${x.ultima_nota}</span></div>
       <div class="rotulo">${x.treinos} treinos · evolução: ${x.evolucao.join(' → ')} · ponto a desenvolver: <b>${esc(x.ponto_mais_fraco || '—')}</b></div>
+      ${x.por_coach && Object.keys(x.por_coach).length > 1 ? `<div class="rotulo">Média por coach: ${Object.entries(x.por_coach).map(([k, g]) => `${esc(NOME_COACH[k] || k)} ${g.media} (${g.treinos})`).join(' · ')}</div>` : ''}
       <table>${Object.entries(x.media_por_dimensao).map(([k, n]) => `<tr><td>${esc(k)}</td><td style="color:${cor(n)}">${n}</td></tr>`).join('')}</table></div>`).join('') || 'Nenhum treino avaliado ainda.'}`;
   $('modal').hidden = false;
 };
@@ -158,4 +203,5 @@ $('btn-mic').onclick = async () => {
     gravador.start(); $('btn-mic').classList.add('gravando'); $('btn-mic').innerHTML = icon('stop');
   } catch (err) { alert('Não consegui acessar o microfone: ' + err.message); }
 };
+pintarCoach();
 init();

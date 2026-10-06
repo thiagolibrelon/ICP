@@ -117,6 +117,21 @@
       ]
     },
     {
+      "id": "TRN",
+      "titulo": "Trilha de treinamento do vendedor",
+      "periodo": "Q4/2026 → 2027",
+      "descricao": "O Treino vira uma trilha completa: 9 competências tiradas dos 15 prompts de análise de ligações, 30 cenários e níveis Bronze, Prata e Ouro. Detalhes em TRILHA_TREINAMENTO.md.",
+      "itens": [
+        {"id": "TRN-01", "titulo": "Coach IA com botão de ligar e desligar", "trilha": "Treino", "descricao": "No modo treino o coach pode ser desligado no início ou no meio; a troca fica registrada e a evolução mostra a média com e sem coach (frente de líder coach).", "fonte": "Conversa de 06/10/2026", "status_inicial": "concluido"},
+        {"id": "TRN-02", "titulo": "Mundo simulado com 30 clientes", "trilha": "Treino", "descricao": "C13 a C30: suporte que vira oportunidade, churn, concorrência, promessa, troca de gestor, expansão, indicação. A linha de base do Laboratório continua nos 12 originais.", "fonte": "Conversa de 06/10/2026", "status_inicial": "concluido"},
+        {"id": "TRN-03", "titulo": "Trilha v1: competências, cenários e níveis", "trilha": "Treino", "descricao": "9 competências mapeadas nos 15 prompts (P13 e P14 ficam com o gestor), botão Trilha no Treino e nível por competência contando só provas.", "fonte": "Conversa de 06/10/2026", "status_inicial": "concluido"},
+        {"id": "TRN-04", "titulo": "Validar a trilha com o gestor e o líder coach", "trilha": "Gestor", "prazo": "16/out", "descricao": "Competências, ordem, notas mínimas dos níveis e quando o coach fica desligado. Ajustes viram a v2.", "fonte": "TRILHA_TREINAMENTO.md §8"},
+        {"id": "TRN-05", "titulo": "Avaliador com todos os códigos da trilha", "trilha": "Treino", "prazo": "31/out", "descricao": "Hoje a nota traz B, CH, OB/R e FC. Acrescentar abertura (AB), promessas (PM), oportunidades perdidas (OP) e sinais de conta (IC, eventos raros).", "fonte": "TRILHA_TREINAMENTO.md §6"},
+        {"id": "TRN-06", "titulo": "Piloto da trilha com coach ligado × desligado", "trilha": "Treino", "prazo": "28/nov", "descricao": "3 a 5 vendedores, metade dos treinos com o coach IA e metade com o líder coach. Compara a evolução por competência.", "fonte": "TRILHA_TREINAMENTO.md §7"},
+        {"id": "TRN-07", "titulo": "Ligações reais apontam o próximo módulo", "trilha": "Treino", "descricao": "Depois da LGPD: os resultados agregados do classificador por vendedor (P1, P5, P8, P9…) indicam a competência mais fraca e sugerem o cenário. Sem trechos de ligação no projeto.", "fonte": "TRILHA_TREINAMENTO.md §6"}
+      ]
+    },
+    {
       "id": "PED",
       "titulo": "Pedidos e dependências",
       "periodo": "Seção 8 do memorando",

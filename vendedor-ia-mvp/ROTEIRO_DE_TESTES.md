@@ -129,7 +129,7 @@ dos testes manuais. A severidade automática segue as regras acima; confira as f
 |---|---|---|
 | A01 | Rode `python iniciar.py` | Diagnóstico mostra `Chamada ........ OK` e o navegador abre |
 | A02 | Olhe o topo da tela | "GPT configurado" em verde |
-| A03 | Abra a lista de clientes (primeiro seletor) | 12 clientes, de "Alpha Obras" a "Mu Holding" |
+| A03 | Abra a lista de clientes (primeiro seletor) | 30 clientes, de "Alpha Obras" (C01) a "Cassini Educação" (C30) |
 | A04 | Escolha Alpha Obras, Modo B, "Roteiro do cliente" → **Nova conversa** | Chat vazio com a nota "Atendimento receptivo..." e o roteiro na esquerda |
 | A05 | Envie: `Oi, tudo bem?` | Resposta da Fernanda em até ~10 s, se apresentando como Fernanda |
 | A06 | Clique em **Reiniciar estoque** e confirme | Tabela de estoque volta ao inicial (ex.: Polo em Curitiba = 0, Creta em BH = 1) |
