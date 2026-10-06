@@ -47,8 +47,8 @@ def test_roadmap_inicial():
     con = next(f for f in r["fases"] if f["id"] == "CON")
     assert con["resumo"]["pct"] == 100          # o que já foi construído nasce concluído
     s1 = next(f for f in r["fases"] if f["id"] == "S1")
-    # já entregues no S1: executor em lote (Laboratório), backup do banco, modelo por papel e red team ampliado
-    entregues = {"S1-01", "S1-07", "S1-08", "S1-09"}
+    # já entregues no S1: executor em lote (Laboratório), backup do banco, modelo por papel, red team ampliado e Treino separado
+    entregues = {"S1-01", "S1-07", "S1-08", "S1-09", "S1-11"}
     assert s1["resumo"]["concluido"] == len(entregues) and all(_item(r, i)["status"] == "concluido" for i in entregues)
     assert _item(r, "S1-03")["status"] == "em_andamento"                        # C12 de setembro pronto; falta o CRM
     assert all(i["status"] == "nao_iniciado" for i in s1["itens"] if i["id"] not in entregues | {"S1-03"})
@@ -65,7 +65,7 @@ def test_status_persiste_e_calcula_resumo(tmp_path):
     assert _item(r, "S1-01")["status"] == "em_andamento" and r["resumo"]["em_andamento"] == 2  # + S1-03 (falta o CRM)
     r = guia.definir_status("S1-01", "concluido")
     i = _item(r, "S1-01")
-    assert i["status"] == "concluido" and i["concluido_em"] and r["fases"][1]["resumo"]["concluido"] == 4  # S1-01 + S1-07/08/09
+    assert i["status"] == "concluido" and i["concluido_em"] and r["fases"][1]["resumo"]["concluido"] == 5  # S1-01 + S1-07/08/09/11
     # persistiu em disco, lido de novo sem estado em memória
     assert json.loads((tmp_path / "roadmap_progresso.json").read_text(encoding="utf-8"))["itens"]["S1-01"]["status"] == "concluido"
     assert _item(guia.roadmap(), "S1-01")["status"] == "concluido"
@@ -223,4 +223,5 @@ def test_api_guia_e_roadmap():
 
 def test_telas_existentes_linkam_para_o_guia():
     with TestClient(A.app) as c:
-        assert 'href="/guia"' in c.get("/").text and 'href="/guia"' in c.get("/treino").text
+        assert 'href="/guia"' in c.get("/").text and 'href="/guia"' in c.get("/laboratorio").text
+        assert c.get("/treino").status_code == 404                                # o Treino virou frente própria

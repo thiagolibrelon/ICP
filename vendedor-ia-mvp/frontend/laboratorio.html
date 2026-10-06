@@ -24,7 +24,6 @@
 </header>
 <nav class="tabs-bar">
   <a class="tab" href="/" data-ic="car">Simulador da Fernanda</a>
-  <a class="tab" href="/treino" data-ic="target">Treino de vendas</a>
   <a class="tab active" href="/laboratorio" data-ic="flask">Laboratório</a>
   <a class="tab" href="/guia" data-ic="book">Guia</a>
 </nav>
@@ -54,7 +53,7 @@
       <label>Modelo da Fernanda<input id="modelo_vendedora" list="modelos-lista" maxlength="80" placeholder="padrão"></label>
       <datalist id="modelos-lista"></datalist>
       <div id="modelos-fixos" class="badge"></div>
-      <label class="linha-check"><input type="checkbox" id="avaliar_ia" checked>Dar nota C12 em cada conversa (avaliador do Treino)</label>
+      <label class="linha-check"><input type="checkbox" id="avaliar_ia" checked>Dar nota C12 em cada conversa</label>
       <label>Nome (opcional)<input id="nome" maxlength="120" placeholder="ex.: Rodada 1 — linha de base"></label>
       <div id="estimativa" class="tool"></div>
       <button id="btn-criar" class="primary" data-ic="flask">Iniciar rodada</button>
@@ -64,7 +63,7 @@
     <div id="rodadas" class="badge">Nenhuma rodada ainda.</div>
   </aside>
   <section id="col-rodada">
-    <div id="rodada"><div class="nota">Monte uma rodada à esquerda. A IA-cliente (as mesmas personas do Treino) conversa sozinha com a Fernanda, nos modos A e B, e o sistema confere cada conversa.</div></div>
+    <div id="rodada"><div class="nota">Monte uma rodada à esquerda. A IA-cliente (as personas do mundo simulado) conversa sozinha com a Fernanda, nos modos A e B, e o sistema confere cada conversa.</div></div>
   </section>
   <aside id="col-conversa">
     <h2>Conversa</h2>

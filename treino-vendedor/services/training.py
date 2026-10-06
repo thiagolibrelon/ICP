@@ -15,20 +15,28 @@ from pathlib import Path
 
 from database import db
 from database.personas import DIFICULDADES, PERSONAS
-from services import ativa, agent, catalog, llm_client, validator
+from services import carteira, catalog, llm_client, validator
 from services.catalog import ErroFerramenta
-from services.util import palavras
+from services.util import norm, palavras
 
 PROMPTS = Path(__file__).resolve().parent.parent / "prompts"
 P_CLIENTE = (PROMPTS / "cliente_treino.md").read_text(encoding="utf-8")
 P_COACH = (PROMPTS / "coach_treino.md").read_text(encoding="utf-8")
 P_AVALIADOR = (PROMPTS / "avaliador_treino.md").read_text(encoding="utf-8")
 
-PESOS = {"diagnostico": 2.0, "challenger": 2.0, "objecoes": 2.0, "disciplina_margem": 1.5, "fechamento": 1.5,
-         "qualificacao": 1.0, "tom": 1.0, "adicionais": 0.5}
+# Dimensões da nota. As 4 últimas completam a régua com os códigos dos prompts de análise de ligações:
+# abertura (P9 AB), promessas (P10 PM), oportunidades perdidas (P6 OP) e sinais da conta (P4/P11/P15 IC e eventos raros).
+# A ordem segue a conversa (é a ordem em que aparecem no resultado).
+PESOS = {"abertura": 1.0, "diagnostico": 2.0, "qualificacao": 1.0, "challenger": 2.0, "objecoes": 2.0, "adicionais": 0.5,
+         "oportunidades": 1.5, "disciplina_margem": 1.5, "promessas": 1.0, "fechamento": 1.5, "conta": 1.0, "tom": 1.0}
 NOMES = {"diagnostico": "Diagnóstico", "challenger": "Challenger com dado", "objecoes": "Tratamento de objeções",
          "disciplina_margem": "Disciplina de margem", "fechamento": "Fechamento e próximo passo", "qualificacao": "Qualificação",
-         "tom": "Tom e empatia", "adicionais": "Adicionais"}
+         "tom": "Tom e empatia", "adicionais": "Adicionais", "abertura": "Abertura", "oportunidades": "Oportunidades aproveitadas",
+         "promessas": "Promessas", "conta": "Sinais da conta"}
+CODIGOS = {"abertura": {"AB1", "AB2", "AB3", "AB4", "AB5"}, "promessas": {f"PM{i}" for i in range(1, 7)},
+           "oportunidades": {f"OP{i}" for i in range(1, 9)},
+           "conta": {f"IC{i}" for i in range(1, 8)} | {f"EV_R{i}" for i in range(1, 6)},
+           "comportamentos": {f"B{i}" for i in range(1, 11)}}
 
 
 
@@ -93,7 +101,7 @@ def iniciar(vendedor: str, cliente_id: str, modo: str = "TREINO", dificuldade: s
     estado = {"revelados": [], "objecoes": [], "calculos": [], "propostas": [], "estado_cliente": "NEGOCIANDO", "frente": frente,
               "coach": coach, "coach_trocas": []}
     if frente == "ativa":
-        estado["motivo"] = ativa.motivos(cliente_id)[0]  # o motivo verdadeiro do contato, tirado do cadastro
+        estado["motivo"] = carteira.motivos(cliente_id)[0]  # o motivo verdadeiro do contato, tirado do cadastro
     db.execute("INSERT INTO treinos VALUES (?,?,?,?,?,?,?,?,?,?,?)",
                (tid, vendedor, cliente_id, modo, dificuldade, _now(), None, "ATIVO", json.dumps(estado), None, None))
     if frente == "receptiva":
@@ -265,6 +273,20 @@ def _ancora_ok(ancora: str, falas_vendedor: list[str]) -> bool:
     return any(len(alvo & set(palavras(f))) / len(alvo) >= 0.7 for f in falas_vendedor)
 
 
+def escuta(hist: list[dict]) -> dict:
+    """P12 (talk/listen) adaptado ao WhatsApp, calculado pelo sistema: quanto do texto é do vendedor e quantas perguntas
+    ele fez. TL1 vendedor domina (> 60% das palavras) | TL2 equilibrado (40–60%) | TL3 cliente domina (< 40%)."""
+    pv = sum(len(palavras(m["conteudo"])) for m in hist if m["role"] == "vendedor")
+    pc = sum(len(palavras(m["conteudo"])) for m in hist if m["role"] == "cliente")
+    if not pv:
+        return {}
+    pct = round(100 * pv / (pv + pc))
+    falas = [m["conteudo"] for m in hist if m["role"] == "vendedor"]
+    return {"palavras_vendedor_pct": pct, "padrao": "TL1" if pct > 60 else "TL2" if pct >= 40 else "TL3",
+            "perguntas_do_vendedor": sum(f.count("?") for f in falas), "mensagens_do_vendedor": len(falas),
+            "palavras_por_mensagem": round(pv / len(falas), 1)}
+
+
 def disciplina_margem(estado: dict, falas: list[str]) -> dict:
     """Determinístico: desconto sem contrapartida, limite revelado e valor que não bate com a tabela."""
     achados, nota = [], 10.0
@@ -277,15 +299,14 @@ def disciplina_margem(estado: dict, falas: list[str]) -> dict:
                  if c["saida"].get("contraproposta_desconto_pct") is not None}
     saidas = [c["saida"] for c in estado["calculos"]]
     chave = json.dumps(db.fetch_all("SELECT * FROM veiculos"), sort_keys=True)
-    ref = saidas + [{"calculaveis": sorted(agent._valores_calculaveis(chave))}, catalog.consultar_catalogo()]
+    ref = saidas + [{"calculaveis": sorted(catalog._valores_calculaveis(chave))}, catalog.consultar_catalogo()]
     for f in falas:
         for m in validator.margens_reveladas(f, margens, liberados):
             achados.append(f"Revelou limite de desconto ({m.split(':')[1]}): \"{f[:80]}\"")
             nota -= 3
-        for v in validator.validar(f, ref, True, True, set(), set()):
-            if v.startswith("VALOR_NAO_VERIFICADO"):
-                achados.append(f"Informou {v.split(':', 1)[1]}, que não bate com a tabela nem com os cálculos feitos.")
-                nota -= 1.5
+        for v in validator.valores_nao_verificados(f, ref):
+            achados.append(f"Informou {v}, que não bate com a tabela nem com os cálculos feitos.")
+            nota -= 1.5
     return {"nota": max(0.0, round(nota, 1)), "achados": achados,
             "justificativa": "Sem problemas de margem ou preço." if not achados else " ".join(achados[:3])}
 
@@ -303,7 +324,7 @@ def encerrar(tid: str) -> dict:
 
 
 def avaliar_conversa(cliente_id: str, hist: list[dict], estado: dict) -> dict:
-    """Nota pela régua C12 para as falas do VENDEDOR de uma conversa (humano no Treino, Fernanda no Laboratório).
+    """Nota pela régua C12 para as falas do VENDEDOR de um treino.
     hist: [{"role": "vendedor"|"cliente", "conteudo"}]; estado: revelados, objecoes, calculos, propostas, estado_cliente."""
     p = PERSONAS[cliente_id]
     falas = [m["conteudo"] for m in hist if m["role"] == "vendedor"]
@@ -320,7 +341,7 @@ def avaliar_conversa(cliente_id: str, hist: list[dict], estado: dict) -> dict:
         try:
             out = _com_papel("avaliador", [{"role": "system", "content": P_AVALIADOR},
                                         {"role": "user", "content": f"CONTEXTO: {json.dumps(contexto, ensure_ascii=False, default=str)}\n\n"
-                                                                    f"CONVERSA:\n{conversa}"}], json_mode=True, max_tokens=2500)
+                                                                    f"CONVERSA:\n{conversa}"}], json_mode=True, max_tokens=4000)
             j = _json(out["message"].get("content"))
             dims = j.get("dimensoes") or {}
             extra = {k: j.get(k) for k in ("pontos_fortes", "pontos_a_melhorar", "resumo")}
@@ -332,8 +353,13 @@ def avaliar_conversa(cliente_id: str, hist: list[dict], estado: dict) -> dict:
     resultado.update({k: v for k, v in extra.items() if v}, aviso=aviso,
                      descobertas={"segredos_descobertos": len(estado["revelados"]), "segredos_total": len(p["segredos"]),
                                   "o_que_faltou_descobrir": [s["info"] for s in p["segredos"] if s["id"] not in estado["revelados"]]},
-                     desafio_do_cenario=p["desafio_challenger"], estado_final_do_cliente=estado["estado_cliente"])
+                     desafio_do_cenario=p["desafio_challenger"], estado_final_do_cliente=estado["estado_cliente"],
+                     escuta=escuta(hist))
     return resultado
+
+
+def _lista(v) -> list[dict]:
+    return [x for x in v if isinstance(x, dict)] if isinstance(v, list) else []
 
 
 def _montar(dims: dict, diag_det: float, disc: dict, falas: list[str], p: dict, estado: dict) -> dict:
@@ -372,6 +398,21 @@ def _montar(dims: dict, diag_det: float, disc: dict, falas: list[str], p: dict, 
             item["respostas"] = d.get("respostas") or []
         if chave == "fechamento":
             item.update({k: d.get(k) for k in ("tipo", "proximo_passo_claro", "prazo_definido")})
+        if chave == "abertura" and estado.get("frente") == "ativa" and falas and "?" not in falas[0] and (item["nota"] or 0) > 4:
+            item["nota"] = 4.0  # contato ativo: abrir sem nenhuma pergunta vale no máximo 4 (regra do sistema)
+            item["justificativa"] += " (Limitado a 4: no contato ativo a primeira mensagem precisa fazer uma pergunta.)"
+        if chave == "abertura":
+            item.update({k: d.get(k) for k in ("usou_nome", "sinalizou_conta", "primeira_pergunta")},
+                        tipo=d.get("tipo") if d.get("tipo") in CODIGOS["abertura"] else None)
+        if chave == "diagnostico":
+            item["comportamentos"] = [c for c in (d.get("comportamentos") or []) if c in CODIGOS["comportamentos"]]
+        if chave == "promessas":
+            item["lista"] = [x for x in _lista(d.get("lista")) if x.get("tipo") in CODIGOS["promessas"]]
+            item["sem_prazo"] = sum(1 for x in item["lista"] if norm(str(x.get("prazo") or "sem prazo")) in ("", "sem prazo"))
+        if chave == "oportunidades":
+            item["perdidas"] = [x for x in _lista(d.get("perdidas")) if x.get("codigo") in CODIGOS["oportunidades"]]
+        if chave == "conta":
+            item["sinais"] = [x for x in _lista(d.get("sinais")) if x.get("codigo") in CODIGOS["conta"]]
         out[chave] = item
     validas = {k: v for k, v in out.items() if v.get("nota") is not None}
     peso = sum(PESOS[k] for k in validas)

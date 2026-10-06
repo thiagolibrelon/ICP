@@ -6,14 +6,15 @@ from fastapi.testclient import TestClient
 import app as A
 from database import seed
 from database.personas import PERSONAS
-from services import ativa, catalog, conversations as cs, laboratorio as lab, training as tr, trilha
+from services import carteira, catalog, training as tr, trilha
 
 
 def test_30_clientes_no_cadastro_e_no_treino():
     assert len(PERSONAS) == 30 and set(PERSONAS) == {r[0] for r in seed.CLIENTES} == {f"C{i:02d}" for i in range(1, 31)}
-    assert seed.VERSAO_MUNDO == "v5" and set(seed.TIERS) >= set(PERSONAS)
+    assert set(seed.TIERS) >= set(PERSONAS)
     assert [c for c in PERSONAS if seed.TIERS[c] == "A"] == ["C10", "C12"]   # os novos são da carteira da venda interna
-    assert len(cs.listar_clientes()) == 30 and catalog.consultar_cliente("C12B")["razao_social"] == "Mu Holding Filial BH"
+    assert catalog.consultar_cliente("C30")["razao_social"] == "Cassini Educação"
+    assert catalog.consultar_cliente("C12B")["razao_social"] == "Mu Holding Filial BH"
 
 
 def test_toda_persona_tem_competencia_valida_e_objecoes_do_classificador():
@@ -33,15 +34,10 @@ def test_toda_competencia_tem_cenario_e_os_15_prompts_estao_mapeados():
 
 
 def test_novos_clientes_tem_motivo_de_contato_ativo_do_cadastro():
-    assert ativa.motivos("C20")[0]["motivo"] == "RENOVACAO"            # vence em 10 dias
-    assert ativa.motivos("C29")[0]["motivo"] == "DIARIA_ALTA"          # 25 dias de diária
-    assert ativa.motivos("C16")[0]["motivo"] in ("FROTA_PROPRIA", "KM_ACIMA_FRANQUIA")
-    assert ativa.motivos("C24")[0]["motivo"] == "RELACIONAMENTO"       # prospect sem locação
-
-
-def test_laboratorio_linha_de_base_continua_com_12():
-    assert lab.TODAS == [f"C{i:02d}" for i in range(1, 13)] and len(lab.NOVOS) == 18
-    assert {i["cliente_id"] for i in lab.PRESETS["rodada_completa"][1]()} == set(lab.TODAS)
+    assert carteira.motivos("C20")[0]["motivo"] == "RENOVACAO"            # vence em 10 dias
+    assert carteira.motivos("C29")[0]["motivo"] == "DIARIA_ALTA"          # 25 dias de diária
+    assert carteira.motivos("C16")[0]["motivo"] in ("FROTA_PROPRIA", "KM_ACIMA_FRANQUIA")
+    assert carteira.motivos("C24")[0]["motivo"] == "RELACIONAMENTO"       # prospect sem locação
 
 
 def _prova(gpt, nome, cid, dificuldade, nota, frente="receptiva"):

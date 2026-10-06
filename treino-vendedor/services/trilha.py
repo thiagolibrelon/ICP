@@ -17,7 +17,7 @@ COMPETENCIAS = [
      "prompts": ["P9", "P2"], "codigos": ["AB1", "AB2", "AB3", "AB4", "AB5"],
      "objetivo": "Abrir dizendo quem é e por que está falando (AB1), usar o nome, mostrar que consultou a conta e fazer uma "
                  "pergunta de diagnóstico, não de confirmação. Evitar a abertura genérica (AB3) e a reativa (AB4).",
-     "dimensoes_da_nota": ["tom", "diagnostico"],
+     "dimensoes_da_nota": ["abertura", "tom"],
      "observacao": "Todo cenário na frente ATIVA exercita a abertura (o vendedor começa)."},
     {"id": "diagnostico", "nome": "Diagnóstico e qualificação",
      "prompts": ["P1", "P12"], "codigos": ["B1", "B3", "B9", "B10"],
@@ -38,22 +38,22 @@ COMPETENCIAS = [
      "prompts": ["P7", "P6"], "codigos": ["OP2", "OP6", "B5"],
      "objetivo": "Reconhecer a janela (o cliente disse algo que se conecta a um produto) e oferecer o adicional ligado à dor "
                  "(B5): multa no condutor errado → telemetria; avaria → proteção; km acima da franquia → pacote de km.",
-     "dimensoes_da_nota": ["adicionais", "challenger"]},
+     "dimensoes_da_nota": ["adicionais", "oportunidades"]},
     {"id": "suporte_oportunidade", "nome": "Suporte que vira oportunidade",
      "prompts": ["P3", "P6"], "codigos": ["OP1", "OP8", "P1–P15 (problemas)"],
      "objetivo": "Resolver ou encaminhar o problema primeiro, sem escalar à toa (OP8), e só então fazer a pergunta comercial "
                  "que a ligação de suporte abre (evitar OP1: resolveu e desligou sem perguntar nada).",
-     "dimensoes_da_nota": ["tom", "diagnostico", "adicionais"]},
+     "dimensoes_da_nota": ["oportunidades", "tom"]},
     {"id": "fechamento", "nome": "Fechamento e promessas",
      "prompts": ["P9", "P10", "P6"], "codigos": ["FC1", "FC2", "FC3", "FC4", "FC5", "PM1", "PM2", "PM3", "PM4", "PM5", "PM6", "OP3"],
      "objetivo": "Fechar com compromisso duplo (FC1: o que o vendedor faz, o que o cliente faz e até quando). Toda promessa "
                  "com prazo e rastreável; nada de 'se precisar me chama' (FC3) ou fechamento aberto (FC4).",
-     "dimensoes_da_nota": ["fechamento"]},
+     "dimensoes_da_nota": ["fechamento", "promessas"]},
     {"id": "conta", "nome": "Saúde da conta, concorrência e retenção",
      "prompts": ["P4", "P11", "P15", "P6"], "codigos": ["IC1", "IC2", "IC3", "IC4", "IC5", "IC6", "IC7", "R1–R5 (eventos raros)", "OP4", "OP5", "OP7"],
      "objetivo": "Ler sinais de risco e de expansão: concorrente na mesa, insatisfação, troca de gestor, crescimento. "
                  "Sondar concorrência, pedir indicação a cliente satisfeito (OP4) e não deixar churn passar (OP7).",
-     "dimensoes_da_nota": ["diagnostico", "objecoes", "fechamento"]},
+     "dimensoes_da_nota": ["conta", "oportunidades"]},
     {"id": "margem", "nome": "Disciplina de margem e alçada",
      "prompts": [], "codigos": [],
      "objetivo": "Usar a calculadora antes de falar preço, trocar desconto por contrapartida (24 meses ou 5+ carros) e "

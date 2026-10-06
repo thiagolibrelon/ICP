@@ -5,7 +5,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 import app as A
-from services import agent, ativa, conversations as cs, evaluation, laboratorio as lab, llm_client, training
+from services import agent, ativa, avaliador_c12, conversations as cs, evaluation, laboratorio as lab, llm_client
 from tests.conftest import tool_call
 from tests.test_laboratorio import _resp, checks, lab_gpt, rodar, unica  # noqa: F401 (fixture)
 
@@ -240,26 +240,7 @@ def test_toda_checagem_ativa_tem_severidade():
     assert lab.severidade("Ativa: combinou um retorno") == "Alta"
 
 
-# ------------------------------------------------------------------ Treino: o vendedor humano chama o cliente
-def test_treino_ativo_vendedor_comeca_com_motivo(monkeypatch):
-    vistos = []
-
-    def fake(messages, **kw):
-        vistos.append(" ".join(str(m.get("content")) for m in messages))
-        if messages[0]["content"].startswith("Você vai INTERPRETAR"):
-            return {"message": {"content": json.dumps({"mensagem": "Oi, quem fala?", "estado": "NEGOCIANDO", "revelou": [], "objecao": None})},
-                    "tokens_entrada": 1, "tokens_saida": 1, "custo_gate": 0}
-        return {"message": {"content": json.dumps({"dica": "Diga quem é e o motivo."})}, "tokens_entrada": 1, "tokens_saida": 1, "custo_gate": 0}
-    monkeypatch.setattr(llm_client, "completar", fake)
-    t = training.iniciar("Ana", "C02", "TREINO", "medio", "ativa")
-    assert t["mensagens"] == [] and t["frente"] == "ativa" and t["motivo"]["motivo"] == "RENOVACAO"
-    t = training.mensagem(t["treino_id"], "Oi, Sandra! Aqui é a Ana, da locadora. O contrato dos 5 Polo vence em 20 dias. Posso te ajudar na renovação?")
-    assert [m["role"] for m in t["mensagens"]] == ["vendedor", "cliente", "coach"]
-    assert "contato ativo" in vistos[0] and '"frente": "ativa"' in vistos[1] and "O vendedor iniciou o contato" in vistos[1]
-    with pytest.raises(ValueError):
-        training.iniciar("Ana", "C02", "TREINO", "medio", "outra")
-
-
+# ------------------------------------------------------------------ avaliador C12 do Laboratório na frente ativa
 def test_avaliador_recebe_a_frente_e_o_motivo(monkeypatch):
     recebido = {}
 
@@ -270,7 +251,7 @@ def test_avaliador_recebe_a_frente_e_o_motivo(monkeypatch):
     monkeypatch.setattr(llm_client, "completar", fake)
     est = {"revelados": [], "objecoes": [], "calculos": [], "propostas": [], "estado_cliente": "NEGOCIANDO", "frente": "ativa",
            "motivo": ativa.motivos("C02")[0]}
-    training.avaliar_conversa("C02", [{"role": "vendedor", "conteudo": "Oi"}, {"role": "cliente", "conteudo": "Oi"}], est)
+    avaliador_c12.avaliar_conversa("C02", [{"role": "vendedor", "conteudo": "Oi"}, {"role": "cliente", "conteudo": "Oi"}], est)
     assert '"frente": "ativa"' in recebido["user"] and "RENOVACAO" in recebido["user"] and "CONTATO ATIVO" in recebido["system"]
     assert agent.REGRAS_ATIVA.startswith("CONTATO ATIVO")
 

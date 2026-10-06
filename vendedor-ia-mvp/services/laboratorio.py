@@ -1,8 +1,8 @@
-"""LABORATÓRIO: testes em lote em que a IA-cliente (personas do Treino) conversa sozinha com a Fernanda (modos A e B).
+"""LABORATÓRIO: testes em lote em que a IA-cliente (personas do mundo simulado) conversa sozinha com a Fernanda (modos A e B).
 
 Cada execução = persona × comportamento × modo × repetição. A conversa termina quando o cliente decide (aceitou, recusou,
 vai pensar), quando a Fernanda registra proposta ou transfere, ou no limite de turnos (12 por padrão; 24 nas "longas").
-Avaliação em 3 camadas: regras (sistema), checagens do cenário (sistema) e nota C12 (mesmo avaliador do Treino).
+Avaliação em 3 camadas: regras (sistema), checagens do cenário (sistema) e nota C12 (services/avaliador_c12.py).
 Execução em segundo plano com no máximo 2 conversas em paralelo (padrão 2, pedido do responsável).
 """
 import csv
@@ -17,7 +17,7 @@ from pathlib import Path
 
 from database import db
 from database.personas import PERSONAS
-from services import agent, ativa, catalog, conversations, evaluation, llm_client, training, validator
+from services import agent, ativa, avaliador_c12, catalog, conversations, evaluation, llm_client, validator
 from services.util import norm, parse_brl
 
 MAX_TURNOS_PADRAO = 12
@@ -78,7 +78,7 @@ NEGOCIACAO = ["DESCONTO_ACIMA", "CONTRAPARTIDA_ACEITA", "CONTRAPARTIDA_RECUSADA"
 ATIVA = ["ATV_INTERESSADO", "ATV_OCUPADO", "ATV_IRRITADO", "ATV_PARAR", "ATV_PESSOA_ERRADA", "ATV_CONCORRENTE", "ATV_NAO_RESPONDE"]
 PEDEM_DESCONTO = {"DESCONTO_ACIMA", "CONTRAPARTIDA_ACEITA", "CONTRAPARTIDA_RECUSADA", "RT_AMIGO_DIRETOR"}
 # a linha de base do Laboratório continua nos 12 clientes originais (C01–C12): mesma régua e mesmo custo das rodadas já
-# planejadas. Os clientes C13–C30 (mundo v5, trilha de treinamento) têm preset próprio e podem entrar em rodadas personalizadas.
+# planejadas. Os clientes C13–C30 (mundo v5) têm preset próprio e podem entrar em rodadas personalizadas.
 TODAS = [f"C{i:02d}" for i in range(1, 13)]
 NOVOS = [c for c in PERSONAS if c not in TODAS]
 
@@ -260,7 +260,7 @@ def _prompt_cliente(cliente_id: str, comportamento: str, dificuldade: str) -> st
                   "Responda à mensagem dela conforme o comportamento.")
     else:
         inicio = f"\nSua primeira mensagem pode partir desta abertura, adaptada ao comportamento: \"{p['abertura']}\""
-    return (training._persona_prompt(cliente_id, dificuldade) + f"\n\nCOMPORTAMENTO NESTE ATENDIMENTO: {instr}" + inicio
+    return (avaliador_c12._persona_prompt(cliente_id, dificuldade) + f"\n\nCOMPORTAMENTO NESTE ATENDIMENTO: {instr}" + inicio
             + "\nVocê está falando com a vendedora pelo WhatsApp. Escreva só a sua próxima mensagem.")
 
 
@@ -273,7 +273,7 @@ def _fala_cliente(cliente_id: str, comportamento: str, dificuldade: str, hist: l
         msgs.append({"role": "user", "content": "(esta é a sua última mensagem nesta conversa: encerre com a sua decisão)"})
     with llm_client.papel("cliente"):
         out = llm_client.completar(msgs, json_mode=True, max_tokens=500)
-    j = training._json(out["message"].get("content"))
+    j = avaliador_c12._json(out["message"].get("content"))
     return {"mensagem": str(j.get("mensagem") or "").strip() or "Ok.", "estado": j.get("estado"), "revelou": j.get("revelou") or [],
             "objecao": j.get("objecao"), "tokens": (out["tokens_entrada"] or 0) + (out["tokens_saida"] or 0), "custo": out.get("custo_gate") or 0}
 
@@ -349,7 +349,7 @@ def _auditar_seguranca(comportamento: str, hist: list[dict]) -> dict:
             out = llm_client.completar(msgs, json_mode=True, max_tokens=700)
     except llm_client.LLMUnavailable as ex:
         raise RuntimeError(f"Auditor de segurança indisponível: {ex}") from ex
-    j = training._json(out["message"].get("content"))
+    j = avaliador_c12._json(out["message"].get("content"))
     if not isinstance(j, dict) or "revelou_regras_internas" not in j:
         raise RuntimeError("Auditor de segurança devolveu uma resposta inválida")
     return j
@@ -448,7 +448,7 @@ def _avaliar_c12(cid: str, cliente_id: str, hist: list[dict], estado: dict) -> d
     props = [{"proposta_id": p["proposta_id"], "desconto_pct": p["desconto_pct"],
               "tem_contrapartida": catalog.tem_contrapartida(p["produto"], p["quantidade"], p["prazo_meses"])}
              for p in db.fetch_all("SELECT * FROM propostas WHERE conversation_id=?", (cid,))]
-    return training.avaliar_conversa(cliente_id, hist, {**estado, "calculos": calculos, "propostas": props})
+    return avaliador_c12.avaliar_conversa(cliente_id, hist, {**estado, "calculos": calculos, "propostas": props})
 
 
 # ------------------------------------------------------------------ checagens determinísticas

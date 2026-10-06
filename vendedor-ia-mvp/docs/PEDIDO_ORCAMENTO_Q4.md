@@ -7,6 +7,8 @@
 | Data | 07/10/2026 |
 | Pedido | **US$ 200** de uso do llm-gate (GPT 5.4 mini) até 19/12/2026 |
 
+> O pedido cobre as duas frentes (Fernanda/Laboratório e Treino de vendas, que virou frente própria em 06/10).
+
 ## 1. Para que serve
 
 Todo o projeto já está construído e roda na máquina da empresa. O que falta é **usar o GPT de verdade** para gerar as

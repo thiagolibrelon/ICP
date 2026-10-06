@@ -10,14 +10,14 @@ Tudo é fictício (clientes, preços, estoque e conversas).
 No Laboratório ninguém digita. Uma IA faz o papel do **cliente** (a "IA-cliente") e conversa sozinha com a **Fernanda**,
 a vendedora IA. Assim dá para rodar centenas de conversas sem ocupar o time.
 
-- A IA-cliente usa as **personas do Treino** (a linha de base fica nos 12 originais, C01–C12; os 18 novos, C13–C30, têm o tipo "Clientes novos", com 36 conversas): cada uma tem informações que só revela se for bem perguntada,
+- A IA-cliente usa as **personas do mundo simulado** (a linha de base fica nos 12 originais, C01–C12; os 18 novos, C13–C30, têm o tipo "Clientes novos", com 36 conversas): cada uma tem informações que só revela se for bem perguntada,
   objeções e uma condição para aceitar.
 - Em cada teste, a IA-cliente recebe também um **comportamento** (ex.: resistente, pede desconto alto, pede humano).
 - A Fernanda roda nos dois modos: **A** (IA sozinha, só para comparação: recebe todos os dados no texto, inclusive as
   margens, não consulta nada, calcula de cabeça e a checagem só marca) e **B** (IA que consulta o sistema, que calcula
   e decide; a trava barra o erro antes de sair; é a versão oficial). Detalhes no Roteiro de Testes, item 0.2.1.
 - No fim de cada conversa, o **sistema confere** se as regras foram respeitadas (✅/❌) e, se ligado, o **avaliador** dá
-  uma nota de 0 a 10 com a mesma régua do Treino (C12).
+  uma nota de 0 a 10 pela régua C12 (`services/avaliador_c12.py`).
 
 > O Laboratório **mede**; ele não ensina nada à IA sozinho. Quem melhora a Fernanda é a gente, ajustando a camada certa
 > (veja a seção 6).
@@ -105,8 +105,7 @@ versões da Fernanda, não para prever o mundo real.
 
 No **Simulador**, escolha "Ativa (a Fernanda chama)": ela abre a conversa e você responde como o cliente (ou clica em
 "Cliente não respondeu"). O **Painel do gerente › Carteira (ativa)** mostra quem chamar, por quê e se pode chamar
-agora. No **Treino**, a frente ativa inverte: **você** chama o cliente, com o motivo da carteira na tela, e a nota
-avalia também a abertura (quem é, motivo útil, uma pergunta) e se você respeitou o tempo do cliente.
+agora. (O treino do vendedor humano na frente ativa fica no app do Treino, `../treino-vendedor`.)
 
 **Comportamentos da IA-cliente:** colaborativo · resistente · pede desconto acima da alçada · aceita contrapartida ·
 recusa contrapartida · na ativa: interessado, ocupado, irritado, pede para parar, pessoa errada, já fechou com
@@ -198,7 +197,7 @@ médio, segundos por turno e custo por conversa. Os modelos padrão vêm do `.en
 
 Todas as rodadas ficam no `database/mvp.db`. Se uma atualização precisar recriar o banco, o sistema **salva uma cópia
 antes** em `database/backups/` e avisa no terminal. A qualquer momento, **Guia › Baixar banco (backup)** baixa uma
-cópia completa (rodadas, conversas e treinos).
+cópia completa (rodadas e conversas).
 
 **Nota do avaliador (opcional):** de 0 a 10 por dimensão (diagnóstico, Challenger com dado, objeções, qualificação,
 adicionais, fechamento, tom e disciplina de margem), com justificativa e onde melhorar.

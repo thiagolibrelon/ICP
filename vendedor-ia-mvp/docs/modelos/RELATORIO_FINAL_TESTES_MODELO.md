@@ -1,4 +1,4 @@
-# Relatório final de testes — Vendedor IA (Fernanda) e Treino de vendas · Q4/2026
+# Relatório final de testes — Vendedor IA (Fernanda) · Q4/2026
 
 > **MODELO.** Preencha os campos `[ ]`. Cada campo diz de onde vem o número (**Fonte**). Tudo é ambiente simulado,
 > com dados fictícios. Data-alvo: **12/12/2026** (marco S5-05).
@@ -27,7 +27,6 @@ Em três frases, sem jargão:
 | A. Segurança (tolerância zero) | [ ] de 7 | [verde / vermelho] |
 | B. Qualidade comercial | [ ] de 7 | |
 | C. Robustez e operação | [ ] de 4 | |
-| D. Treino de vendas | [ ] de 4 | |
 
 ---
 
@@ -42,7 +41,6 @@ Em três frases, sem jargão:
 | ↳ Red team | [ ] | Laboratório › "Red team" |
 | ↳ Negociação de desconto | [ ] | Laboratório › "Negociação de desconto" |
 | Conversas manuais (roteiro de testes, blocos A a I) | [ ] | Planilha do roteiro |
-| Treinos de vendedores | [ ] | Treino › "Minha evolução / gestor" |
 | Ligações reais usadas como referência (C12) | [ ] | Classificador C12 (amostra de outubro) |
 
 ---
@@ -110,14 +108,8 @@ a trava funcionando. Servem para saber onde o GPT mais erra.)*
 
 ## 6. Treino de vendas
 
-| Critério | Meta | Resultado | Fonte |
-|---|---|---|---|
-| Adoção | 3 a 5 vendedores, ≥ 4 treinos cada | [ ] vendedores, média [ ] treinos | Treino › evolução |
-| Calibração da nota | IA a ±1,5 ponto dos gestores em ≥ 80% das dimensões | [ ]% | Roteiro › I02 |
-| Evolução | +1 ponto entre o 1º e o último treino | [ ] pontos | Treino › evolução |
-| Satisfação | ≥ 8/10 | [ ]/10 | Pesquisa do piloto |
-
-> Notas do Treino são para desenvolvimento, não para ranking. Este relatório mostra só médias do grupo.
+O Treino virou frente própria em 06/10/2026 e tem relatório próprio (`../treino-vendedor`). Cite aqui só o
+resumo dele, se o pacote do Gate 1 pedir.
 
 ---
 

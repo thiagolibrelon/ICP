@@ -10,7 +10,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from database import db, seed
-from services import ativa, catalog, conversations as conv, evaluation, guia, laboratorio, llm_client, training, trilha
+from services import ativa, catalog, conversations as conv, evaluation, guia, laboratorio, llm_client
 
 BASE = Path(__file__).resolve().parent
 
@@ -40,31 +40,6 @@ class Audio(BaseModel):
     audio_base64: str = Field(min_length=10, max_length=15_000_000)
     mime: str = "audio/webm"
     duracao_s: float | None = None
-
-
-class NovoTreino(BaseModel):
-    vendedor: str = Field(min_length=1, max_length=80)
-    cliente_id: str
-    modo: str = Field("TREINO", pattern="^(PROVA|TREINO)$")
-    dificuldade: str = Field("medio", pattern="^(facil|medio|dificil)$")
-    frente: str = Field("receptiva", pattern="^(receptiva|ativa)$", description="ativa = o vendedor inicia o contato")
-    coach: bool | None = Field(None, description="Coach IA ligado? Padrão: ligado no TREINO, sempre desligado na PROVA")
-
-
-class Coach(BaseModel):
-    ligado: bool
-
-
-class Condicao(BaseModel):
-    modelo: str
-    quantidade: int = Field(gt=0)
-    cidade: str
-    produto: str = "AM"
-    prazo_meses: int | None = None
-    dias: int | None = None
-    desconto_pct: float = 0.0
-    adicionais: list[str] = []
-    pacotes_km_extra: int | None = None
 
 
 class Mensagem(BaseModel):
@@ -251,70 +226,6 @@ def exportar_classificador(ids: str | None = None):
                     headers={"Content-Disposition": 'attachment; filename="vendedor_ia_para_classificador.csv"'})
 
 
-# ------------------------------------------------------------------ MODO TREINO (vendedor humano x cliente simulado)
-@app.get("/api/treino/personas")
-def treino_personas():
-    return training.personas()
-
-
-@app.post("/api/treino", status_code=201)
-def treino_novo(body: NovoTreino):
-    return _tratar(training.iniciar, body.vendedor, body.cliente_id, body.modo, body.dificuldade, body.frente, body.coach)
-
-
-@app.get("/api/treino/historico")
-def treino_historico(vendedor: str | None = None):
-    return training.historico(vendedor)
-
-
-@app.get("/api/treino/trilha")
-def treino_trilha(vendedor: str | None = None):
-    """A trilha (competências × 15 prompts × cenários) e, se vier o vendedor, o nível dele em cada competência."""
-    out = trilha.mapa()
-    if vendedor:
-        out["progresso"] = _tratar(trilha.progresso, vendedor)
-    return out
-
-
-@app.get("/api/treino/{tid}")
-def treino_obter(tid: str):
-    return _tratar(training.obter, tid)
-
-
-@app.post("/api/treino/{tid}/mensagem")
-def treino_mensagem(tid: str, body: Mensagem):
-    return _tratar(training.mensagem, tid, body.conteudo)
-
-
-@app.post("/api/treino/{tid}/audio")
-def treino_audio(tid: str, body: Audio):
-    import base64
-    try:
-        return _tratar(training.audio, tid, base64.b64decode(body.audio_base64.split(",")[-1]), body.mime, body.duracao_s)
-    except llm_client.TranscricaoIndisponivel as e:
-        raise HTTPException(503, f"Transcrição indisponível: {e}")
-
-
-@app.post("/api/treino/{tid}/avaliar-condicao")
-def treino_avaliar(tid: str, body: Condicao):
-    return _tratar(training.avaliar_condicao, tid, body.model_dump())
-
-
-@app.post("/api/treino/{tid}/registrar-proposta")
-def treino_registrar(tid: str, body: Condicao):
-    return _tratar(training.registrar, tid, body.model_dump())
-
-
-@app.post("/api/treino/{tid}/coach")
-def treino_coach(tid: str, body: Coach):
-    return _tratar(training.definir_coach, tid, body.ligado)
-
-
-@app.post("/api/treino/{tid}/encerrar")
-def treino_encerrar(tid: str):
-    return _tratar(training.encerrar, tid)
-
-
 # ------------------------------------------------------------------ LABORATÓRIO (IA-cliente x Fernanda, testes em lote)
 @app.get("/api/lab/catalogo")
 def lab_catalogo():
@@ -388,7 +299,7 @@ def lab_execucao(exec_id: str):
     return _tratar(laboratorio.obter_execucao, exec_id)
 
 
-# ------------------------------------------------------------------ BACKUP DO BANCO (rodadas, conversas e treinos)
+# ------------------------------------------------------------------ BACKUP DO BANCO (rodadas e conversas)
 @app.get("/api/backup/banco")
 def backup_banco():
     import tempfile
@@ -464,11 +375,6 @@ app.mount("/como-funciona", StaticFiles(directory=BASE / "docs" / "como_funciona
 @app.get("/")
 def index():
     return FileResponse(BASE / "frontend" / "index.html")
-
-
-@app.get("/treino")
-def pagina_treino():
-    return FileResponse(BASE / "frontend" / "treino.html")
 
 
 @app.get("/guia")

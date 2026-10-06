@@ -8,6 +8,8 @@
 | **Assunto** | Vendedor IA e Treino de Vendas com IA — status do MVP, definição de sucesso e roadmap do 4º trimestre de 2026 |
 | **Classificação** | Interno. O MVP usa apenas dados fictícios |
 
+> **Atualização de 06/10/2026:** o Treino de vendas virou **frente própria** (app `treino-vendedor`, com banco, roadmap e roteiro próprios). Este documento continua cobrindo as duas frentes no Q4; as metas e o cronograma do Treino passam a ser acompanhados em `../treino-vendedor/ROADMAP_TREINO.md`.
+
 ---
 
 ## 1. Resumo executivo

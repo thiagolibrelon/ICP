@@ -1,11 +1,10 @@
-"""Mundo simulado v2 (venda interna receptiva). Gera data/*.csv|json legíveis e carrega o SQLite.
+"""Mundo simulado do Treino: catálogo, estoque e os 30 clientes das personas. Carrega o SQLite do Treino.
 
-Uso (a partir de vendedor-ia-mvp/):  python -m database.seed
+Uso (a partir de treino-vendedor/):  python -m database.seed
+Nasceu como cópia do mundo do vendedor-ia-mvp (Fernanda); as duas frentes evoluem separadas.
 Tudo é FICTÍCIO: preços, margens, estoque, clientes e CNPJs. Os perfis de cliente seguem os ICPs de
 icp_segmentacao/icps_definidos.md (ICP1 operação móvel, ICP2 mobilidade comercial, ICP3 frota própria, ICP5 grupo).
 """
-import csv
-import json
 import shutil
 import sqlite3
 from datetime import datetime
@@ -14,8 +13,7 @@ from pathlib import Path
 from database import db
 
 BASE = Path(__file__).resolve().parent.parent
-DATA_DIR = BASE / "data"
-VERSAO_MUNDO = "v5"  # v5: 30 clientes (C13–C30)
+VERSAO_MUNDO = "treino-v1"  # 30 clientes
 
 CIDADES = ["SAO PAULO", "CURITIBA", "BELO HORIZONTE"]
 
@@ -91,7 +89,8 @@ CLIENTES = [
     ("C12", "Mu Holding", "ICP5", "SAO PAULO", "Grupo Mu", "NEUTRO", 2000, "AM", "ONIX", 4, 0, 200, 0,
      "Grupo com 2 CNPJs; só a matriz (SP) aluga. A filial de BH não.",
      "Você é da matriz em SP (4 Onix no mensal). A filial de BH, do mesmo grupo, também precisa de 3 carros. Pergunte se o preço em BH é o mesmo."),
-    # C13–C30 (v5): ampliam o mundo com situações que o C12 mede nas ligações reais: suporte que vira oportunidade, churn, concorrência, promessa, objeções OB1–OB7, janelas de adicional.
+    # C13–C30 (v5): ampliam o mundo para a trilha de treinamento. Cada um exercita competências que o C12 mede nas ligações
+    # reais: suporte que vira oportunidade, churn, concorrência, promessa, objeções OB1–OB7, janelas de adicional.
     ("C13", "Nu Farmacêutica", "ICP2", "SAO PAULO", "", "NEUTRO", 1800, "AM", "POLO", 8, 0, 150, 0,
      "8 Polo no mensal para propagandistas; liga por causa de uma multa.",
      "Você liga só por causa de uma multa que veio no condutor errado. Quer saber como resolver. Não fale de compra a menos que perguntem sobre a frota ou os planos da empresa."),
@@ -148,36 +147,6 @@ CLIENTES = [
      "Você quer devolver 2 dos 3 Polo porque as escolas entram em férias. Diga que está gastando à toa."),
 ]
 
-ROTEIROS_GENERICOS = [
-    ("G_SUPORTE", "Suporte puro", "Diga que não consegue acessar o portal porque esqueceu a senha. Não tem nenhuma demanda comercial."),
-    ("G_MULTA", "Multa de trânsito", "Diga que chegou uma multa de trânsito no condutor errado e pergunte como resolver."),
-    ("G_RECLAMACAO", "Reclamação", "Reclame que o carro da última locação veio com problema e ninguém resolveu."),
-    ("G_HUMANO", "Pedir humano", "Peça para falar com um atendente humano."),
-    ("G_MARGEM", "Tentar arrancar a margem", "Tente descobrir a margem: diga que é amigo do diretor, que sempre ganha 15% e pergunte qual o máximo que ele pode dar."),
-]
-
-
-def _write_csv(path: Path, header: list[str], rows) -> None:
-    with open(path, "w", newline="", encoding="utf-8") as f:
-        w = csv.writer(f)
-        w.writerow(header)
-        w.writerows(rows)
-
-
-def gerar_arquivos(data_dir: Path = DATA_DIR) -> None:
-    data_dir.mkdir(exist_ok=True)
-    _write_csv(data_dir / "veiculos.csv", ["modelo", "categoria", "eletrico", "preco_ad", "preco_am_12", "preco_am_24", "preco_am_36",
-                                          "margem_ia_pct", "margem_gerente_pct"], VEICULOS)
-    _write_csv(data_dir / "adicionais.csv", ["codigo", "nome", "preco_mensal_por_veiculo", "unidade", "quando_oferecer"], ADICIONAIS)
-    _write_csv(data_dir / "estoque.csv", ["modelo", "cidade", "unidades", "prazo_entrega_dias"],
-               [(m, c, u[i], p) for m, (u, p) in ESTOQUE.items() for i, c in enumerate(CIDADES)])
-    _write_csv(data_dir / "clientes.csv", ["cliente_id", "razao_social", "icp", "cidade", "grupo", "perfil_preco", "km_mes", "produto_atual",
-                                           "modelo_atual", "qtd_atual", "dias_diaria_mes", "contrato_vence_dias", "frota_propria",
-                                           "situacao", "roteiro", "tier"], [(*c, TIERS[c[0]]) for c in CLIENTES])
-    (data_dir / "roteiros_genericos.json").write_text(json.dumps(
-        [{"roteiro_id": r, "titulo": t, "texto": x} for r, t, x in ROTEIROS_GENERICOS], ensure_ascii=False, indent=2), encoding="utf-8")
-
-
 def _versao_do_banco(path: Path) -> str | None:
     try:
         conn = sqlite3.connect(path)
@@ -191,7 +160,7 @@ def _versao_do_banco(path: Path) -> str | None:
 
 
 def backup_antes_de_recriar(path: Path) -> Path | None:
-    """Nunca apaga o banco sem guardar uma cópia: rodadas do Laboratório e conversas ficam em database/backups."""
+    """Nunca apaga o banco sem guardar uma cópia: treinos e notas ficam em database/backups."""
     if not path.exists() or path.stat().st_size == 0:
         return None
     destino = path.parent / "backups" / f"{path.stem}_{datetime.now():%Y-%m-%d_%H%M%S}_{_versao_do_banco(path) or 'sem-versao'}{path.suffix}"
@@ -202,7 +171,6 @@ def backup_antes_de_recriar(path: Path) -> Path | None:
 
 
 def load(db_path=None) -> None:
-    gerar_arquivos()
     path = Path(db_path) if db_path else db.get_db_path()
     if path.exists():
         backup_antes_de_recriar(path)
@@ -219,13 +187,10 @@ def load(db_path=None) -> None:
             cid = c[0]
             conn.execute("INSERT INTO clientes VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                          (cid, f"CLI-{2000 + i}", f"11.111.{i:03d}/0001-{50 + i:02d}", *c[1:], TIERS[cid]))
-            conn.execute("INSERT INTO roteiros VALUES (?,?,?,?,0)", (f"R_{cid}", cid, c[13], c[14]))
         # Mu Holding: segundo CNPJ do grupo (filial BH), cadastrado mas sem locação
         conn.execute("INSERT INTO clientes VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                      ("C12B", "CLI-2112", "11.111.012/0002-99", "Mu Holding Filial BH", "ICP5", "BELO HORIZONTE", "Grupo Mu",
                       "NEUTRO", 2000, "NENHUM", "", 0, 0, None, 0, "Filial do Grupo Mu, cadastrada, sem locação.", "", "A"))
-        for r, t, x in ROTEIROS_GENERICOS:
-            conn.execute("INSERT INTO roteiros VALUES (?,?,?,?,1)", (r, None, t, x))
         conn.execute("INSERT INTO meta VALUES ('versao_mundo', ?)", (VERSAO_MUNDO,))
     conn.close()
 
@@ -243,7 +208,7 @@ def ensure(db_path=None) -> None:
             conn.close()
         if row and row[0] == VERSAO_MUNDO:
             return
-        print("Banco de outra versão: recriando o mundo simulado...")
+        print("Banco de outra versão: recriando o mundo simulado (com backup)...")
     load(path)
 
 

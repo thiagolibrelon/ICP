@@ -7,9 +7,8 @@ from fastapi.testclient import TestClient
 
 import app as A
 from database import db, seed
-from services import agent, conversations as cs, laboratorio as lab, llm_client, training, validator
+from services import agent, conversations as cs, laboratorio as lab, llm_client, validator
 from tests.test_laboratorio import _resp, checks, lab_gpt, rodar, unica  # noqa: F401 (fixture)
-from tests.test_treino import cliente as fala_cliente
 
 
 # ================================================================== S1-07 backup
@@ -60,19 +59,6 @@ def test_modelo_por_papel_vem_do_ambiente(monkeypatch):
     with llm_client.usando_modelos({"vendedora": "modelo-forte"}):
         assert llm_client.modelos_atuais() == {"vendedora": "modelo-forte", "cliente": "modelo-base", "avaliador": "modelo-juiz"}
     assert llm_client.modelo() == "modelo-base"
-
-
-def test_treino_marca_o_papel_de_cada_chamada(monkeypatch):
-    vistos = []
-
-    def fake(messages, **kw):
-        vistos.append(llm_client.papel_atual())
-        if messages[0]["content"].startswith("Você vai INTERPRETAR"):
-            return {"message": {"content": fala_cliente("Uns 22 dias.")}, "tokens_entrada": 1, "tokens_saida": 1, "custo_gate": 0}
-        return {"message": {"content": json.dumps({"dica": "ok"})}, "tokens_entrada": 1, "tokens_saida": 1, "custo_gate": 0}
-    monkeypatch.setattr(llm_client, "completar", fake)
-    training.mensagem(training.iniciar("Ana", "C01", "TREINO")["treino_id"], "Quantos dias?")
-    assert vistos == ["cliente", "coach"]
 
 
 def test_rodada_fixa_os_modelos_e_usa_em_cada_papel(lab_gpt, monkeypatch):

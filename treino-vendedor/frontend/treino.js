@@ -127,13 +127,19 @@ function abrirResultado(r) {
     ${r.coach ? `<div class="rotulo">Coach: ${esc(NOME_COACH[r.coach.situacao] || r.coach.situacao)} · ${r.coach.dicas} dica(s)${r.coach.trocas.length ? ` · ${r.coach.trocas.length} troca(s) no meio do treino` : ''}</div>` : ''}
     ${(r.pontos_fortes || []).length ? `<h2>Pontos fortes</h2><ul>${r.pontos_fortes.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
     ${(r.pontos_a_melhorar || []).length ? `<h2>Onde melhorar</h2><ul>${r.pontos_a_melhorar.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
+    ${r.escuta && r.escuta.mensagens_do_vendedor ? `<div class="rotulo">Escuta (calculada pelo sistema): ${r.escuta.palavras_vendedor_pct}% das palavras foram suas (${r.escuta.padrao === 'TL1' ? 'você falou mais' : r.escuta.padrao === 'TL3' ? 'o cliente falou mais' : 'equilibrado'}) · ${r.escuta.perguntas_do_vendedor} pergunta(s) em ${r.escuta.mensagens_do_vendedor} mensagem(ns)</div>` : ''}
     <h2>Nota por dimensão (régua C12)</h2>
     ${dims.map(d => `<div class="dim"><div class="dim-top"><span>${esc(d.nome)}</span><span style="color:${cor(d.nota)}">${d.nota ?? '—'}</span></div>
       <div class="barra"><i style="width:${(d.nota || 0) * 10}%;background:${cor(d.nota)}"></i></div>
       <div>${esc(d.justificativa)}</div>
       ${d.segredos ? `<div class="rotulo">${esc(d.segredos)}</div>` : ''}
       ${d.qualidade_c12 ? `<div class="rotulo">Challenger C12: qualidade ${esc(d.qualidade_c12)}${(d.codigos || []).length ? ' · ' + d.codigos.map(esc).join(', ') : ''}</div>` : ''}
-      ${d.tipo ? `<div class="rotulo">Fechamento: ${esc(d.tipo)} · próximo passo ${esc(d.proximo_passo_claro)} · prazo ${esc(d.prazo_definido)}</div>` : ''}
+      ${d.proximo_passo_claro ? `<div class="rotulo">Fechamento: ${esc(d.tipo || '—')} · próximo passo ${esc(d.proximo_passo_claro)} · prazo ${esc(d.prazo_definido)}</div>` : ''}
+      ${d.primeira_pergunta ? `<div class="rotulo">Abertura: ${esc(d.tipo || '—')} · usou o nome ${esc(d.usou_nome)} · mostrou que viu a conta ${esc(d.sinalizou_conta)} · primeira pergunta: ${esc(d.primeira_pergunta)}</div>` : ''}
+      ${(d.comportamentos || []).length ? `<div class="rotulo">Comportamentos (P1): ${d.comportamentos.map(esc).join(', ')}</div>` : ''}
+      ${(d.lista || []).length ? `<ul>${d.lista.map(x => `<li>${esc(x.tipo)} · ${esc(x.frase)} · prazo: ${esc(x.prazo || 'sem prazo')} · risco ${esc(x.risco)}</li>`).join('')}</ul>` : ''}
+      ${(d.perdidas || []).length ? `<ul>${d.perdidas.map(x => `<li><b>${esc(x.codigo)}</b> (${esc(x.impacto)}): ${esc(x.o_que_faltou)}${x.deveria_ter_dito ? ` — <i>“${esc(x.deveria_ter_dito)}”</i>` : ''}</li>`).join('')}</ul>` : ''}
+      ${(d.sinais || []).length ? `<ul>${d.sinais.map(x => `<li>${esc(x.codigo)} · ${esc(x.o_que_apareceu)} · explorou: ${esc(x.explorou)}</li>`).join('')}</ul>` : ''}
       ${d.ancora ? `<div class="rotulo">Trecho seu${d.ancora_verificada ? '' : ' (não localizado exatamente)'}:</div><div class="citacao">“${esc(d.ancora)}”</div>` : ''}
       ${(d.achados || []).length ? `<ul>${d.achados.map(a => `<li>${esc(a)}</li>`).join('')}</ul>` : ''}
       ${d.como_melhorar ? `<div class="rotulo">Como melhorar</div><div>${esc(d.como_melhorar)}</div>` : ''}

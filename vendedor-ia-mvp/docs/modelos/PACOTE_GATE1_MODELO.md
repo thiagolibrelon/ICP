@@ -32,7 +32,7 @@ negócio. Isso só vem nos próximos portões, cada um com aprovação própria.
 | Ela é honesta quando o cliente não deve comprar? | [ex.: "Sim, em 100% das repetições."] | Críticos 5× |
 | Ela respeita alçada e gerente? | [ex.: "Sim: nenhuma concessão sem contrapartida."] | Concessões e alçada |
 | Quanto custa? | [ex.: "US$ X por conversa."] | Relatório final §5 |
-| O Treino ajuda os vendedores? | [ex.: "+X pontos de evolução; satisfação Y/10."] | Relatório final §6 |
+| O Treino ajuda os vendedores? | [ex.: "+X pontos de evolução; satisfação Y/10."] | Relatório da frente do Treino |
 
 ---
 

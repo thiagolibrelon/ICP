@@ -1,6 +1,6 @@
 # Trilha de treinamento do vendedor — v1
 
-> Para validar com o gestor e com a frente de líder coach (item TRN-04 do roadmap, até 16/10/2026).
+> Para validar com o gestor e com a frente de líder coach (item TRN-04 do `ROADMAP_TREINO.md`, até 16/10/2026).
 > Ambiente simulado, dados fictícios. As notas do Treino servem para o desenvolvimento do vendedor; não são ranking nem cobrança.
 
 ## 1. O que é
@@ -85,9 +85,7 @@ suporte, cobrança, retenção, concorrência, troca de gestor, expansão e indi
 Cada cliente tem os segredos (o que só conta se perguntarem bem), as objeções com os códigos do P8, a condição de aceite,
 o desafio do cenário e a janela de adicional. Os novos clientes são todos da carteira da venda interna (Tier B ou C).
 
-Entram também no simulador e na carteira da frente ativa, com o motivo de contato tirado do cadastro. No **Laboratório**,
-a linha de base continua nos 12 originais: mesma régua e mesmo custo das rodadas planejadas. Os novos têm um tipo de
-rodada próprio, "Clientes novos C13–C30" (36 conversas), para conferir que as personas se comportam bem.
+Na frente ativa, o motivo do contato vem do cadastro de cada um (contrato vencendo, diária alta, frota própria…).
 
 ## 5. Como o vendedor percorre a trilha
 
@@ -118,21 +116,27 @@ concreto, Challenger fica limitado a 4, então não sobe de nível.
 - **Na evolução ("Minha evolução / gestor"):** cada treino aparece como coach IA ligado, desligado, trocado no meio ou
   prova. A média por situação sai por vendedor e no geral. É a base para comparar coach IA × líder coach no piloto.
 
-### O que ainda falta medir (próxima versão, TRN-05)
+### O que a nota mede (completa desde 06/10, TRN-05)
 
-Hoje a nota do Treino já usa:
-- **B** (diagnóstico);
-- **CH** com a régua do C12;
-- **OB e R** (objeções);
-- **FC** (fechamento, com próximo passo e prazo).
+12 dimensões, com os mesmos códigos dos prompts de análise:
 
-Faltam:
-- **AB** (tipo de abertura);
-- **PM** (promessas, com prazo e risco);
-- **OP** (oportunidades perdidas);
-- **IC e eventos raros** (sinais da conta).
+| Dimensão | Códigos | Quem calcula |
+|---|---|---|
+| Abertura | AB1–AB5, nome, conta, primeira pergunta (P9) | Avaliador; no ativo, sem pergunta = no máximo 4 (sistema) |
+| Diagnóstico | B1–B10 (P1) + segredos descobertos | Avaliador + sistema |
+| Qualificação | Decisor, envolvidos, prazo | Avaliador |
+| Challenger com dado | CH1–CH7 e a régua do C12 (P5) | Avaliador; sem dado = no máximo 4 |
+| Objeções | OB1–OB7 × R1–R6 (P8) | Avaliador |
+| Adicionais | Janela de adicional da persona (P7) | Avaliador (só se há janela) |
+| Oportunidades aproveitadas | OP1–OP8 (P6) | Avaliador |
+| Disciplina de margem | Contrapartida, limite revelado, preço da tabela | Sistema |
+| Promessas | PM1–PM6, prazo e risco (P10) | Avaliador (só se houve promessa) |
+| Fechamento | FC1–FC5, próximo passo e prazo (P9) | Avaliador |
+| Sinais da conta | IC1–IC7 e eventos raros (P4, P11, P15) | Avaliador (só se apareceu sinal) |
+| Tom e empatia | — | Avaliador |
 
-São acréscimos no prompt do avaliador e na tela do resultado. A estrutura da nota não muda.
+A **escuta** (P12: % das palavras do vendedor e número de perguntas) é calculada pelo sistema e aparece no resultado,
+sem peso na nota.
 
 ### Ligações reais (TRN-07, depois da LGPD)
 
@@ -166,11 +170,15 @@ cenário. Nenhum trecho de ligação entra no projeto.
 
 ## 9. Escopo
 
-A trilha de treinamento é uma frente própria (responsável: [nome]). A Fernanda, o Laboratório e a frente ativa seguem
-com o restante do time. As duas frentes compartilham:
-- o mundo simulado (30 clientes);
-- a régua C12 do avaliador;
-- o código.
+Desde 06/10/2026 o Treino é uma **frente própria**: app `treino-vendedor` (porta 8001), com banco, mundo simulado,
+roadmap, roteiro de testes e testes automáticos próprios. A Fernanda, o Laboratório e a frente ativa ficam no
+`vendedor-ia-mvp`, com o restante do time.
 
-Mudanças nessas partes comuns combinam-se entre as duas frentes. Um exemplo é subir a versão do mundo, que recria o
-banco (com backup automático).
+As duas frentes nasceram do mesmo código e agora evoluem separadas:
+- o mundo simulado (30 clientes) é uma cópia em cada projeto;
+- a régua C12: o Treino tem a nota completa (12 dimensões); o Laboratório guardou a versão de 8 dimensões, para não
+  mudar a comparação das rodadas;
+- nada de um projeto importa código do outro.
+
+O que é comum de verdade é a régua do time (os 15 prompts e o C12 das ligações reais). Uma mudança nela (ex.: uma regra
+nova do Challenger) deve ser combinada entre as duas frentes.

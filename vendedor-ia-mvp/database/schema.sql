@@ -41,15 +41,6 @@ CREATE TABLE IF NOT EXISTS handoffs (
 );
 CREATE TABLE IF NOT EXISTS meta (chave TEXT PRIMARY KEY, valor TEXT);
 
--- MODO TREINO: vendedor humano x cliente simulado pelo GPT
-CREATE TABLE IF NOT EXISTS treinos (
-  treino_id TEXT PRIMARY KEY, vendedor TEXT, cliente_id TEXT, modo TEXT, dificuldade TEXT, inicio TEXT, fim TEXT,
-  status TEXT, estado_json TEXT, resultado_json TEXT, nota_geral REAL
-);
-CREATE TABLE IF NOT EXISTS treino_mensagens (
-  id INTEGER PRIMARY KEY AUTOINCREMENT, treino_id TEXT, timestamp TEXT, role TEXT, conteudo TEXT, meta_json TEXT
-);
-
 -- LABORATÓRIO: rodadas de testes em lote (IA-cliente x Fernanda)
 CREATE TABLE IF NOT EXISTS lab_rodadas (
   rodada_id TEXT PRIMARY KEY, nome TEXT, criado_em TEXT, inicio TEXT, fim TEXT, status TEXT, config_json TEXT

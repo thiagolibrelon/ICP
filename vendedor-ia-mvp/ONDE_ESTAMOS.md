@@ -2,6 +2,7 @@
 
 > Consolidação das decisões e entregas até 30/09/2026. Tudo no simulador é **fictício**.
 > Código: pasta `vendedor-ia-mvp/`, branch `claude/new-session-rkmsb8`.
+> **06/10/2026:** o Treino de vendas (§3.6) virou frente própria, no app `../treino-vendedor`.
 
 ---
 

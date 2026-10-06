@@ -10,7 +10,7 @@ import app as A
 from database import db
 from services import laboratorio as lab, llm_client
 from tests.conftest import tool_call
-from tests.test_treino import AVALIACAO
+from tests.respostas import AVALIACAO
 
 
 def _resp(conteudo=None, tool_calls=None):
@@ -369,5 +369,5 @@ def test_api_cancelar_e_retomar(lab_gpt):
 
 def test_paginas_tem_aba_do_laboratorio():
     with TestClient(A.app) as c:
-        for p in ("/", "/treino", "/guia", "/laboratorio"):
+        for p in ("/", "/guia", "/laboratorio"):
             assert 'href="/laboratorio"' in c.get(p).text

@@ -1,4 +1,4 @@
-// Laboratório: IA-cliente (personas do Treino) conversa sozinha com a Fernanda (modos A e B); o sistema confere cada conversa.
+// Laboratório: IA-cliente (personas do mundo simulado) conversa sozinha com a Fernanda (modos A e B); o sistema confere cada conversa.
 let cat = null, rodadaId = null, execId = null, timer = null;
 const marcadas = new Set();
 const $ = id => document.getElementById(id);
